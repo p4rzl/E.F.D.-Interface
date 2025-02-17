@@ -1,0 +1,73 @@
+# Progetto Spagna
+
+Questo progetto richiede la creazione di un ambiente virtuale e l'installazione delle dipendenze elencate nel file `index.py`.
+
+## Requisiti
+
+- Python 3.x
+- `virtualenv` (opzionale ma consigliato)
+
+## Dipendenze
+
+Il progetto richiede le seguenti dipendenze:
+- Flask
+- Flask-Login
+- Flask-SQLAlchemy
+- Flask-WTF
+- Werkzeug
+- python-dotenv
+
+## Istruzioni
+
+1. Clona il repository:
+    ```sh
+    git clone <URL_DEL_REPOSITORY>
+    cd <NOME_DEL_REPOSITORY>
+    ```
+
+2. Crea un ambiente virtuale (opzionale ma consigliato):
+    ```sh
+    python3 -m venv venv
+    source venv/bin/activate  # Su Windows usa `venv\Scripts\activate`
+    ```
+
+3. Installa le dipendenze:
+    ```sh
+    pip install flask flask-login flask-sqlalchemy flask-wtf python-dotenv
+    ```
+    
+    Oppure usando il file requirements.txt:
+    ```sh
+    pip install -r requirements.txt
+    ```
+
+4. Configura il file `.env`:
+    ```sh
+    DATABASE_URL=sqlite:///database.db
+    SECRET_KEY=your_secret_key_here
+    ```
+
+5. Esegui il file `index.py`:
+    ```sh
+    python index.py
+    ```
+
+## Note
+
+Per creare il file `requirements.txt` con tutte le dipendenze:
+```sh
+pip freeze > requirements.txt
+```
+
+Il progetto utilizza SQLite come database predefinito. Il file del database verrà creato automaticamente nella directory del progetto.
+
+## Sicurezza
+
+Il progetto include:
+- Protezione CSRF
+- Hashing delle password
+- Gestione sessioni sicure
+- Limite tentativi di login
+- Protezione contro SQL injection
+
+Buon lavoro!
