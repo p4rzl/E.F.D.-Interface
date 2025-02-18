@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="{{ url_for('static', filename='style-login.css') }}">
-    <title>Login Page</title>
+    <title>Registrazione</title>
 </head>
 <body>
-    <div class="login-container">
-        <h2>Login</h2>
+    <div class="register-container">
+        <h2>Registrazione</h2>
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
@@ -16,7 +16,7 @@
                 {% endfor %}
             {% endif %}
         {% endwith %}
-        <form method="POST" action="{{ url_for('login') }}">
+        <form method="POST" action="{{ url_for('register') }}">
             {{ form.hidden_tag() }}
             <div class="form-group">
                 {{ form.username.label }}
@@ -32,10 +32,17 @@
                     <span class="error">{{ error }}</span>
                 {% endfor %}
             </div>
-            {{ form.submit(class="btn-login") }}
+            <div class="form-group">
+                {{ form.confirm_password.label }}
+                {{ form.confirm_password(class="form-control") }}
+                {% for error in form.confirm_password.errors %}
+                    <span class="error">{{ error }}</span>
+                {% endfor %}
+            </div>
+            {{ form.submit(class="btn-register") }}
         </form>
-        <div class="register-link">
-            <p>Non hai un account? <a href="{{ url_for('register') }}">Registrati</a></p>
+        <div class="login-link">
+            <p>Hai già un account? <a href="{{ url_for('login') }}">Accedi</a></p>
         </div>
     </div>
 </body>
