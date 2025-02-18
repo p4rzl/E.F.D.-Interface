@@ -5,9 +5,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Errore del Server</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .error-container {
+            text-align: center;
+            background: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .error-container h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            color: #dc3545;
+        }
+        .error-container p {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+        .error-container a {
+            text-decoration: none;
+            color: #007bff;
+            font-weight: bold;
+        }
+        .error-container a:hover {
+            text-decoration: underline;
+        }
+    </style>
     <div class="error-container">
         <h1>500 - Errore del Server</h1>
         <p>Si è verificato un errore interno del server.</p>
