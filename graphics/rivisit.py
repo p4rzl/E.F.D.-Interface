@@ -1,22 +1,26 @@
-import numpy as np
+from netCDF4 import Dataset
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
-import netCDF4 as nc
-import pdfkit
+import numpy as np
 
-# Funzione per caricare e visualizzare le correnti oceaniche
-def plot_ocean_currents(nc_file, output_image):
-    # Carica i dati dal file NetCDF esistente
-    dataset = nc.Dataset(nc_file, 'r')
-    lon = dataset.variables['longitude'][:]  # Longitudine
-    lat = dataset.variables['latitude'][:]   # Latitudine
-    u = dataset.variables['u'][:]            # Componente longitudinale della corrente
-    v = dataset.variables['v'][:]            # Componente latitudinale della corrente
+def plot_ocean_currents(input_file, output_file):
+    # Carica il file netCDF
+    dataset = Dataset(input_file, 'r')
+    # Aggiungi questo dopo aver caricato il dataset per controllare le dimensioni
+    print("Dimensioni del Dataset:")
+    for var in dataset.variables:
+        print(f"{var}: {dataset.variables[var].shape}")
+    
+    # Estrai le variabili senza presumere una struttura 3D
+    u = dataset.variables['u'][:]  # Velocità longitudinale
+    v = dataset.variables['v'][:]  # Velocità latitudinale
+    lon = dataset.variables['lon'][:]
+    lat = dataset.variables['lat'][:]
 
-    # Seleziona un'istantanea (ad esempio il primo timestep)
-    u_current = u[0, :, :]  # Velocità longitudinale per il primo timestep
-    v_current = v[0, :, :]  # Velocità latitudinale per il primo timestep
-
+    # Modifica queste righe per gestire dati 2D
+    u_current = u  # Rimuovi l'indicizzazione temporale poiché i dati sono 2D
+    v_current = v  # Rimuovi l'indicizzazione temporale poiché i dati sono 2D
+    
     # Crea la figura e l'asse con la proiezione geografica
     fig, ax = plt.subplots(figsize=(10, 8), subplot_kw={'projection': ccrs.PlateCarree()})
     ax.coastlines()
@@ -47,12 +51,9 @@ def main():
     plot_ocean_currents('ocean_currents.nc', 'currents_plot.png')
 
     # Step 2: Crea la pagina HTML con il grafico
-    import create_html_page  # Importa il modulo per creare il file HTML
-    create_html_page.create_html_page('currents_plot.png', 'currents_page.html')
+    from create_html_page import create_html_page
+    create_html_page('currents_plot.png', 'currents_page.html')
 
-    # Step 3: Converte l'HTML in PDF
-    convert_html_to_pdf('currents_page.html', 'currents_visualization.pdf')
-
-# Esegui il programma
-if __name__ == "__main__":
+# Modifica l'esecuzione
+if __name__ == "__main__":  # Corretto da "currents_page.html" a "__main__"
     main()
