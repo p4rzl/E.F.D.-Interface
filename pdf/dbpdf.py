@@ -3,7 +3,7 @@ from fpdf import FPDF
 from PyPDF2 import PdfReader, PdfWriter
 
 # Nome del file PDF
-file_path = "esempio.pdf"
+file_path = "pdf/esempio.pdf"
 
 # Se il file non esiste, crearlo
 if not os.path.exists(file_path):
@@ -16,8 +16,8 @@ if not os.path.exists(file_path):
     pdf.add_page()
 
     # Aggiunta di testo alla pagina
-    titleText = "Luca Cassano"
-    paraText = "Luca Albanese"
+    titleText = "Luca Cassano - itis"
+    paraText = "Luca Albanese - itis"
 
     # Creazione del font e colore
     pdf.set_font("Helvetica", size=20)
@@ -44,7 +44,7 @@ for page in reader.pages:
 writer.add_blank_page()
 
 # Salvataggio del file modificato
-with open("output.pdf", "wb") as output_pdf:
+with open("pdf/output.pdf", "wb") as output_pdf:
     writer.write(output_pdf)
 
 print("PDF aggiornato e salvato come 'output.pdf'")

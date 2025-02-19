@@ -1,7 +1,7 @@
 from flask import Flask, render_template, redirect, url_for, request, flash
 from flask_login import login_user, login_required, logout_user, current_user
 from datetime import datetime, timezone
-from functools import wraps #da cambiare
+from functools import wraps      # Da cambiare
 from dotenv import load_dotenv
 import os
 import logging
@@ -14,6 +14,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Crea e configura l'app Flask
 def create_app():
     app = Flask(__name__)
     load_dotenv()
@@ -61,15 +62,18 @@ app = create_app()
 from models import User
 from forms import LoginForm, RegistrationForm
 
+# Carica l'utente dal database
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+# Gestisce l'accesso non autorizzato
 @login_manager.unauthorized_handler
 def unauthorized():
     flash('Devi effettuare il login per accedere a questa pagina.', 'error')
     return redirect(url_for('login', next=request.url))
 
+# Gestisce la registrazione degli utenti
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated:
@@ -93,6 +97,7 @@ def register():
     
     return render_template('register.html', form=form)
 
+# Gestisce il login degli utenti
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
@@ -127,6 +132,7 @@ def login():
     
     return render_template('login.html', form=form)
 
+# Gestisce il logout degli utenti
 @app.route('/logout')
 @login_required
 def logout():
@@ -134,6 +140,7 @@ def logout():
     flash('Logout effettuato con successo', 'success')
     return redirect(url_for('login'))
 
+# Gestisce la visualizzazione della home page
 @app.route('/')
 @app.route('/home')
 @login_required
@@ -144,6 +151,7 @@ def home():
         logger.error(f'Errore nel caricamento della home page: {str(e)}')
         return render_template('500.html'), 500
 
+# Gestisce la visualizzazione della pagina admin
 @app.route('/admin')
 @login_required
 def admin():
@@ -152,6 +160,7 @@ def admin():
         return redirect(url_for('home'))
     return render_template('admin.html', users=User.query.all())
 
+# Gestisce l'attivazione/disattivazione degli utenti
 @app.route('/toggle_user/<int:user_id>', methods=['POST'])
 @login_required
 def toggle_user(user_id):
@@ -169,15 +178,18 @@ def toggle_user(user_id):
     flash(f'Stato utente {user_to_toggle.username} aggiornato.', 'success')
     return redirect(url_for('admin'))
 
+# Gestisce l'errore 404
 @app.errorhandler(404)
 def not_found_error(e):
     return render_template('404.html'), 404
 
+# Gestisce l'errore 500
 @app.errorhandler(500)
 def internal_error(e):
     db.session.rollback()
     return render_template('500.html'), 500
 
+# Forza l'uso di HTTPS in produzione
 @app.before_request
 def before_request():
     if os.getenv('FLASK_ENV') == 'production':
@@ -185,6 +197,7 @@ def before_request():
             secure_url = request.url.replace('http://', 'https://', 1)
             return redirect(secure_url, code=301)
 
+# Inizializza il database dell'app
 def init_app_db():
     with app.app_context():
         db.create_all()

@@ -8,6 +8,7 @@
 </head>
 <body>
     <div class="register-container">
+        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo Azienda" class="logo">
         <h2>Registrazione</h2>
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
