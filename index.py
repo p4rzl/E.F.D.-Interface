@@ -1,9 +1,12 @@
-from flask import Flask, render_template, redirect, url_for, request, flash
+from flask import Flask, render_template, redirect, url_for, request, flash, jsonify
 from flask_login import login_user, login_required, logout_user, current_user
-from datetime import datetime, timezone
+from flask_socketio import SocketIO, emit
+from datetime import datetime, timezone, timedelta
 from dotenv import load_dotenv
 import os
 import logging
+from models import User, ChatMessage
+from forms import LoginForm, RegistrationForm
 from extensions import db, login_manager, csrf
 
 # Configurazione logging
@@ -16,7 +19,7 @@ logger = logging.getLogger(__name__)
 # Creazione della directory per le immagini statiche
 if not os.path.exists('static/img'):
     os.makedirs('static/img')
-    
+
 # Crea e configura l'app Flask
 def create_app():
     app = Flask(__name__)
@@ -59,11 +62,18 @@ def create_app():
 
     return app
 
-# Creazione dell'app
+# Creazione dell'app e inizializzazione di socketio
 app = create_app()
+socketio = SocketIO(app, cors_allowed_origins="*")
 
-from models import User
-from forms import LoginForm, RegistrationForm
+def cleanup_old_messages():
+    try:
+        three_days_ago = datetime.now(timezone.utc) - timedelta(days=3)
+        ChatMessage.query.filter(ChatMessage.created_at < three_days_ago).delete()
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f'Errore nella pulizia dei messaggi: {str(e)}')
 
 # Carica l'utente dal database
 @login_manager.user_loader
@@ -214,6 +224,51 @@ def reload_animation():
     
     return redirect(url_for('home'))
 
+@app.route('/get_messages')
+@login_required
+def get_messages():
+    cleanup_old_messages()
+    messages = ChatMessage.query.order_by(ChatMessage.created_at.desc()).limit(50).all()
+    return jsonify([{
+        'username': msg.user.username,
+        'message': msg.message,
+        'timestamp': msg.created_at.strftime('%d/%m/%Y %H:%M')
+    } for msg in messages])
+
+def cleanup_old_messages():
+    try:
+        three_days_ago = datetime.now(timezone.utc) - timedelta(days=3)
+        ChatMessage.query.filter(ChatMessage.created_at < three_days_ago).delete()
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f'Errore nella pulizia dei messaggi: {str(e)}')
+
+# WebSocket per i messaggi in tempo reale
+@socketio.on('send_message')
+def handle_message(data):
+    if not current_user.is_authenticated:
+        return
+    
+    try:
+        message = ChatMessage(
+            user_id=current_user.id,
+            message=data['message']
+        )
+        db.session.add(message)
+        db.session.commit()
+        
+        emit('new_message', {
+            'username': current_user.username,
+            'message': message.message,
+            'timestamp': message.created_at.strftime('%d/%m/%Y %H:%M'),
+            'isAdmin': current_user.is_admin
+        }, broadcast=True)
+        
+    except Exception as e:
+        logger.error(f'Errore nell\'invio del messaggio: {str(e)}')
+        db.session.rollback()
+        
 # Gestisce la visualizzazione della pagina admin
 @app.route('/admin')
 @login_required
@@ -318,4 +373,4 @@ def init_app_db():
 
 if __name__ == '__main__':
     init_app_db()
-    app.run(debug=True, host='127.0.0.1', port=5000)
+    socketio.run(app, debug=True, host='127.0.0.1', port=5000)
