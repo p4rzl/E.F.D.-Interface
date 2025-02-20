@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style-login.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style-login.css') }}">
     <title>Registrazione</title>
 </head>
 <body>
     <div class="register-container">
-        <img src="{{ url_for('static', filename='logo.png') }}" alt="Logo Azienda" class="logo">
+        <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo Azienda" class="logo">
         <h2>Registrazione</h2>
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}

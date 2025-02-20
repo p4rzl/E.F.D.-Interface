@@ -1,0 +1,276 @@
+body {
+    font-family: 'Roboto', sans-serif;
+    background: linear-gradient(135deg, #001f3f, #0074cc);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.login-container, .register-container {
+    max-width: 400px;
+    margin: 50px auto;
+    padding: 30px;
+    border-radius: 8px;
+    background-color: white;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.logo {
+    max-width: 350px;
+    margin-bottom: 20px;
+}
+
+.login-container h2, .register-container h2 {
+    font-size: 26px;
+    font-weight: bold;
+    color: #004c97;
+    margin-bottom: 20px;
+}
+
+.login-container input[type="text"],
+.login-container input[type="password"],
+.register-container input[type="text"],
+.register-container input[type="password"] {
+    width: 100%;
+    padding: 14px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-sizing: border-box;
+    transition: all 0.3s;
+}
+
+.login-container input:focus,
+.register-container input:focus {
+    border-color: #004c97;
+    outline: none;
+    box-shadow: 0 0 5px rgba(0, 76, 151, 0.5);
+}
+
+.login-container button, .register-container button {
+    width: 100%;
+    padding: 14px;
+    background-color: #004c97;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+.login-container button:hover, .register-container button:hover {
+    background-color: #003366;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.error {
+    color: red;
+    font-size: 0.9em;
+    margin-top: 5px;
+}
+
+.alert {
+    padding: 12px;
+    margin-bottom: 15px;
+    border-radius: 6px;
+}
+
+.alert-error {
+    background-color: #ffebee;
+    color: #c62828;
+    border: 1px solid #ef9a9a;
+}
+
+.alert-success {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #a5d6a7;
+}
+
+.btn-login, .btn-register {
+    width: 100%;
+    padding: 12px;
+    background-color: #004c97;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.btn-login:hover, .btn-register:hover {
+    background-color: #003366;
+}
+
+.register-link, .login-link {
+    text-align: center;
+    margin-top: 15px;
+    color: #004c97;
+}
+
+.register-link a, .login-link a {
+    text-decoration: none;
+    color: #004c97;
+    font-weight: bold;
+}
+
+.register-link a:hover, .login-link a:hover {
+    text-decoration: underline;
+}
+
+/* Aggiungi le animazioni keyframes */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Modifica il body per l'animazione del background */
+body {
+    font-family: 'Roboto', sans-serif;
+    background: linear-gradient(135deg, #001f3f, #0074cc, #004c97);
+    background-size: 200% 200%;
+    animation: gradientBG 15s ease infinite;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+/* Aggiungi animazioni ai container */
+.login-container, .register-container {
+    animation: scaleIn 0.6s ease-out;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.login-container:hover, .register-container:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Animazione per il logo */
+.logo {
+    animation: fadeInUp 0.8s ease-out;
+}
+
+/* Animazione per i campi input */
+.login-container input,
+.register-container input {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.login-container input:focus,
+.register-container input:focus {
+    transform: scale(1.02);
+}
+
+/* Animazione per i bottoni */
+.btn-login, .btn-register {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.btn-login:hover, .btn-register:hover {
+    background-color: #003366;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 76, 151, 0.3);
+}
+
+/* Effetto ripple per i bottoni */
+.btn-login::after,
+.btn-register::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    background-image: radial-gradient(circle, rgba(255,255,255,.3) 10%, transparent 10.01%);
+    background-repeat: no-repeat;
+    background-position: 50%;
+    transform: scale(10,10);
+    opacity: 0;
+    transition: transform .5s, opacity 1s;
+}
+
+.btn-login:active::after,
+.btn-register:active::after {
+    transform: scale(0,0);
+    opacity: .3;
+    transition: 0s;
+}
+
+/* Animazione per i link */
+.register-link a, 
+.login-link a {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.register-link a::after, 
+.login-link a::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    bottom: -2px;
+    left: 0;
+    background-color: #004c97;
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform 0.3s ease;
+}
+
+.register-link a:hover::after, 
+.login-link a:hover::after {
+    transform: scaleX(1);
+    transform-origin: left;
+}
+
+/* Animazione per gli alert */
+.alert {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+/* Animazione per messaggi di errore */
+.error {
+    animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+}

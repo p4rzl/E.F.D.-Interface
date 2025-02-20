@@ -2,45 +2,96 @@
 <html lang="it">
 <head>
     <meta charset="utf-8">
-    <title>Pagina Amministratore</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pannello Amministratore</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <h1>Gestione Utenti</h1>
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="alert alert-{{ category }}">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-    <table>
-        <thead>
-            <tr>
-                <th>Username</th>
-                <th>Stato</th>
-                <th>Azioni</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for user in users %}
-            <tr>
-                <td>{{ user.username }}</td>
-                <td>{{ "Attivo" if user.is_active else "Disattivo" }}</td>
-                <td>
-                    <form method="POST" action="{{ url_for('toggle_user', user_id=user.id) }}">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" {% if user == current_user %}disabled{% endif %}>
-                            {{ "Disattiva" if user.is_active else "Attiva" }}
-                        </button>
-                    </form>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-    <div style="text-align: center; margin-top: 20px;">
-        <a href="{{ url_for('home') }}"><button>Torna alla Home</button></a>
-    </div>
+    <header>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('home') }}">Home</a></li>
+                <li><a href="{{ url_for('admin') }}" class="active">Admin Panel</a></li>
+                <li class="user-info">
+                    <span>{{ current_user.username }}</span>
+                    <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="welcome-section">
+            <h1>Pannello di Amministrazione</h1>
+            <p>Gestisci gli utenti e i loro permessi</p>
+        </section>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <section class="admin-panel">
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Stato</th>
+                            <th>Ruolo</th>
+                            <th>Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr class="{{ 'current-user' if user == current_user }}">
+                            <td class="user-cell">
+                                {{ user.username }}
+                                {% if user.username == 'admin' %}
+                                    <span class="admin-badge">Admin Principale</span>
+                                {% endif %}
+                                {% if user == current_user %}
+                                    <span class="current-user-badge">Tu</span>
+                                {% endif %}
+                            </td>
+                            <td class="status-cell">
+                                <span class="status-badge {{ 'active' if user.is_active else 'inactive' }}">
+                                    {{ "Attivo" if user.is_active else "Disattivo" }}
+                                </span>
+                            </td>
+                            <td class="role-cell">
+                                <span class="role-badge {{ 'admin' if user.is_admin else 'user' }}">
+                                    {{ "Admin" if user.is_admin else "Utente" }}
+                                </span>
+                            </td>
+                            <td class="actions-cell">
+                                <div class="action-buttons">
+                                    <form method="POST" action="{{ url_for('toggle_user', user_id=user.id) }}" class="inline-form">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn-toggle" 
+                                                {{ 'disabled' if user == current_user or user.username == 'admin' }}>
+                                            {{ "Disattiva" if user.is_active else "Attiva" }}
+                                        </button>
+                                    </form>
+                                    
+                                    <form method="POST" action="{{ url_for('toggle_admin', user_id=user.id) }}" class="inline-form">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn-admin" 
+                                                {{ 'disabled' if user == current_user or user.username == 'admin' }}>
+                                            {{ "Rimuovi Admin" if user.is_admin else "Rendi Admin" }}
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
 </body>
 </html>

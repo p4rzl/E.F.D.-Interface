@@ -1,7 +1,6 @@
 from flask import Flask, render_template, redirect, url_for, request, flash
 from flask_login import login_user, login_required, logout_user, current_user
 from datetime import datetime, timezone
-from functools import wraps      # Da cambiare
 from dotenv import load_dotenv
 import os
 import logging
@@ -14,6 +13,10 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Creazione della directory per le immagini statiche
+if not os.path.exists('static/img'):
+    os.makedirs('static/img')
+    
 # Crea e configura l'app Flask
 def create_app():
     app = Flask(__name__)
@@ -146,10 +149,70 @@ def logout():
 @login_required
 def home():
     try:
-        return render_template('home.html', username=current_user.username)
+        animation_path = 'static/img/currents_animation.gif'
+        current_plot = False
+        last_update = None
+        
+        try:
+            from rivisit import create_ocean_currents_animation
+            
+            # Verifica se l'animazione deve essere rigenerata
+            should_regenerate = (
+                not os.path.exists(animation_path) or 
+                (datetime.now(timezone.utc) - datetime.fromtimestamp(
+                    os.path.getmtime(animation_path), timezone.utc
+                )).total_seconds() > 3600  # Rigenera ogni ora
+            )
+            
+            if should_regenerate:
+                os.makedirs(os.path.dirname(animation_path), exist_ok=True)
+                current_plot = create_ocean_currents_animation(animation_path)
+            else:
+                current_plot = True
+            
+            if current_plot:
+                last_update = datetime.fromtimestamp(
+                    os.path.getmtime(animation_path), timezone.utc
+                )
+                logger.info('Animazione delle correnti oceaniche aggiornata')
+        
+        except Exception as e:
+            logger.error(f'Errore nella generazione dell\'animazione: {str(e)}')
+            current_plot = False
+        
+        return render_template('home.html',
+                             username=current_user.username,
+                             current_plot=current_plot,
+                             last_update=last_update,
+                             is_admin=current_user.is_admin)
+
     except Exception as e:
         logger.error(f'Errore nel caricamento della home page: {str(e)}')
         return render_template('500.html'), 500
+
+# Gestisce la ricarica dell'animazione delle correnti oceaniche
+@app.route('/reload_animation', methods=['POST'])
+@login_required
+def reload_animation():
+    if not current_user.is_admin:
+        flash('Accesso non autorizzato.', 'error')
+        return redirect(url_for('home'))
+    
+    try:
+        animation_path = 'static/img/currents_animation.gif'
+        from rivisit import create_ocean_currents_animation
+        
+        os.makedirs(os.path.dirname(animation_path), exist_ok=True)
+        if create_ocean_currents_animation(animation_path):
+            flash('Animazione ricaricata con successo!', 'success')
+        else:
+            flash('Errore durante la ricarica dell\'animazione.', 'error')
+            
+    except Exception as e:
+        logger.error(f'Errore nella ricarica dell\'animazione: {str(e)}')
+        flash('Errore durante la ricarica dell\'animazione.', 'error')
+    
+    return redirect(url_for('home'))
 
 # Gestisce la visualizzazione della pagina admin
 @app.route('/admin')
@@ -160,6 +223,45 @@ def admin():
         return redirect(url_for('home'))
     return render_template('admin.html', users=User.query.all())
 
+# Gestisce la promozione/rimozione degli amministratori
+@app.route('/toggle_admin/<int:user_id>', methods=['POST'])
+@login_required
+def toggle_admin(user_id):
+    if not current_user.is_admin:
+        flash('Accesso non autorizzato.', 'error')
+        return redirect(url_for('home'))
+    
+    try:
+        user_to_toggle = User.query.get_or_404(user_id)
+        
+        # Impedisci di modificare l'admin principale
+        if user_to_toggle.username == 'admin':
+            flash('Non puoi modificare i permessi dell\'amministratore principale.', 'error')
+            return redirect(url_for('admin'))
+        
+        # Impedisci di modificare il proprio stato di admin
+        if user_to_toggle == current_user:
+            flash('Non puoi modificare il tuo stato di amministratore.', 'error')
+            return redirect(url_for('admin'))
+            
+        # Controlla che ci sia sempre almeno un admin
+        if user_to_toggle.is_admin and User.query.filter_by(is_admin=True).count() <= 1:
+            flash('Deve esistere almeno un amministratore nel sistema.', 'error')
+            return redirect(url_for('admin'))
+        
+        user_to_toggle.is_admin = not user_to_toggle.is_admin
+        db.session.commit()
+        
+        action = "rimosso da" if not user_to_toggle.is_admin else "promosso ad"
+        flash(f'Utente {user_to_toggle.username} {action} amministratore.', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f'Errore nella modifica dei permessi: {str(e)}')
+        flash('Errore durante la modifica dei permessi.', 'error')
+        
+    return redirect(url_for('admin'))
+
 # Gestisce l'attivazione/disattivazione degli utenti
 @app.route('/toggle_user/<int:user_id>', methods=['POST'])
 @login_required
@@ -169,6 +271,12 @@ def toggle_user(user_id):
         return redirect(url_for('home'))
     
     user_to_toggle = User.query.get_or_404(user_id)
+    
+    # Impedisci di disattivare l'admin principale
+    if user_to_toggle.username == 'admin':
+        flash('Non puoi disattivare l\'amministratore principale.', 'error')
+        return redirect(url_for('admin'))
+    
     if user_to_toggle == current_user:
         flash('Non puoi disattivare il tuo account.', 'error')
         return redirect(url_for('admin'))
