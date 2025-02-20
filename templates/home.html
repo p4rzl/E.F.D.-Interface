@@ -111,11 +111,13 @@
                     const notification = document.getElementById('chatNotification');
                     notification.textContent = `${username}: ${message}`;
                     notification.classList.add('show');
+                    chatButton.classList.add('new-message');
                     
                     setTimeout(() => {
                         notification.classList.add('hide');
                         setTimeout(() => {
                             notification.classList.remove('show', 'hide');
+                            chatButton.classList.remove('new-message');
                         }, 300);
                     }, 5000);
                 }

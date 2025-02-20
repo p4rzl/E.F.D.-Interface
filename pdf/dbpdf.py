@@ -78,24 +78,43 @@ if not os.path.exists(file_path):
     c.save()
     print(f"File '{file_path}' creato con successo.")
 
-
-
-
 # Ora possiamo caricare e modificare il file PDF esistente
 reader = PdfReader(file_path)
 writer = PdfWriter()
 
-# Aggiungi tutte le pagine del PDF esistente al nuovo file PDF
-for page_num in range(len(reader.pages)):
-    page = reader.pages[page_num]
-    writer.add_page(page)
+# Crea un PDF temporaneo con i nuovi dati
+temp_pdf_path = "pdf/temp_page.pdf"
+c = canvas.Canvas(temp_pdf_path, pagesize=letter)
 
-# Aggiungi una nuova pagina al file PDF
-writer.add_blank_page()
+# Aggiungi i nuovi dati in una posizione più bassa sulla pagina
+c.setFont("Helvetica", 14)
+c.drawString(50, 300, "Dati Aggiornati:")  # Spostato più in basso
+c.drawString(50, 280, "Temperatura: 25°C")
+c.drawString(50, 260, "Pressione: 1013 hPa")
+c.drawString(50, 240, "Umidità: 65%")
+c.drawString(50, 220, "Velocità del vento: 10 km/h")
+c.save()
 
-# Salvataggio del file modificato
+# Leggi la prima pagina del PDF esistente
+page = reader.pages[0]
+
+# Leggi la pagina temporanea con i nuovi dati
+temp_reader = PdfReader(temp_pdf_path)
+temp_page = temp_reader.pages[0]
+
+# Unisci le pagine (sovrapponi i nuovi dati sulla pagina esistente)
+page.merge_page(temp_page)
+
+# Aggiungi la pagina modificata al nuovo PDF
+writer.add_page(page)
+
+# Salva il PDF modificato
 output_path = "pdf/output.pdf"
 with open(output_path, "wb") as output_pdf:
     writer.write(output_pdf)
+
+# Rimuovi il file temporaneo
+if os.path.exists(temp_pdf_path):
+    os.remove(temp_pdf_path)
 
 print(f"PDF aggiornato e salvato come '{output_path}'")
