@@ -232,9 +232,10 @@ def get_messages():
     return jsonify([{
         'username': msg.user.username,
         'message': msg.message,
-        'timestamp': msg.created_at.strftime('%d/%m/%Y %H:%M')
+        'timestamp': msg.created_at.strftime('%d/%m/%Y %H:%M'),
+        'avatar_id': msg.user.avatar_id
     } for msg in messages])
-
+    
 def cleanup_old_messages():
     try:
         three_days_ago = datetime.now(timezone.utc) - timedelta(days=3)
@@ -262,7 +263,8 @@ def handle_message(data):
             'username': current_user.username,
             'message': message.message,
             'timestamp': message.created_at.strftime('%d/%m/%Y %H:%M'),
-            'isAdmin': current_user.is_admin
+            'isAdmin': current_user.is_admin,
+            'avatar_id': current_user.avatar_id
         }, broadcast=True)
         
     except Exception as e:
@@ -373,4 +375,4 @@ def init_app_db():
 
 if __name__ == '__main__':
     init_app_db()
-    socketio.run(app, debug=True, host='127.0.0.1', port=5000)
+    socketio.run(app, debug=False, host='0.0.0.0', port=5000)

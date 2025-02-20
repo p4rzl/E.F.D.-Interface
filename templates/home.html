@@ -15,6 +15,9 @@
                     <li><a href="{{ url_for('admin') }}">Admin Panel</a></li>
                 {% endif %}
                 <li class="user-info">
+                    <img src="{{ url_for('static', filename='img/avatars/' + current_user.avatar_id|string + '.png') }}" 
+                         alt="Avatar" 
+                         class="user-avatar">
                     <span>Benvenuto, {{ current_user.username }}</span>
                     <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
                 </li>
@@ -91,117 +94,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Inizializza socket.io
-            const socket = io();
-            const chatButton = document.getElementById('chatButton');
-            const chatContainer = document.getElementById('chatContainer');
-            const closeChat = document.getElementById('closeChat');
-            const messageInput = document.getElementById('messageInput');
-            const sendMessage = document.getElementById('sendMessage');
-            const chatMessages = document.getElementById('chatMessages');
-        
-            // Imposta isAdmin come variabile JavaScript
-            const isAdmin = {{ 'true' if current_user.is_admin else 'false' }};
-        
-            // Funzione per mostrare le notifiche
-            function showNotification(message, username) {
-                if (!chatContainer.classList.contains('active')) {
-                    const notification = document.getElementById('chatNotification');
-                    notification.textContent = `${username}: ${message}`;
-                    notification.classList.add('show');
-                    chatButton.classList.add('new-message');
-                    
-                    setTimeout(() => {
-                        notification.classList.add('hide');
-                        setTimeout(() => {
-                            notification.classList.remove('show', 'hide');
-                            chatButton.classList.remove('new-message');
-                        }, 300);
-                    }, 5000);
-                }
-            }
-        
-            // Funzione per aggiungere un messaggio
-            function addMessage(data) {
-                const messageDiv = document.createElement('div');
-                messageDiv.className = 'message';
-                
-                const usernameSpan = document.createElement('span');
-                usernameSpan.className = `username ${data.isAdmin ? 'admin' : ''}`;
-                usernameSpan.textContent = data.username;
-        
-                const timestampSpan = document.createElement('span');
-                timestampSpan.className = 'timestamp';
-                timestampSpan.textContent = data.timestamp;
-        
-                const contentDiv = document.createElement('div');
-                contentDiv.className = 'message-content';
-                contentDiv.textContent = data.message;
-        
-                messageDiv.appendChild(usernameSpan);
-                messageDiv.appendChild(timestampSpan);
-                messageDiv.appendChild(contentDiv);
-        
-                chatMessages.appendChild(messageDiv);
-                chatMessages.scrollTop = chatMessages.scrollHeight;
-        
-                // Mostra notifica se la chat è chiusa
-                if (!chatContainer.classList.contains('active')) {
-                    showNotification(data.message, data.username);
-                }
-            }
-        
-            // Gestione eventi chat
-            chatButton.addEventListener('click', () => {
-                chatContainer.classList.toggle('active');
-                if (chatContainer.classList.contains('active')) {
-                    loadMessages();
-                }
-            });
-        
-            closeChat.addEventListener('click', () => {
-                chatContainer.classList.remove('active');
-            });
-        
-            // Carica messaggi esistenti
-            function loadMessages() {
-                fetch('/get_messages')
-                    .then(response => response.json())
-                    .then(messages => {
-                        chatMessages.innerHTML = '';
-                        messages.reverse().forEach(msg => {
-                            msg.isAdmin = msg.username === 'admin';
-                            addMessage(msg);
-                        });
-                    });
-            }
-        
-            // Gestione invio messaggi
-            function sendNewMessage() {
-                const message = messageInput.value.trim();
-                if (message) {
-                    socket.emit('send_message', { message: message });
-                    messageInput.value = '';
-                }
-            }
-        
-            sendMessage.addEventListener('click', sendNewMessage);
-            messageInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') sendNewMessage();
-            });
-        
-            // Socket.io event listeners
-            socket.on('connect', () => {
-                console.log('Connected to socket.io');
-            });
-        
-            socket.on('new_message', (data) => {
-                data.isAdmin = data.username === 'admin';
-                addMessage(data);
-            });
-        });
-        </script>
+    <script src="{{ url_for('static', filename='js/msg.js') }}"></script>
 </body>
 </html>

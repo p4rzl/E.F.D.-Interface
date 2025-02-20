@@ -3,11 +3,11 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime, timedelta, timezone
 from flask import current_app
 from extensions import db
+import random
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
-    # email = db.Column(db.String(120), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     last_login = db.Column(db.DateTime)
@@ -15,6 +15,7 @@ class User(UserMixin, db.Model):
     failed_login_attempts = db.Column(db.Integer, default=0)
     locked_until = db.Column(db.DateTime)
     is_admin = db.Column(db.Boolean, default=False)
+    avatar_id = db.Column(db.Integer, default=lambda: random.randint(1, 8)) 
 
     def set_password(self, password):
         self.password = generate_password_hash(password, method='pbkdf2:sha256:260000')

@@ -646,3 +646,66 @@ section {
 .chat-messages::-webkit-scrollbar-thumb:hover {
     background: var(--dark-blue);
 }
+
+/* Stili per gli avatar */
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--primary-blue);
+}
+
+/* Modifica lo stile per la user-info nella navbar */
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+/* Modifica lo stile per i messaggi della chat */
+.message {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+.message-avatar {
+    width: 32px;
+    height: 32px;
+    min-width: 32px; /* Impedisce il restringimento dell'avatar */
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--primary-blue);
+}
+
+.message-user-info {
+    display: flex;
+    flex-direction: row; /* Cambiato da column a row */
+    align-items: center; /* Centrato verticalmente */
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* Modifica lo stile per la tabella admin */
+.user-cell {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.user-info-admin {
+    display: flex;
+    align-items: center; /* Allinea verticalmente il contenuto */
+    gap: 8px;
+}
+
+.admin-badge,
+.current-user-badge {
+    display: inline-block;
+    margin-left: 8px;
+}
