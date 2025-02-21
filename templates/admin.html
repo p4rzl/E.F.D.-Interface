@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pannello Amministratore</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon">
 </head>
 <body>
     <header>
@@ -49,19 +50,19 @@
                         {% for user in users %}
                         <tr class="{{ 'current-user' if user == current_user }}">
                             <td class="user-cell">
-    <img src="{{ url_for('static', filename='img/avatars/' + user.avatar_id|string + '.png') }}" 
-         alt="Avatar" 
-         class="user-avatar">
-    <div class="user-info-admin">
-        {{ user.username }}
-        {% if user.username == 'admin' %}
-            <span class="admin-badge">Admin Principale</span>
-        {% endif %}
-        {% if user == current_user %}
-            <span class="current-user-badge">Tu</span>
-        {% endif %}
-    </div>
-</td>
+                                <img src="{{ url_for('static', filename='img/avatars/' + user.avatar_id|string + '.png') }}" 
+                                     alt="Avatar" 
+                                     class="user-avatar">
+                                <div class="user-info-admin">
+                                    {{ user.username }}
+                                    {% if user.username == 'admin' %}
+                                        <span class="admin-badge">Admin Principale</span>
+                                    {% endif %}
+                                    {% if user == current_user %}
+                                        <span class="current-user-badge">Tu</span>
+                                    {% endif %}
+                                </div>
+                            </td>
                             <td class="status-cell">
                                 <span class="status-badge {{ 'active' if user.is_active else 'inactive' }}">
                                     {{ "Attivo" if user.is_active else "Disattivo" }}

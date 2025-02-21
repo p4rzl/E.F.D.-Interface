@@ -1,120 +1,93 @@
+from flask import Flask, request, render_template, send_file
+from netCDF4 import Dataset
 from PyPDF2 import PdfWriter, PdfReader
 import os
 from reportlab.pdfgen import canvas 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
-from reportlab.graphics.shapes import *
-from reportlab.graphics import renderPDF
 from reportlab.graphics.shapes import Drawing, Rect
+from reportlab.graphics import renderPDF
 
-# Nome del file PDF
-file_path = "pdf/esempio.pdf"
+app = Flask(__name__)
+UPLOAD_FOLDER = "uploads"
+OUTPUT_FOLDER = "pdf"
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
-# Se il file non esiste, crearlo
-if not os.path.exists(file_path):
-    print(f"Il file '{file_path}' non esiste. Creazione in corso...")
-
-    # Creazione di un file PDF temporaneo con ReportLab
-    c = canvas.Canvas(file_path, pagesize=letter)
-
-    # Aggiunta di testo alla pagina
-    titleText = "Ocean currents data"
-    paraText = "Luca Albanese - itis"
-
-    # Calcola le dimensioni del rettangolo 
-    page_width = letter[0]    # larghezza pagina
-    page_height = letter[1]   # altezza pagina
-    rect_height = page_height * 0.30  # aumentato al 30% dell'altezza
-    rect_y = page_height - rect_height + 20  # aggiustato per coprire tutto in alto
-
-    # Creazione del gradiente
-    d = Drawing(page_width, page_height)
+@app.route('/', methods=['GET', 'POST'])
+def upload_file():
+    if request.method == 'POST':
+        if 'file' not in request.files:
+            return "Nessun file caricato"
+        file = request.files['file']
+        if file.filename == '':
+            return "Nessun file selezionato"
+        
+        filepath = os.path.join(UPLOAD_FOLDER, file.filename)
+        file.save(filepath)
+        pdf_path = process_nc_file(filepath)
+        return send_file(pdf_path, as_attachment=True)
     
-    # Creiamo diversi rettangoli con opacità decrescente per simulare il gradiente
+    return render_template('upload.html')
+
+def process_nc_file(nc_file):
+    pdf_output = os.path.join(OUTPUT_FOLDER, "output.pdf")
+    temp_pdf_path = os.path.join(OUTPUT_FOLDER, "temp_page.pdf")
+    pdf_input = "pdf/esempio.pdf"
+    
+    with Dataset(nc_file, "r") as nc:
+        lat = nc.variables["latitude"][:]
+        lon = nc.variables["longitude"][:]
+        temp = nc.variables["temperature"][:]
+
+    c = canvas.Canvas(temp_pdf_path, pagesize=letter)
+    page_width, page_height = letter
+    rect_height = page_height * 0.30
+    rect_y = page_height - rect_height + 20
+    
+    d = Drawing(page_width, page_height)
     num_steps = 50
     for i in range(num_steps):
-        # Calcola l'altezza di ogni segmento
         segment_height = rect_height / num_steps
-        # Calcola la posizione y di ogni segmento
         segment_y = rect_y + (i * segment_height)
-        # Calcola il colore con intensità decrescente
-        intensity = 0.5 - (i / (num_steps * 2))  # da 0.5 a 0
+        intensity = 0.5 - (i / (num_steps * 2))
         r = Drawing()
-        r.add(Rect(
-            0,                          # x
-            segment_y,                  # y
-            page_width,                 # width
-            segment_height,             # height
-            fillColor=colors.Color(0.1, 0.2, 0.5 + intensity),  # colore blu con intensità variabile
-            strokeColor=None
-        ))
+        r.add(Rect(0, segment_y, page_width, segment_height, fillColor=colors.Color(0.1, 0.2, 0.5 + intensity), strokeColor=None))
         d.add(r)
-    
-    # Renderizza il gradiente
     renderPDF.draw(d, c, 0, 0)
-
-    # Calcolo della posizione centrale per il titolo
-    title_font_size = 36
-    c.setFont("Helvetica", title_font_size)
-    title_width = c.stringWidth(titleText, "Helvetica", title_font_size)
-    title_x = (page_width - title_width) / 2  # centro orizzontale
-    title_y = rect_y + (rect_height/2) - 10   # centro verticale nel rettangolo
-
-    # Disegna il testo del titolo in bianco
+    
+    titleText = "Ocean currents data"
     c.setFillColor(colors.white)
+    c.setFont("Helvetica", 36)
+    title_x = (page_width - c.stringWidth(titleText, "Helvetica", 36)) / 2
+    title_y = rect_y + (rect_height/2) - 10
     c.drawString(title_x, title_y, titleText)
-
-    # Resto del testo in nero
+    
     c.setFillColor(colors.black)
     c.setFont("Helvetica", 14)
-    c.drawString(30, rect_y - 70, paraText)  # aumentato lo spazio sotto il rettangolo
+    c.drawString(30, rect_y - 70, "Dati estratti dal file NetCDF")
 
-    # Aggiungi altre informazioni (DATI)
     c.setFont("Helvetica", 12)
-    c.drawString(50, rect_y - 100, "DATA: Software Developer presso XYZ Inc.")  # abbassato
-    c.drawString(50, rect_y - 125, "Formazione: Laurea in Informatica presso Università ABC")  # abbassato
-
-    # Salvataggio del file
+    for i in range(min(5, len(lat))):
+        text = f"Punto {i+1}: {lat[i]:.2f}°N, {lon[i]:.2f}°E, Temp: {temp[i]:.1f}°C"
+        c.drawString(50, rect_y - 100 - (i * 20), text)
+    
     c.save()
-    print(f"File '{file_path}' creato con successo.")
 
-# Ora possiamo caricare e modificare il file PDF esistente
-reader = PdfReader(file_path)
-writer = PdfWriter()
-
-# Crea un PDF temporaneo con i nuovi dati
-temp_pdf_path = "pdf/temp_page.pdf"
-c = canvas.Canvas(temp_pdf_path, pagesize=letter)
-
-# Aggiungi i nuovi dati in una posizione più bassa sulla pagina
-c.setFont("Helvetica", 14)
-c.drawString(50, 300, "Dati Aggiornati:")  # Spostato più in basso
-c.drawString(50, 280, "Temperatura: 25°C")
-c.drawString(50, 260, "Pressione: 1013 hPa")
-c.drawString(50, 240, "Umidità: 65%")
-c.drawString(50, 220, "Velocità del vento: 10 km/h")
-c.save()
-
-# Leggi la prima pagina del PDF esistente
-page = reader.pages[0]
-
-# Leggi la pagina temporanea con i nuovi dati
-temp_reader = PdfReader(temp_pdf_path)
-temp_page = temp_reader.pages[0]
-
-# Unisci le pagine (sovrapponi i nuovi dati sulla pagina esistente)
-page.merge_page(temp_page)
-
-# Aggiungi la pagina modificata al nuovo PDF
-writer.add_page(page)
-
-# Salva il PDF modificato
-output_path = "pdf/output.pdf"
-with open(output_path, "wb") as output_pdf:
-    writer.write(output_pdf)
-
-# Rimuovi il file temporaneo
-if os.path.exists(temp_pdf_path):
+    reader = PdfReader(pdf_input)
+    writer = PdfWriter()
+    temp_reader = PdfReader(temp_pdf_path)
+    
+    page = reader.pages[0]
+    temp_page = temp_reader.pages[0]
+    page.merge_page(temp_page)
+    writer.add_page(page)
+    
+    with open(pdf_output, "wb") as output_pdf:
+        writer.write(output_pdf)
+    
     os.remove(temp_pdf_path)
+    return pdf_output
 
-print(f"PDF aggiornato e salvato come '{output_path}'")
+if __name__ == '__main__':
+    app.run(debug=True)

@@ -9,11 +9,23 @@
     --border-radius: 8px;
 }
 
+/* Tema scuro */
+[data-theme="dark"] {
+    --primary-blue: #0074cc;
+    --dark-blue: #001f3f;
+    --light-blue: #0074cc;
+    --white: #1a1a1a;
+    --gray: #888;
+    --bg-color: #121212;
+    --text-color: #fff;
+    --shadow-standard: 0 2px 8px rgba(255, 255, 255, 0.1);
+}
+
 /* Reset e stile base */
 body {
     font-family: 'Roboto', sans-serif;
-    background: #f8f9fa;
-    color: #333;
+    background-color: var(--bg-color);
+    color: var(--text-color);
     margin: 0;
     padding: 0;
     min-height: 100vh;
@@ -708,4 +720,22 @@ section {
 .current-user-badge {
     display: inline-block;
     margin-left: 8px;
+}
+
+.theme-toggle {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    cursor: pointer;
+    padding: 0.5rem;
+    font-size: 1.2rem;
+    transition: transform 0.3s ease;
+}
+
+.theme-toggle:hover {
+    transform: scale(1.1);
+}
+
+[data-theme="dark"] .theme-toggle .fa-moon {
+    color: #ffd700;
 }

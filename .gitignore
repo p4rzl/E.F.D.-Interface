@@ -3,3 +3,6 @@
 /instance/
 /__pycache__/
 spagna.code-workspace
+.gitignore
+.gitattributes
+```
