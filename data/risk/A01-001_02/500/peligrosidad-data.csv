@@ -1,0 +1,25 @@
+,data
+hazard_dry_beach_lost,Alta
+hazard_coastal_erosion,Muy leve
+hazard_flood,Muy leve
+total_hazard,Muy leve
+dry_beach_lost_mean,10287.786708978778
+dry_beach_lost_5,8751.004694287705
+dry_beach_lost_95,13131.653853331041
+coastal_erosion_mean,21.25140999266173
+coastal_erosion_5,21.25140999266173
+coastal_erosion_95,28.931744567642912
+dry_beach_lost_rel,0.5549432070998098
+flood_area_rel,0.3118286914338122
+low_permeability,0.09615384615384616
+flood_depth,3.1848740668485336
+slr,71.47220189442406
+slr_5,71.47220189442406
+slr_95,71.47220189442406
+ma,6.343470684540782
+ma_5,5.121650615428031
+ma_95,8.081728320458664
+flood_area,5780.820498689401
+flood_area_5,4144.170939624507
+flood_area_95,10648.367099136085
+flood_severity,0.0013578123139528957

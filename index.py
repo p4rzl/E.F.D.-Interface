@@ -153,49 +153,18 @@ def logout():
     flash('Logout effettuato con successo', 'success')
     return redirect(url_for('login'))
 
+MAPBOX_TOKEN = os.getenv('MAPBOX_TOKEN')
+
 # Gestisce la visualizzazione della home page
 @app.route('/')
 @app.route('/home')
 @login_required
 def home():
     try:
-        animation_path = 'static/img/currents_animation.gif'
-        current_plot = False
-        last_update = None
-        
-        try:
-            from rivisit import create_ocean_currents_animation
-            
-            # Verifica se l'animazione deve essere rigenerata
-            should_regenerate = (
-                not os.path.exists(animation_path) or 
-                (datetime.now(timezone.utc) - datetime.fromtimestamp(
-                    os.path.getmtime(animation_path), timezone.utc
-                )).total_seconds() > 3600  # Rigenera ogni ora
-            )
-            
-            if should_regenerate:
-                os.makedirs(os.path.dirname(animation_path), exist_ok=True)
-                current_plot = create_ocean_currents_animation(animation_path)
-            else:
-                current_plot = True
-            
-            if current_plot:
-                last_update = datetime.fromtimestamp(
-                    os.path.getmtime(animation_path), timezone.utc
-                )
-                logger.info('Animazione delle correnti oceaniche aggiornata')
-        
-        except Exception as e:
-            logger.error(f'Errore nella generazione dell\'animazione: {str(e)}')
-            current_plot = False
-        
         return render_template('home.html',
                              username=current_user.username,
-                             current_plot=current_plot,
-                             last_update=last_update,
+                             mapbox_token=MAPBOX_TOKEN,
                              is_admin=current_user.is_admin)
-
     except Exception as e:
         logger.error(f'Errore nel caricamento della home page: {str(e)}')
         return render_template('500.html'), 500
