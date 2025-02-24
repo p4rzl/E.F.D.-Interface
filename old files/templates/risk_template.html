@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html meta="">
+    <head>
+        <title>Informe de Riesgo</title>
+        <link rel="preconnect" href="https://fonts.gstatic.com">
+        <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap"
+              rel="stylesheet">
+        <style>
+            body {
+                font-family: 'Montserrat', 'Arial', sans-serif;
+                margin: 40px;
+                line-height: 1.2;
+            }
+    
+            header {
+                text-align: center;
+                margin-bottom: 20px;
+            }
+    
+            h1 {
+                color: #333;
+                border-bottom: 2px solid #333;
+                padding-bottom: 5px;
+            }
+
+            hr {
+                width: 600px;
+            }
+
+            table {
+                margin-left: auto;
+                margin-right: auto;
+                border-collapse: collapse;
+                margin-top: 20px;
+            }
+    
+            th, td {
+                border: 1px solid #ddd;
+                padding: 12px;
+                text-align: left;
+            }
+    
+            th {
+                background-color: #f2f2f2;
+            }
+    
+            tr:hover {
+                background-color: #f5f5f5;
+            }
+
+            img {
+                width: 600px;
+                height: auto;
+            }
+
+            section {
+                margin-bottom: 20px;
+            }
+        </style>
+    </head>
+    <body>
+        {% if mode == "interactive" %}<a href="/app/riesgo/risk-pdf" target="_blank">Descargar informe en PDF</a>{% endif %}
+        <header>
+            <h2>Nombre de la playa: {{ data["info"]["beach"] }}</h2>
+            <h3>Provincia: {{ data["info"]["region"] }}</h3>
+            <hr>
+        </header>
+        {% if mode == "static" %}
+            <img src="{{ encoded_image }}" alt="Risk graph" />
+        {% elif mode == "interactive" %}
+            {{ interactive_image }}
+        {% endif %}
+        <header>
+            <h3>Riesgo total: {{ data["risk"]["total"] }}</h3>
+        </header>
+        <table>
+            <thead>
+                <th>Nombre del indicador</th>
+                <th>Información representativa</th>
+                <th>Valoración</th>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Población</td>
+                    <td>{{ data["poblacion"]["npr"] }} habitantes</td>
+                    <td>{{ data["poblacion"]["risk"] }}</td>
+                </tr>
+                <tr>
+                    <td>Economía</td>
+                    <td>{{ data['economia']['cost'] }}€</td>
+                    <td>{{ data["economia"]["risk"] }}</td>
+                </tr>
+                <tr>
+                    <td>Puntos de especial importancia</td>
+                    <td></td>
+                    <td>{{ data["ei"]["risk"] }}</td>
+                </tr>
+                <tr>
+                    <td>Medio ambiente</td>
+                    <td></td>
+                    <td>{{ data["zp"]["risk"] }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </body>
+</html>

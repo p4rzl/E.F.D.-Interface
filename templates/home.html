@@ -41,33 +41,65 @@
             </ul>
         </nav>
     </header>
+<div class="dashboard-container">
+    <div class="map-container">
+        <div id="map"></div>
+        <div class="map-controls">
+            <div class="control-group">
+                <label for="layerSelect">Seleziona Layer</label>
+                <select id="layerSelect" class="control-select">
+                    <option value="all">Tutti i layer</option>
+                    <option value="beaches">Spiagge</option>
+                    <option value="risk">Rischi</option>
+                    <option value="hazard">Pericoli</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label for="yearSlider">Anno: <span id="yearValue">2023</span></label>
+                <input type="range" 
+                       id="yearSlider" 
+                       class="time-slider"
+                       min="2023" 
+                       max="2100" 
+                       value="2023">
+            </div>
+        </div>
+    </div>
 
-    <main>
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}">{{ message }}</div>
+    <div class="data-section">
+        <h2>Dati delle Spiagge</h2>
+        <table class="data-table" id="beachesTable">
+            <thead>
+                <tr>
+                    <th>Nome Spiaggia</th>
+                    <th>Lunghezza (m)</th>
+                    <th>Larghezza (m)</th>
+                    <th>Indice di Rischio</th>
+                    <th>Erosione (m/anno)</th>
+                    <th>Azioni</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for beach in beaches %}
+                <tr>
+                    <td>{{ beach.name }}</td>
+                    <td>{{ beach.length|round(1) }}</td>
+                    <td>{{ beach.width|round(1) }}</td>
+                    <td>{{ beach.risk_index|round(2) }}</td>
+                    <td>{{ beach.erosion_rate|round(2) }}</td>
+                    <td>
+                        <button class="action-button" 
+                                onclick="showBeachDetails('{{ beach.id }}')">
+                            Dettagli
+                        </button>
+                    </td>
+                </tr>
                 {% endfor %}
-            {% endif %}
-        {% endwith %}
-
-        <section class="welcome-section">
-            <h1>Dashboard Principale</h1>
-            <p>Benvenuto nella tua dashboard personale, {{ username }}.</p>
-        </section>
-
-        <section class="ocean-currents">
-            <div class="section-header">
-                <h2>Visualizzazione Correnti Oceaniche</h2>
-            </div>
-            <div class="plot-container">
-                <div id="map" data-token="{{ mapbox_token }}"></div>
-                <div class="trend-indicator">
-                    <div id="riskTrend"></div>
-                    <div id="coastlineTrend"></div>
-                </div>
-            </div>
-        </section>
+            </tbody>
+        </table>
+    </div>
+</div>
     </main>
 
     <div class="chat-notification" id="chatNotification"></div>
@@ -90,8 +122,10 @@
         </div>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <script src="{{ url_for('static', filename='js/map.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
     <script src="{{ url_for('static', filename='js/msg.js') }}"></script>
     <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
 </body>

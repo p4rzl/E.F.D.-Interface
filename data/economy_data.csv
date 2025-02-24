@@ -1,0 +1,355 @@
+Group,Database,Filename,Subgroup,Type,Default_dimension,QGIS_Layername,Query,Filter_JdA,Curve_1,Curve_2,Max_damage_1,Max_damage_2,Economic_influence
+Edificaciones_fijas,catastro,A.ES.SDGC.BU.building.geojson,,polygon,,,,,VI-RES,,MA-UCS,,Local
+Edificaciones_fijas,usos_jda,Edificaciones fijas.geojson,,polygon,,EF_S_Elem_DPMT,,Id_Elem.notnull() and 'En DPMT' == '-1',VI-RES,,MA-UCS,,Local
+Edificaciones_fijas,usos_jda,Edificaciones fijas.geojson,,point,400,EF_P_Elem_DPMT,,Id_Elem.notnull() and 'En DPMT' == '-1',VI-RES,,MA-UCS,,Local
+Edificaciones_fijas,usos_jda,Edificaciones fijas.geojson,,polygon,,EF_S_Elem_ZSP,,Id_Elem.notnull() and 'En ZSP' == '-1',VI-RES,,MA-UCS,,Local
+Edificaciones_fijas,usos_jda,Edificaciones fijas.geojson,,point,400,EF_P_Elem_ZSP,,Id_Elem.notnull() and 'En ZSP' == '-1',VI-RES,,MA-UCS,,Local
+Instalaciones_desmontables,usos_jda,Instalaciones desmontables.geojson,Invernaderos,polygon,,ID_Invernaderos_S_Elem_DPMT,"""Tipo_Uso_2 == 'Instalación de plástico asociada a cultivos'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-IND,,VI-IND,,Comarcal
+Instalaciones_desmontables,usos_jda,Instalaciones desmontables.geojson,Invernaderos,polygon,,ID_Invernaderos_S_Elem_ZSP,"""Tipo_Uso_2 == 'Instalación de plástico asociada a cultivos'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-IND,,VI-IND,,Comarcal
+Instalaciones_desmontables,btn25,BCN0407S_CUL_INT_polygon.geojson,Invernaderos,polygon,,BTN_CUL_INT_S,"""TIPO_0407 == '01'""",,VI-IND,,VI-IND,,Comarcal
+Instalaciones_desmontables,usos_jda,Instalaciones desmontables.geojson,Otras (no invernaderos),polygon,,ID_No_Invernaderos_S_Elem_DPMT,"""Tipo_Uso_2 != 'Instalación de plástico asociada a cultivos'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-IND,,VI-IND,,Local
+Instalaciones_desmontables,usos_jda,Instalaciones desmontables.geojson,Otras (no invernaderos),polygon,,ID_No_Invernaderos_S_Elem_ZSP,"""Tipo_Uso_2 != 'Instalación de plástico asociada a cultivos'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-IND,,VI-IND,,Local
+Infraestructuras_Estac,usos_jda,Infraestructuras.geojson,,polygon, ,IE_S_Elem_DPMT,"""Tipo_Uso_2 == 'Estacionamientos'""",Id_Elem.notnull() and 'En DPMT' == '-1',MG-PRK,,MG-PRK,,Local
+Infraestructuras_Estac,usos_jda,Infraestructuras.geojson,,point,200,IE_P_Elem_DPMT,"""Tipo_Uso_2 == 'Estacionamientos'""",Id_Elem.notnull() and 'En DPMT' == '-1',MG-PRK,,MG-PRK,,Local
+Infraestructuras_Estac,usos_jda,Infraestructuras.geojson,,polygon, ,IE_S_Elem_ZSP,"""Tipo_Uso_2 == 'Estacionamientos'""",Id_Elem.notnull() and 'En ZSP' == '-1',MG-PRK,,MG-PRK,,Local
+Infraestructuras_Estac,usos_jda,Infraestructuras.geojson,,point,200,IE_P_Elem_ZSP,"""Tipo_Uso_2 == 'Estacionamientos'""",Id_Elem.notnull() and 'En ZSP' == '-1',MG-PRK,,MG-PRK,,Local
+Infraestructuras_Estac,btn25,BCN0613S_INF_TRANS_S_polygon.geojson,,polygon, ,BTN_Estac_S,"""TIPO_0613 == '01'""",,MG-PRK,,MG-PRK,,Local
+Infraestructuras_VA,usos_jda,Infraestructuras.geojson,Vias de transporte,line,7,VT_L_Elem_DPMT,"""Id_T3 in ('35','36','38')""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-VIA,VI-LIM,VI-VIA,VI-LIM,Comarcal
+Infraestructuras_VA,usos_jda,Infraestructuras.geojson,Vias de transporte,line,7,VT_L_Elem_ZSP,"""Id_T3 in ('35','36','38')""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-VIA,VI-LIM,VI-VIA,VI-LIM,Comarcal
+Infraestructuras_VA,usos_jda,Infraestructuras.geojson,Vias de transporte,line,7,VT_L_Usos_DPMT,"""Id_T3 in ('35','36','38')""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-VIA,VI-LIM,VI-VIA,VI-LIM,Comarcal
+Infraestructuras_VA,usos_jda,Infraestructuras.geojson,Vias de transporte,line,7,VT_L_Usos_ZSP,"""Id_T3 in ('35','36','38')""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-VIA,VI-LIM,VI-VIA,VI-LIM,Comarcal
+Infraestructuras_VA,rt,rt_tramo_vial.geojson,Vias de transporte,line,7,RT_CARRETERAS,"""firmed == 'Pavimentado'""","""nombre not in ('MARITIMO','MARITIMO TRAVESIA A','MARITIMO TRAVESIA B')""",VI-VIA,VI-LIM,VI-VIA,VI-LIM,Comarcal
+Infraestructuras_VA,usos_jda,Infraestructuras.geojson,Paseo marítimo,line,10,PM_L_Elem_DPMT,"""Id_T3 == '37'",Id_Elem.notnull() and 'En DPMT' == '-1',VI-VIA,VI-LIM,VI-VIA,VI-LIM,Local
+Infraestructuras_VA,usos_jda,Infraestructuras.geojson,Paseo marítimo,line,10,PM_L_Elem_ZSP,"""Id_T3 == '37'",Id_Elem.notnull() and 'En ZSP' == '-1',VI-VIA,VI-LIM,VI-VIA,VI-LIM,Local
+Infraestructuras_VA,usos_jda,Infraestructuras.geojson,Paseo marítimo,line,10,PM_L_Usos_DPMT,"""Id_T3 == '37'",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-VIA,VI-LIM,VI-VIA,VI-LIM,Local
+Infraestructuras_VA,usos_jda,Infraestructuras.geojson,Paseo marítimo,line,10,PM_L_Usos_ZSP,"""Id_T3 == '37'",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-VIA,VI-LIM,VI-VIA,VI-LIM,Local
+Infraestructuras_VA,rt,rt_tramo_vial.geojson,Paseo marítimo,line,10,RT_PASEO_M,"""firmed == 'Pavimentado'""","""tipo_viald == 'PASEO'""",VI-VIA,VI-LIM,VI-VIA,VI-LIM,Local
+Infraestructuras_VA,usos_jda,Infraestructuras.geojson,Sendero no asfaltado,line,7,SN_L_Elem_DPMT,"""Id_T3 == '39'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-VIA,VI-LIM,VI-VIA,VI-LIM,Local
+Infraestructuras_VA,usos_jda,Infraestructuras.geojson,Sendero no asfaltado,line,7,SN_L_Elem_ZSP,"""Id_T3 == '39'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-VIA,VI-LIM,VI-VIA,VI-LIM,Local
+Infraestructuras_VA,usos_jda,Infraestructuras.geojson,Sendero no asfaltado,line,7,SN_L_Usos_DPMT,"""Id_T3 == '39'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-VIA,VI-LIM,VI-VIA,VI-LIM,Local
+Infraestructuras_VA,usos_jda,Infraestructuras.geojson,Sendero no asfaltado,line,7,SN_L_Usos_ZSP,"""Id_T3 == '39'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-VIA,VI-LIM,VI-VIA,VI-LIM,Local
+Infraestructuras_VA,rt,rt_tramo_vial.geojson,Sendero no asfaltado,line,7,RT_SENDERO,"""firmed != 'Pavimentado'""",,VI-VIA,VI-LIM,VI-VIA,VI-LIM,Local
+Infraestructuras_VA,usos_jda,Infraestructuras.geojson,Accesos,point,50,AC_P_Elemen_DPMT,"""Id_T3 in ('39','40','147','41')""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-VIA,VI-LIM,VI-VIA,VI-LIM,Local
+Infraestructuras_VA,usos_jda,Infraestructuras.geojson,Accesos,point,50,AC_P_Elemen_ZSP,"""Id_T3 in ('39','40','147','41')""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-VIA,VI-LIM,VI-VIA,VI-LIM,Local
+Infraestructuras_VA,usos_jda,Infraestructuras.geojson,Accesos,point,50,AC_P_Usos_DPMT,"""Id_T3 in ('39','40','147','41')""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-VIA,VI-LIM,VI-VIA,VI-LIM,Local
+Infraestructuras_VA,usos_jda,Infraestructuras.geojson,Accesos,point,50,AC_P_Usos_ZSP,"""Id_T3 in ('39','40','147','41')""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-VIA,VI-LIM,VI-VIA,VI-LIM,Local
+Infraestructuras_ET,usos_jda,Infraestructuras.geojson,Infr. Lineales,line,1,ET_L_Elem_DPMT,"""Id_T3 == '44'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-VIA,VI-LIM,VI-VIA,VI-LIM,Local
+Infraestructuras_ET,usos_jda,Infraestructuras.geojson,Infr. Lineales,line,1,ET_L_Elem_ZSP,"""Id_T3 == '44'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-VIA,VI-LIM,VI-VIA,VI-LIM,Local
+Infraestructuras_ET,usos_jda,Infraestructuras.geojson,Infr. Lineales,line,1,ET_L_Usos_DPMT,"""Id_T3 == '44'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-VIA,VI-LIM,VI-VIA,VI-LIM,Local
+Infraestructuras_ET,usos_jda,Infraestructuras.geojson,Infr. Lineales,line,1,ET_L_Usos_ZSP,"""Id_T3 == '44'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-VIA,VI-LIM,VI-VIA,VI-LIM,Local
+Infraestructuras_ET,usos_jda,Infraestructuras.geojson,Telec. Pun tuales,point,5,TC_L_Elem_ZSP,"""Id_T3 == '57'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-IND,,VI-IND,,Comarcal
+Infraestructuras_ET,usos_jda,Infraestructuras.geojson,Telec. Pun tuales,point,5,TC_L_Usos_DPMT,"""Id_T3 == '57'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-IND,,VI-IND,,Comarcal
+Infraestructuras_ET,usos_jda,Infraestructuras.geojson,Telec. Pun tuales,point,5,TC_L_Usos_ZSP,"""Id_T3 == '57'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-IND,,VI-IND,,Comarcal
+Infraestructuras_ET,usos_jda,Infraestructuras.geojson,Telec. Pun tuales,point,5,TC_L_Elem_DPMT,"""Id_T3 == '57'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-IND,,VI-IND,,Comarcal
+Infraestructuras_ET,usos_jda,Infraestructuras.geojson,Telec. Pun tuales,point,5,TC_L_Elem_DPMT,"""Id_T3 == '58'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-IND,,VI-IND,,Nacional
+Infraestructuras_ET,usos_jda,Infraestructuras.geojson,Telec. Pun tuales,point,5,TC_L_Elem_DPMT,"""Id_T3 == '58'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-IND,,VI-IND,,Nacional
+Infraestructuras_ET,usos_jda,Infraestructuras.geojson,Telec. Pun tuales,point,5,TC_L_Elem_DPMT,"""Id_T3 == '58'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-IND,,VI-IND,,Nacional
+Infraestructuras_ET,usos_jda,Infraestructuras.geojson,Telec. Pun tuales,point,5,TC_L_Elem_DPMT,"""Id_T3 == '58'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-IND,,VI-IND,,Nacional
+Infraestructuras_ET,usos_jda,Infraestructuras.geojson,Faro y radiofaro,point,10,FA_P_Elem_DPMT,"""Id_T3 == '57'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-IND,,VI-IND,,Local
+Infraestructuras_ET,usos_jda,Infraestructuras.geojson,Faro y radiofaro,point,10,FA_P_Elem_ZSP,"""Id_T3 == '57'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-IND,,VI-IND,,Local
+Infraestructuras_ET,usos_jda,Infraestructuras.geojson,Faro y radiofaro,point,10,FA_P_Usos_DPMT,"""Id_T3 == '57'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-IND,,VI-IND,,Local
+Infraestructuras_ET,usos_jda,Infraestructuras.geojson,Faro y radiofaro,point,10,FA_P_Usos_ZSP,"""Id_T3 == '57'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-IND,,VI-IND,,Local
+Infraestructuras_ET,btn25,BCN0659S_SEN_MAR_S_polygon.geojson,Faro y radiofaro,polygon,,BTN_SEN_MAR_S,,,VI-IND,,VI-IND,,Local
+Infraestructuras_ET,btn25,BCN0659P_SEN_MAR_P_point.geojson,Faro y radiofaro,point,10,BTN_SEN_MAR_P,,,VI-IND,,VI-IND,,Local
+Infraestructuras_ET,usos_jda,Infraestructuras.geojson,Centro de transformación,point,5,CT_P_Elem_DPMT,"""Id_T3 == '132'""",Id_Elem.notnull() and 'En DPMT' == '-1',HZ-SVT,,MA-ENE,,Local
+Infraestructuras_ET,usos_jda,Infraestructuras.geojson,Centro de transformación,point,5,CT_P_Elem_ZSP,"""Id_T3 == '132'""",Id_Elem.notnull() and 'En ZSP' == '-1',HZ-SVT,,MA-ENE,,Local
+Infraestructuras_ET,usos_jda,Infraestructuras.geojson,Centro de transformación,point,5,CT_P_Usos_DPMT,"""Id_T3 == '132'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',HZ-SVT,,MA-ENE,,Local
+Infraestructuras_ET,usos_jda,Infraestructuras.geojson,Centro de transformación,point,5,CT_P_Usos_ZSP,"""Id_T3 == '132'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',HZ-SVT,,MA-ENE,,Local
+Infraestructuras_ET,btn25,BCN0719S_TRA_ELEC_polygon.geojson,Centro de transformación,polygon,,BTN_TRA_ELEC_S,,,HZ-SVT,,MA-ENE,,Local
+Infraestructuras_IH,usos_jda,Infraestructuras.geojson,Planta potabilización,point,200,PT_P_Elem_DPMT,"""Id_T3 == '45'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-IND,,MA-HID,,Local
+Infraestructuras_IH,usos_jda,Infraestructuras.geojson,Planta potabilización,point,200,PT_P_Elem_ZSP,"""Id_T3 == '45'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-IND,,MA-HID,,Local
+Infraestructuras_IH,usos_jda,Infraestructuras.geojson,Planta potabilización,point,200,PT_P_Usos_DPMT,"""Id_T3 == '45'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-IND,,MA-HID,,Local
+Infraestructuras_IH,usos_jda,Infraestructuras.geojson,Planta potabilización,point,200,PT_P_Usos_ZSP,"""Id_T3 == '45'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-IND,,MA-HID,,Local
+Infraestructuras_IH,usos_jda,Infraestructuras.geojson,Planta potabilización,polygon,,PT_S_Elem_DPMT,"""Id_T3 == '45'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-IND,,MA-HID,,Local
+Infraestructuras_IH,usos_jda,Infraestructuras.geojson,Planta potabilización,polygon,,PT_S_Elem_ZSP,"""Id_T3 == '45'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-IND,,MA-HID,,Local
+Infraestructuras_IH,usos_jda,Infraestructuras.geojson,Planta potabilización,polygon,,PT_S_Usos_DPMT,"""Id_T3 == '45'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-IND,,MA-HID,,Local
+Infraestructuras_IH,usos_jda,Infraestructuras.geojson,Planta potabilización,polygon,,PT_S_Usos_ZSP,"""Id_T3 == '45'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-IND,,MA-HID,,Local
+Infraestructuras_IH,usos_jda,Infraestructuras.geojson,EDAR-EBAR,point,200,DB_P_Elem_DPMT,"""Id_T3 in ('45','46','47','48','148')""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-IND,,MA-HID,,Local
+Infraestructuras_IH,usos_jda,Infraestructuras.geojson,EDAR-EBAR,point,200,DB_P_Elem_ZSP,"""Id_T3 in ('45','46','47','48','148')""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-IND,,MA-HID,,Local
+Infraestructuras_IH,usos_jda,Infraestructuras.geojson,EDAR-EBAR,point,200,DB_P_Usos_DPMT,"""Id_T3 in ('45','46','47','48','148')""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-IND,,MA-HID,,Local
+Infraestructuras_IH,usos_jda,Infraestructuras.geojson,EDAR-EBAR,point,200,DB_P_Usos_ZSP,"""Id_T3 in ('45','46','47','48','148')""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-IND,,MA-HID,,Local
+Infraestructuras_IH,usos_jda,Infraestructuras.geojson,EDAR-EBAR,polygon,,DB_S_Elem_DPMT,"""Id_T3 in ('45','46','47','48','148')""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-IND,,MA-HID,,Local
+Infraestructuras_IH,usos_jda,Infraestructuras.geojson,EDAR-EBAR,polygon,,DB_S_Elem_ZSP,"""Id_T3 in ('45','46','47','48','148')""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-IND,,MA-HID,,Local
+Infraestructuras_IH,usos_jda,Infraestructuras.geojson,EDAR-EBAR,polygon,,DB_S_Usos_DPMT,"""Id_T3 in ('45','46','47','48','148')""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-IND,,MA-HID,,Local
+Infraestructuras_IH,usos_jda,Infraestructuras.geojson,EDAR-EBAR,polygon,,DB_S_Usos_ZSP,"""Id_T3 in ('45','46','47','48','148')""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-IND,,MA-HID,,Local
+Infraestructuras_IH,edar,edar.geojson,,polygon,,,,,VI-IND,,MA-HID,,Local
+Infraestructuras_IH,usos_jda,Infraestructuras.geojson,Colectores-saneamiento,line,5,CO_L_Elemen_DPMT,"""Id_T3 in ('133','149','49','50')""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-IND,,MA-HID,,Local
+Infraestructuras_IH,usos_jda,Infraestructuras.geojson,Colectores-saneamiento,line,5,CO_L_Elemen_ZSP,"""Id_T3 in ('133','149','49','50')""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-IND,,MA-HID,,Local
+Infraestructuras_IH,usos_jda,Infraestructuras.geojson,Colectores-saneamiento,line,5,CO_L_Usos_DPMT,"""Id_T3 in ('133','149','49','50')""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-IND,,MA-HID,,Local
+Infraestructuras_IH,usos_jda,Infraestructuras.geojson,Colectores-saneamiento,line,5,CO_L_Usos_ZSP,"""Id_T3 in ('133','149','49','50')""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-IND,,MA-HID,,Local
+Infraestructuras_IH,usos_jda,Infraestructuras.geojson,Captacion de agua,point,5,CA_P_Elemen_DPMT,"""Id_T3 == '51'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-IND,,MA-HID,,Local
+Infraestructuras_IH,usos_jda,Infraestructuras.geojson,Captacion de agua,point,5,CA_P_Elemen_ZSP,"""Id_T3 == '51'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-IND,,MA-HID,,Local
+Infraestructuras_IH,usos_jda,Infraestructuras.geojson,Captacion de agua,point,5,CA_P_Usos_DPMT,"""Id_T3 == '51'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-IND,,MA-HID,,Local
+Infraestructuras_IH,usos_jda,Infraestructuras.geojson,Captacion de agua,point,5,CA_P_Usos_ZSP,"""Id_T3 == '51'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-IND,,MA-HID,,Local
+Infraestructuras_IH,btn25,BCN0334P_SURGEN_point.geojson,Captacion de agua,point,5,BTN_SURGEN_P,"""TIPO_0334 == '03'""",,VI-IND,,MA-HID,,Local
+Infraestructuras_IH,usos_jda,Infraestructuras.geojson,Depósito de agua,point,5,DA_P_Elemen_DPMT,"""Id_T3 == '52'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-IND,,MA-HID,,Local
+Infraestructuras_IH,usos_jda,Infraestructuras.geojson,Depósito de agua,point,5,DA_P_Elemen_ZSP,"""Id_T3 == '52'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-IND,,MA-HID,,Local
+Infraestructuras_IH,usos_jda,Infraestructuras.geojson,Depósito de agua,point,5,DA_P_Usos_DPMT,"""Id_T3 == '52'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-IND,,MA-HID,,Local
+Infraestructuras_IH,usos_jda,Infraestructuras.geojson,Depósito de agua,point,5,DA_P_Usos_ZSP,"""Id_T3 == '52'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-IND,,MA-HID,,Local
+Infraestructuras_IH,btn25,BCN0331S_DEP_AGU_polygon.geojson,Depósito de agua,polygon, ,BTN_DEP_AGU_S,"""SITUA_0331 != '03'""",,VI-IND,,MA-HID,,Local
+Infraestructuras_NH,usos_jda,Infraestructuras.geojson,Tte de productos no hídricos,line,5,NH_L_Elem_DPMT,"""Id_T3 == '55'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-IND, ,VI-IND,,Local
+Infraestructuras_NH,usos_jda,Infraestructuras.geojson,Tte de productos no hídricos,line,5,NH_L_Elem_ZSP,"""Id_T3 == '55'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-IND,,VI-IND,,Local
+Infraestructuras_NH,usos_jda,Infraestructuras.geojson,Tte de productos no hídricos,line,5,NH_L_Usos_DPMT,"""Id_T3 == '55'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-IND,,VI-IND,,Local
+Infraestructuras_NH,usos_jda,Infraestructuras.geojson,Tte de productos no hídricos,line,5,NH_L_Usos_ZSP,"""Id_T3 == '55'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-IND,,VI-IND,,Local
+Infraestructuras_NH,btn25,BCN0701L_CON_COMB_line.geojson,Tte de productos no hídricos,line,5,BTN_CON_COMB_L,"""SITUA_0701 != '03'""",,VI-IND,,VI-IND,,Local
+Infraestructuras_ZV_y_Otras,usos_jda,Infraestructuras.geojson,Zonas verdes,polygon,,ZV_S_Elem_DPMT,"""Tipo_Uso_2 == 'Zonas verdes'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-JAR,,VI-JAR,,Local
+Infraestructuras_ZV_y_Otras,usos_jda,Infraestructuras.geojson,Zonas verdes,polygon,,ZV_S_Elem_ZSP,"""Tipo_Uso_2 == 'Zonas verdes'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-JAR,,VI-JAR,,Local
+Infraestructuras_ZV_y_Otras,usos_jda,Infraestructuras.geojson,Zonas verdes,polygon,,ZV_S_Usos_DPMT,"""Tipo_Uso_2 == 'Zonas verdes'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-JAR,,VI-JAR,,Local
+Infraestructuras_ZV_y_Otras,usos_jda,Infraestructuras.geojson,Zonas verdes,polygon,,ZV_S_Usos_ZSP,"""Tipo_Uso_2 == 'Zonas verdes'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-JAR,,VI-JAR,,Local
+Infraestructuras_ZV_y_Otras,btn25,BCN0561S_ZON_VER_polygon.geojson,Zonas verdes,polygon,,BTN_ZON_VER_S,"""TIPO_0561 == '01'""",,VI-JAR,,VI-JAR,,Local
+Infraestructuras_ZV_y_Otras,usos_jda,Infraestructuras.geojson,Estación de servicio,point,25,ES_P_Elem_DPMT,"""Id_T3 in ('64','122')""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-COM,,VI-COM,,Local
+Infraestructuras_ZV_y_Otras,usos_jda,Infraestructuras.geojson,Estación de servicio,point,25,ES_P_Elem_ZSP,"""Id_T3 in ('64','122')""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-COM,,VI-COM,,Local
+Infraestructuras_ZV_y_Otras,usos_jda,Infraestructuras.geojson,Estación de servicio,point,25,ES_P_Usos_DPMT,"""Id_T3 in ('64','122')""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-COM,,VI-COM,,Local
+Infraestructuras_ZV_y_Otras,usos_jda,Infraestructuras.geojson,Estación de servicio,point,25,ES_P_Usos_ZSP,"""Id_T3 in ('64','122')""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-COM,,VI-COM,,Local
+Infraestructuras_ZV_y_Otras,btn25,BCN0615P_INF_TRANS_P_point.geojson,Estación de servicio,point,25,BTN_EST_SERV_P,"""TIPO_0615 == '06'""",,VI-COM,,VI-COM,,Local
+Infraestructuras_ZV_y_Otras,usos_jda,Infraestructuras.geojson,Aeródromo,point,400,AE_P_Elem_DPMT,"""Id_T3 == '65'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-IND,,MA-AER,,Comarcal
+Infraestructuras_ZV_y_Otras,usos_jda,Infraestructuras.geojson,Aeródromo,point,400,AE_P_Elem_ZSP,"""Id_T3 == '65'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-IND,,MA-AER,,Comarcal
+Infraestructuras_ZV_y_Otras,usos_jda,Infraestructuras.geojson,Aeródromo,point,400,AE_P_Usos_DPMT,"""Id_T3 == '65'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-IND,,MA-AER,,Comarcal
+Infraestructuras_ZV_y_Otras,usos_jda,Infraestructuras.geojson,Aeródromo,point,400,AE_P_Usos_ZSP,"""Id_T3 == '65'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-IND,,MA-AER,,Comarcal
+Infraestructuras_ZV_y_Otras,btn25,BCN0665S_ZON_ATER_S_polygon.geojson,Aeródromo,polygon,,BTN_AER_S,"""TIPO_0665 == '01'""",,VI-IND,,MA-AER,,Comarcal
+Infraestructuras_ZV_y_Otras,usos_jda,Infraestructuras.geojson,Almac. residuos sol.,point,200,AE_P_Elem_DPMT,"""Id_T3 == '66'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-IND,,MA-WST,,Local
+Infraestructuras_ZV_y_Otras,usos_jda,Infraestructuras.geojson,Almac. residuos sol.,point,200,AE_P_Elem_ZSP,"""Id_T3 == '66'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-IND,,MA-WST,,Local
+Infraestructuras_ZV_y_Otras,usos_jda,Infraestructuras.geojson,Almac. residuos sol.,point,200,AR_P_Usos_DPMT,"""Id_T3 == '66'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-IND,,MA-WST,,Local
+Infraestructuras_ZV_y_Otras,usos_jda,Infraestructuras.geojson,Almac. residuos sol.,point,200,AR_P_Usos_ZSP,"""Id_T3 == '66'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-IND,,MA-WST,,Local
+Infraestructuras_ZV_y_Otras,btn25,BCN0573S_ALM_RES_polygon.geojson,Almac. residuos sol.,polygon,,BTN_AR_S,"""TIPO_0573 == '01'""",,VI-IND,,MA-WST,,Local
+Infraestructuras_ZV_y_Otras,usos_jda,Infraestructuras.geojson,Puertos y marinas,polygon,,PM_S_Elem_ZSP,"""Id_T3 == '151'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-IND,,MA-AER,,Local
+Infraestructuras_ZV_y_Otras,usos_jda,Infraestructuras.geojson,Puertos y marinas,polygon,,AR_S_Usos_DPMT,"""Id_T3 == '151'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-IND,,MA-AER,,Local
+Infraestructuras_ZV_y_Otras,usos_jda,Infraestructuras.geojson,Puertos y marinas,polygon,,PM_S_Usos_ZSP,"""Id_T3 == '151'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-IND,,MA-AER,,Local
+Infraestructuras_ZV_y_Otras,btn25,BCN0615P_INF_TRANS_P_point.geojson,Puertos y marinas,point,200,BTN_PM_P,"""TIPO_0615 == '02'""",,VI-IND,,MA-AER,,Local
+Infraestructuras_ZV_y_Otras,usos_jda,Infraestructuras.geojson,Puertos y marinas,polygon,,PM_S_Elem_DPMT,"""Id_T3 == '151'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-IND,,MA-AER,,Local
+Infraestructuras_ZV_y_Otras,usos_jda,Infraestructuras.geojson,Otras infraestructuras,point,10,OI_P_Elem_DPMT,"""Id_T3 == '135'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-VIA,,VI-VIA,,Local
+Infraestructuras_ZV_y_Otras,usos_jda,Infraestructuras.geojson,Otras infraestructuras,point,10,OI_P_Elem_ZSP,"""Id_T3 == '135'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-VIA,,VI-VIA,,Local
+Infraestructuras_ZV_y_Otras,usos_jda,Infraestructuras.geojson,Otras infraestructuras,point,10,OI_P_Usos_DPMT,"""Id_T3 == '135'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-VIA,,VI-VIA,,Local
+Infraestructuras_ZV_y_Otras,usos_jda,Infraestructuras.geojson,Otras infraestructuras,point,10,OI_P_Usos_ZSP,"""Id_T3 == '135'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-VIA,,VI-VIA,,Local
+Infraestructuras_ZV_y_Otras,btn25,BCN0615P_INF_TRANS_P_point.geojson,Otras infraestructuras,point,10,BTN_OI_P,"""TIPO_0615 in ('03','04')""",,VI-VIA,,VI-VIA,,Local
+Ins. deportivas descubiertas,usos_jda,Instalaciones deportivas descubiertas.geojson,Campos de golf,polygon,,CG_P_Elem_DPMT,"""Id_T3 == '72'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-NAR,,VI-NAR,,Local
+Ins. deportivas descubiertas,usos_jda,Instalaciones deportivas descubiertas.geojson,Campos de golf,polygon,,CG_P_Elem_ZSP,"""Id_T3 == '72'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-NAR,,VI-NAR,,Local
+Ins. deportivas descubiertas,usos_jda,Instalaciones deportivas descubiertas.geojson,Campos de golf,polygon,,CG_P_Usos_DPMT,"""Id_T3 == '72'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-NAR,,VI-NAR,,Local
+Ins. deportivas descubiertas,usos_jda,Instalaciones deportivas descubiertas.geojson,Campos de golf,polygon,,CG_P_Usos_ZSP,"""Id_T3 == '72'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-NAR,,VI-NAR,,Local
+Ins. deportivas descubiertas,usos_jda,Instalaciones deportivas descubiertas.geojson,Equipamiento y pistas,polygon,,EP_S_Elem_DPMT,"""Id_T3 in ('75','77')""",Id_Elem.notnull() and 'En DPMT' == '-1',MG-IDP,,MG-IDP,,Local
+Ins. deportivas descubiertas,usos_jda,Instalaciones deportivas descubiertas.geojson,Equipamiento y pistas,polygon,,EP_S_Elem_ZSP,"""Id_T3 in ('75','77')""",Id_Elem.notnull() and 'En ZSP' == '-1',MG-IDP,,MG-IDP,,Local
+Ins. deportivas descubiertas,usos_jda,Instalaciones deportivas descubiertas.geojson,Equipamiento y pistas,polygon,,EP_S_Usos_DPMT,"""Id_T3 in ('75','77')""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',MG-IDP,,MG-IDP,,Local
+Ins. deportivas descubiertas,usos_jda,Instalaciones deportivas descubiertas.geojson,Equipamiento y pistas,polygon,,EP_S_Usos_ZSP,"""Id_T3 in ('75','77')""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',MG-IDP,,MG-IDP,,Local
+Ins. deportivas descubiertas,usos_jda,Instalaciones deportivas descubiertas.geojson,Equipamiento y pistas,point,200,EP_P_Elem_DPMT,"""Id_T3 in ('75','77')""",Id_Elem.notnull() and 'En DPMT' == '-1',MG-IDP,,MG-IDP,,Local
+Ins. deportivas descubiertas,usos_jda,Instalaciones deportivas descubiertas.geojson,Equipamiento y pistas,point,200,EP_P_Elem_ZSP,"""Id_T3 in ('75','77')""",Id_Elem.notnull() and 'En ZSP' == '-1',MG-IDP,,MG-IDP,,Local
+Ins. deportivas descubiertas,usos_jda,Instalaciones deportivas descubiertas.geojson,Equipamiento y pistas,point,200,EP_P_Usos_DPMT,"""Id_T3 in ('75','77')""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',MG-IDP,,MG-IDP,,Local
+Ins. deportivas descubiertas,usos_jda,Instalaciones deportivas descubiertas.geojson,Equipamiento y pistas,point,200,EP_P_Usos_ZSP,"""Id_T3 in ('75','77')""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',MG-IDP,,MG-IDP,,Local
+Ins. deportivas descubiertas,btn25,BCN0564S_INS_DEP_polygon.geojson,Equipamiento y pistas,polygon,,BTN_EP_S,"""TIPO_0564 in ('02','03','06','07')""",,MG-IDP,,MG-IDP,,Local
+Ins. deportivas descubiertas,usos_jda,Instalaciones deportivas descubiertas.geojson,Otros equipamientos y pistas,polygon,,OE_S_Elem_DPMT,,Id_Elem.notnull() and 'En DPMT' == '-1',MG-IDP,,MG-IDP,,Local
+Ins. deportivas descubiertas,usos_jda,Instalaciones deportivas descubiertas.geojson,Otros equipamientos y pistas,polygon,,OE_S_Elem_ZSP,,Id_Elem.notnull() and 'En ZSP' == '-1',MG-IDP,,MG-IDP,,Local
+Ins. deportivas descubiertas,usos_jda,Instalaciones deportivas descubiertas.geojson,Otros equipamientos y pistas,polygon,,OE_S_Usos_DPMT,,Id_Elem.isnull() and ZSP_DPMT == 'DPMT',MG-IDP,,MG-IDP,,Local
+Ins. deportivas descubiertas,usos_jda,Instalaciones deportivas descubiertas.geojson,Otros equipamientos y pistas,polygon,,OE_S_Usos_ZSP,,Id_Elem.isnull() and ZSP_DPMT == 'ZSP',MG-IDP,,MG-IDP,,Local
+Ins. deportivas descubiertas,usos_jda,Instalaciones deportivas descubiertas.geojson,Otros equipamientos y pistas,point,100,OE_P_Elem_DPMT,,Id_Elem.notnull() and 'En DPMT' == '-1',MG-IDP,,MG-IDP,,Local
+Ins. deportivas descubiertas,usos_jda,Instalaciones deportivas descubiertas.geojson,Otros equipamientos y pistas,point,100,OE_P_Elem_ZSP,,Id_Elem.notnull() and 'En ZSP' == '-1',MG-IDP,,MG-IDP,,Local
+Ins. deportivas descubiertas,usos_jda,Instalaciones deportivas descubiertas.geojson,Otros equipamientos y pistas,point,100,OE_P_Usos_DPMT,,Id_Elem.isnull() and ZSP_DPMT == 'DPMT',MG-IDP,,MG-IDP,,Local
+Ins. deportivas descubiertas,usos_jda,Instalaciones deportivas descubiertas.geojson,Otros equipamientos y pistas,point,100,OE_P_Usos_ZSP,,Id_Elem.isnull() and ZSP_DPMT == 'ZSP',MG-IDP,,MG-IDP,,Local
+Ins. deportivas descubiertas,usos_jda,Instalaciones deportivas descubiertas.geojson,Piscinas,polygon,,PI_S_Elem_DPMT,"""Id_T3 == '76'""",Id_Elem.notnull() and 'En DPMT' == '-1',MG-IDP,,MG-IDP,,Local
+Ins. deportivas descubiertas,usos_jda,Instalaciones deportivas descubiertas.geojson,Piscinas,polygon,,PI_S_Elem_ZSP,"""Id_T3 == '76'""",Id_Elem.notnull() and 'En ZSP' == '-1',MG-IDP,,MG-IDP,,Local
+Ins. deportivas descubiertas,usos_jda,Instalaciones deportivas descubiertas.geojson,Piscinas,polygon,,PI_S_Usos_DPMT,"""Id_T3 == '76'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',MG-IDP,,MG-IDP,,Local
+Ins. deportivas descubiertas,usos_jda,Instalaciones deportivas descubiertas.geojson,Piscinas,polygon,,PI_S_Usos_ZSP,"""Id_T3 == '76'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',MG-IDP,,MG-IDP,,Local
+Ins. deportivas descubiertas,usos_jda,Instalaciones deportivas descubiertas.geojson,Piscinas,point,200,PI_P_Elem_DPMT,"""Id_T3 == '76'""",Id_Elem.notnull() and 'En DPMT' == '-1',MG-IDP,,MG-IDP,,Local
+Ins. deportivas descubiertas,usos_jda,Instalaciones deportivas descubiertas.geojson,Piscinas,point,200,PI_P_Elem_ZSP,"""Id_T3 == '76'""",Id_Elem.notnull() and 'En ZSP' == '-1',MG-IDP,,MG-IDP,,Local
+Ins. deportivas descubiertas,usos_jda,Instalaciones deportivas descubiertas.geojson,Piscinas,point,200,PI_P_Usos_DPMT,"""Id_T3 == '76'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',MG-IDP,,MG-IDP,,Local
+Ins. deportivas descubiertas,usos_jda,Instalaciones deportivas descubiertas.geojson,Piscinas,point,200,PI_P_Usos_ZSP,"""Id_T3 == '76'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',MG-IDP,,MG-IDP,,Local
+Ins. deportivas descubiertas,catastro,A.ES.SDGC.BU.otherconstruction.geojson,Piscinas,polygon,,,"""constructionNature == 'openAirPool'""",,MG-IDP,,MG-IDP,,Local
+Aprovechamientos agropecuarios,usos_jda,Aprovechamientos agropecuarios.geojson,Agricultura,polygon,,AG_S_Elem_DPMT,"""Id_T3 == '79'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-NAS,,VI-NAS,,Local
+Aprovechamientos agropecuarios,usos_jda,Aprovechamientos agropecuarios.geojson,Agricultura,polygon,,AG_S_Elem_ZSP,"""Id_T3 == '79'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-NAS,,VI-NAS,,Local
+Aprovechamientos agropecuarios,usos_jda,Aprovechamientos agropecuarios.geojson,Agricultura,polygon,,AG_S_Usos_DPMT,"""Id_T3 == '79'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-NAS,,VI-NAS,,Local
+Aprovechamientos agropecuarios,usos_jda,Aprovechamientos agropecuarios.geojson,Agricultura,polygon,,AG_S_Usos_ZSP,"""Id_T3 == '79'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-NAS,,VI-NAS,,Local
+Aprovechamientos agropecuarios,usos_jda,Aprovechamientos agropecuarios.geojson,Agricultura,point,100,AG_P_Elem_DPMT,"""Id_T3 == '79'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-NAS,,VI-NAS,,Local
+Aprovechamientos agropecuarios,usos_jda,Aprovechamientos agropecuarios.geojson,Agricultura,point,100,AG_P_Elem_ZSP,"""Id_T3 == '79'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-NAS,,VI-NAS,,Local
+Aprovechamientos agropecuarios,usos_jda,Aprovechamientos agropecuarios.geojson,Agricultura,point,100,AG_P_Usos_DPMT,"""Id_T3 == '79'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-NAS,,VI-NAS,,Local
+Aprovechamientos agropecuarios,usos_jda,Aprovechamientos agropecuarios.geojson,Agricultura,point,100,AG_P_Usos_ZSP,"""Id_T3 == '79'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-NAS,,VI-NAS,,Local
+Aprovechamientos agropecuarios,usos_jda,Aprovechamientos agropecuarios.geojson,Huertos particulares,polygon,,HP_S_Elem_DPMT,"""Id_T3 == '154'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-NAR,,VI-NAR,,Local
+Aprovechamientos agropecuarios,usos_jda,Aprovechamientos agropecuarios.geojson,Huertos particulares,polygon,,HP_S_Elem_ZSP,"""Id_T3 == '154'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-NAR,,VI-NAR,,Local
+Aprovechamientos agropecuarios,usos_jda,Aprovechamientos agropecuarios.geojson,Huertos particulares,polygon,,HP_S_Usos_DPMT,"""Id_T3 == '154'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-NAR,,VI-NAR,,Local
+Aprovechamientos agropecuarios,usos_jda,Aprovechamientos agropecuarios.geojson,Huertos particulares,polygon,,HP_S_Usos_ZSP,"""Id_T3 == '154'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-NAR,,VI-NAR,,Local
+Aprovechamientos agropecuarios,usos_jda,Aprovechamientos agropecuarios.geojson,Huertos particulares,point,50,HP_P_Elem_DPMT,"""Id_T3 == '154'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-NAR,,VI-NAR,,Local
+Aprovechamientos agropecuarios,usos_jda,Aprovechamientos agropecuarios.geojson,Huertos particulares,point,50,HP_P_Elem_ZSP,"""Id_T3 == '154'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-NAR,,VI-NAR,,Local
+Aprovechamientos agropecuarios,usos_jda,Aprovechamientos agropecuarios.geojson,Huertos particulares,point,50,HP_P_Usos_DPMT,"""Id_T3 == '154'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-NAR,,VI-NAR,,Local
+Aprovechamientos agropecuarios,usos_jda,Aprovechamientos agropecuarios.geojson,Huertos particulares,point,50,HP_P_Usos_ZSP,"""Id_T3 == '154'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-NAR,,VI-NAR,,Local
+Aprovechamientos agropecuarios,usos_jda,Aprovechamientos agropecuarios.geojson,Usos ganaderos,polygon,,UG_S_Elem_DPMT,"""Id_T3 in ('82','84')""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-IND,,VI-IND,,Local
+Aprovechamientos agropecuarios,usos_jda,Aprovechamientos agropecuarios.geojson,Usos ganaderos,polygon,,UG_S_Elem_ZSP,"""Id_T3 in ('82','84')""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-IND,,VI-IND,,Local
+Aprovechamientos agropecuarios,usos_jda,Aprovechamientos agropecuarios.geojson,Usos ganaderos,polygon,,UG_S_Usos_DPMT,"""Id_T3 in ('82','84')""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-IND,,VI-IND,,Local
+Aprovechamientos agropecuarios,usos_jda,Aprovechamientos agropecuarios.geojson,Usos ganaderos,polygon,,UG_S_Usos_ZSP,"""Id_T3 in ('82','84')""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-IND,,VI-IND,,Local
+Aprovechamientos agropecuarios,usos_jda,Aprovechamientos agropecuarios.geojson,Usos ganaderos,point,100,UG_P_Elem_DPMT,"""Id_T3 in ('82','84')""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-IND,,VI-IND,,Local
+Aprovechamientos agropecuarios,usos_jda,Aprovechamientos agropecuarios.geojson,Usos ganaderos,point,100,UG_P_Elem_ZSP,"""Id_T3 in ('82','84')""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-IND,,VI-IND,,Local
+Aprovechamientos agropecuarios,usos_jda,Aprovechamientos agropecuarios.geojson,Usos ganaderos,point,100,UG_P_Usos_DPMT,"""Id_T3 in ('82','84')""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-IND,,VI-IND,,Local
+Aprovechamientos agropecuarios,usos_jda,Aprovechamientos agropecuarios.geojson,Usos ganaderos,point,100,UG_P_Usos_ZSP,"""Id_T3 in ('82','84')""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-IND,,VI-IND,,Local
+Aprovechamientos agropecuarios,usos_jda,Aprovechamientos agropecuarios.geojson,Acuicultura,polygon,,AQ_S_Elem_DPMT,"""Id_T3 == '85'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-IND,,VI-IND,,Local
+Aprovechamientos agropecuarios,usos_jda,Aprovechamientos agropecuarios.geojson,Acuicultura,polygon,,AQ_S_Elem_ZSP,"""Id_T3 == '85'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-IND,,VI-IND,,Local
+Aprovechamientos agropecuarios,usos_jda,Aprovechamientos agropecuarios.geojson,Acuicultura,polygon,,AQ_S_Usos_DPMT,"""Id_T3 == '85'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-IND,,VI-IND,,Local
+Aprovechamientos agropecuarios,usos_jda,Aprovechamientos agropecuarios.geojson,Acuicultura,polygon,,AQ_S_Usos_ZSP,"""Id_T3 == '85'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-IND,,VI-IND,,Local
+Aprovechamientos agropecuarios,usos_jda,Aprovechamientos agropecuarios.geojson,Acuicultura,point,100,AQ_P_Elem_DPMT,"""Id_T3 == '85'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-IND,,VI-IND,,Local
+Aprovechamientos agropecuarios,usos_jda,Aprovechamientos agropecuarios.geojson,Acuicultura,point,100,AQ_P_Elem_ZSP,"""Id_T3 == '85'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-IND,,VI-IND,,Local
+Aprovechamientos agropecuarios,usos_jda,Aprovechamientos agropecuarios.geojson,Acuicultura,point,100,AQ_P_Usos_DPMT,"""Id_T3 == '85'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-IND,,VI-IND,,Local
+Aprovechamientos agropecuarios,usos_jda,Aprovechamientos agropecuarios.geojson,Acuicultura,point,100,AQ_P_Usos_ZSP,"""Id_T3 == '85'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-IND,,VI-IND,,Local
+Aprovechamientos agropecuarios,usos_jda,Aprovechamientos agropecuarios.geojson,Otros aprov. agr-pec,polygon,,AP_S_Elem_DPMT,"""Id_T3 == '137'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-NAS,,VI-NAS,,Local
+Aprovechamientos agropecuarios,usos_jda,Aprovechamientos agropecuarios.geojson,Otros aprov. agr-pec,polygon,,AP_S_Elem_ZSP,"""Id_T3 == '137'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-NAS,,VI-NAS,,Local
+Aprovechamientos agropecuarios,usos_jda,Aprovechamientos agropecuarios.geojson,Otros aprov. agr-pec,polygon,,AP_S_Usos_DPMT,"""Id_T3 == '137'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-NAS,,VI-NAS,,Local
+Aprovechamientos agropecuarios,usos_jda,Aprovechamientos agropecuarios.geojson,Otros aprov. agr-pec,polygon,,AP_S_Usos_ZSP,"""Id_T3 == '137'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-NAS,,VI-NAS,,Local
+Aprovechamientos agropecuarios,usos_jda,Aprovechamientos agropecuarios.geojson,Otros aprov. agr-pec,point,100,AP_P_Elem_DPMT,"""Id_T3 == '137'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-NAS,,VI-NAS,,Local
+Aprovechamientos agropecuarios,usos_jda,Aprovechamientos agropecuarios.geojson,Otros aprov. agr-pec,point,100,AP_P_Elem_ZSP,"""Id_T3 == '137'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-NAS,,VI-NAS,,Local
+Aprovechamientos agropecuarios,usos_jda,Aprovechamientos agropecuarios.geojson,Otros aprov. agr-pec,point,100,AP_P_Usos_DPMT,"""Id_T3 == '137'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-NAS,,VI-NAS,,Local
+Aprovechamientos agropecuarios,usos_jda,Aprovechamientos agropecuarios.geojson,Otros aprov. agr-pec,point,100,AP_P_Usos_ZSP,"""Id_T3 == '137'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-NAS,,VI-NAS,,Local
+Otros usos,usos_jda,Otros usos.geojson,Explotaciones mineras,polygon,,EM_S_Elem_DPMT,"""Id_T3 == '87'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Explotaciones mineras,polygon,,EM_S_Elem_ZSP,"""Id_T3 == '87'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Explotaciones mineras,polygon,,EM_S_Usos_DPMT,"""Id_T3 == '87'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Explotaciones mineras,polygon,,EM_S_Usos_ZSP,"""Id_T3 == '87'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Explotaciones mineras,point,200,EM_P_Elem_DPMT,"""Id_T3 == '87'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Explotaciones mineras,point,200,EM_P_Elem_ZSP,"""Id_T3 == '87'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Explotaciones mineras,point,200,EM_P_Usos_DPMT,"""Id_T3 == '87'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Explotaciones mineras,point,200,EM_P_Usos_ZSP,"""Id_T3 == '87'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-IND,,VI-IND,,Local
+Otros usos,btn25,BCN0540P_EXP_MIN_P_point.geojson,Explotaciones mineras,point,200,capa_EM_P,"""ESTAD_0540 == '01'""",,VI-IND,,VI-IND,,Local
+Otros usos,btn25,BCN0540S_EXP_MIN_S_polygon.geojson,Explotaciones mineras,polygon,,capa_EM_S,"""ESTAD_0540 == '01'""",,VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Actividades forestales,polygon,,AF_S_Elem_DPMT,"""Tipo_Uso_2 == 'Actividades forestales'""",Id_Elem.notnull() and 'En DPMT' == '-1',V-NAS,,V-NAS,,Local
+Otros usos,usos_jda,Otros usos.geojson,Actividades forestales,polygon,,AF_S_Elem_ZSP,"""Tipo_Uso_2 == 'Actividades forestales'""",Id_Elem.notnull() and 'En ZSP' == '-1',V-NAS,,V-NAS,,Local
+Otros usos,usos_jda,Otros usos.geojson,Actividades forestales,polygon,,AF_S_Usos_DPMT,"""Tipo_Uso_2 == 'Actividades forestales'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',V-NAS,,V-NAS,,Local
+Otros usos,usos_jda,Otros usos.geojson,Actividades forestales,polygon,,AF_S_Usos_ZSP,"""Tipo_Uso_2 == 'Actividades forestales'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',V-NAS,,V-NAS,,Local
+Otros usos,usos_jda,Otros usos.geojson,Actividades forestales,point,200,AF_P_Elem_DPMT,"""Tipo_Uso_2 == 'Actividades forestales'""",Id_Elem.notnull() and 'En DPMT' == '-1',V-NAS,,V-NAS,,Local
+Otros usos,usos_jda,Otros usos.geojson,Actividades forestales,point,200,AF_P_Elem_ZSP,"""Tipo_Uso_2 == 'Actividades forestales'""",Id_Elem.notnull() and 'En ZSP' == '-1',V-NAS,,V-NAS,,Local
+Otros usos,usos_jda,Otros usos.geojson,Actividades forestales,point,200,AF_P_Usos_DPMT,"""Tipo_Uso_2 == 'Actividades forestales'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',V-NAS,,V-NAS,,Local
+Otros usos,usos_jda,Otros usos.geojson,Actividades forestales,point,200,AF_P_Usos_ZSP,"""Tipo_Uso_2 == 'Actividades forestales'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',V-NAS,,V-NAS,,Local
+Otros usos,usos_jda,Otros usos.geojson,Explotaciones salineras,polygon,,AS_S_Elem_DPMT,"""Id_T3 == '94'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Explotaciones salineras,polygon,,AS_S_Elem_ZSP,"""Id_T3 == '94'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Explotaciones salineras,polygon,,AS_S_Usos_DPMT,"""Id_T3 == '94'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Explotaciones salineras,polygon,,AS_S_Usos_ZSP,"""Id_T3 == '94'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Explotaciones salineras,point,200,AS_P_Elem_DPMT,"""Id_T3 == '94'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Explotaciones salineras,point,200,AS_P_Elem_ZSP,"""Id_T3 == '94'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Explotaciones salineras,point,200,AS_P_Usos_DPMT,"""Id_T3 == '94'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Explotaciones salineras,point,200,AS_P_Usos_ZSP,"""Id_T3 == '94'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-IND,,VI-IND,,Local
+Otros usos,btn25,BCN0358S_SALINA_polygon.geojson,Explotaciones salineras,polygon,,BTN_EXP_SAL_S,"""COMPO_0358 == '02'""",,VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Energía alternativa eólica,polygon,,EA_E_S_Elem_DPMT,"""Id_T3 == '96'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-IND,,VI-IND,,Comarcal
+Otros usos,usos_jda,Otros usos.geojson,Energía alternativa eólica,polygon,,EA_E_S_Elem_ZSP,"""Id_T3 == '96'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-IND,,VI-IND,,Comarcal
+Otros usos,usos_jda,Otros usos.geojson,Energía alternativa eólica,polygon,,EA_E_S_Usos_DPMT,"""Id_T3 == '96'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-IND,,VI-IND,,Comarcal
+Otros usos,usos_jda,Otros usos.geojson,Energía alternativa eólica,polygon,,EA_E_S_Usos_ZSP,"""Id_T3 == '96'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-IND,,VI-IND,,Comarcal
+Otros usos,usos_jda,Otros usos.geojson,Energía alternativa eólica,point,5,EA_E_P_Elem_DPMT,"""Id_T3 == '98'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-IND,,VI-IND,,Comarcal
+Otros usos,usos_jda,Otros usos.geojson,Energía alternativa eólica,point,5,EA_E_P_Elem_ZSP,"""Id_T3 == '98'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-IND,,VI-IND,,Comarcal
+Otros usos,usos_jda,Otros usos.geojson,Energía alternativa eólica,point,5,EA_E_P_Usos_DPMT,"""Id_T3 == '98'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-IND,,VI-IND,,Comarcal
+Otros usos,usos_jda,Otros usos.geojson,Energía alternativa eólica,point,5,EA_E_P_Usos_ZSP,"""Id_T3 == '98'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-IND,,VI-IND,,Comarcal
+Otros usos,btn25,BCN0713S_CEN_ELEC_polygon.geojson,Energía alternativa eólica,polygon,,BTN_ENA_EOL_S,"""TIPO_0713 in ('04','07')""",,VI-IND,,VI-IND,,Comarcal
+Otros usos,usos_jda,Otros usos.geojson,Energía alternativa solar,polygon,,EA_S_S_Elem_DPMT,"""Id_T3 == '97'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-IND,,VI-IND,,Comarcal
+Otros usos,usos_jda,Otros usos.geojson,Energía alternativa solar,polygon,,EA_S_S_Elem_ZSP,"""Id_T3 == '97'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-IND,,VI-IND,,Comarcal
+Otros usos,usos_jda,Otros usos.geojson,Energía alternativa solar,polygon,,EA_S_S_Usos_DPMT,"""Id_T3 == '97'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-IND,,VI-IND,,Comarcal
+Otros usos,usos_jda,Otros usos.geojson,Energía alternativa solar,polygon,,EA_S_S_Usos_ZSP,"""Id_T3 == '97'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-IND,,VI-IND,,Comarcal
+Otros usos,usos_jda,Otros usos.geojson,Energía alternativa solar,point,5,EA_S_P_Elem_DPMT,"""Id_T3 == '99'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-IND,,VI-IND,,Comarcal
+Otros usos,usos_jda,Otros usos.geojson,Energía alternativa solar,point,5,EA_S_P_Elem_ZSP,"""Id_T3 == '99'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-IND,,VI-IND,,Comarcal
+Otros usos,usos_jda,Otros usos.geojson,Energía alternativa solar,point,5,EA_S_P_Usos_DPMT,"""Id_T3 == '99'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-IND,,VI-IND,,Comarcal
+Otros usos,usos_jda,Otros usos.geojson,Energía alternativa solar,point,5,EA_S_P_Usos_ZSP,"""Id_T3 == '99'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-IND,,VI-IND,,Comarcal
+Otros usos,btn25,BCN0713S_CEN_ELEC_polygon.geojson,Energía alternativa solar,polygon,,BTN_ENA_SOL_S,"""TIPO_0713 == '05'""",,VI-IND,,VI-IND,,Comarcal
+Otros usos,usos_jda,Otros usos.geojson,Usos de interés público (1),polygon,,P1_S_Elem_DPMT,"""Id_T3 in ('101', '67', '160', '69', '145')""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-VIA,VI-LIM,MA-SOC,,Local
+Otros usos,usos_jda,Otros usos.geojson,Usos de interés público (1),polygon,,P1_S_Elem_ZSP,"""Id_T3 in ('101', '67', '160', '69', '145')""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-VIA,VI-LIM,MA-SOC,,Local
+Otros usos,usos_jda,Otros usos.geojson,Usos de interés público (1),polygon,,P1_S_Usos_DPMT,"""Id_T3 in ('101', '67', '160', '69', '145')""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-VIA,VI-LIM,MA-SOC,,Local
+Otros usos,usos_jda,Otros usos.geojson,Usos de interés público (1),polygon,,P1_S_Usos_ZSP,"""Id_T3 in ('101', '67', '160', '69', '145')""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-VIA,VI-LIM,MA-SOC,,Local
+Otros usos,usos_jda,Otros usos.geojson,Usos de interés público (1),point,5,P1_P_Elem_DPMT,"""Id_T3 in ('101', '67', '160', '69', '145')""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-VIA,VI-LIM,MA-SOC,,Local
+Otros usos,usos_jda,Otros usos.geojson,Usos de interés público (1),point,5,P1_P_Elem_ZSP,"""Id_T3 in ('101', '67', '160', '69', '145')""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-VIA,VI-LIM,MA-SOC,,Local
+Otros usos,usos_jda,Otros usos.geojson,Usos de interés público (1),point,5,P1_P_Usos_DPMT,"""Id_T3 in ('101', '67', '160', '69', '145')""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-VIA,VI-LIM,MA-SOC,,Local
+Otros usos,usos_jda,Otros usos.geojson,Usos de interés público (1),point,5,P1_P_Usos_ZSP,"""Id_T3 in ('101', '67', '160', '69', '145')""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-VIA,VI-LIM,MA-SOC,,Local
+Otros usos,usos_jda,Otros usos.geojson,Usos de interés público (2),polygon,,P2_S_Elem_DPMT,"""Id_T3 in ('155', '156')""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-VIA,VI-LIM,MA-SOC,,Local
+Otros usos,usos_jda,Otros usos.geojson,Usos de interés público (2),polygon,,P2_S_Elem_ZSP,"""Id_T3 in ('155', '156')""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-VIA,VI-LIM,MA-SOC,,Local
+Otros usos,usos_jda,Otros usos.geojson,Usos de interés público (2),polygon,,P2_S_Usos_DPMT,"""Id_T3 in ('155', '156')""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-VIA,VI-LIM,MA-SOC,,Local
+Otros usos,usos_jda,Otros usos.geojson,Usos de interés público (2),polygon,,P2_S_Usos_ZSP,"""Id_T3 in ('155', '156')""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-VIA,VI-LIM,MA-SOC,,Local
+Otros usos,usos_jda,Otros usos.geojson,Usos de interés público (2),line,1,P2_L_Elem_DPMT,"""Id_T3 in ('155', '156')""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-VIA,VI-LIM,MA-SOC,,Local
+Otros usos,usos_jda,Otros usos.geojson,Usos de interés público (2),line,1,P2_L_Elem_ZSP,"""Id_T3 in ('155', '156')""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-VIA,VI-LIM,MA-SOC,,Local
+Otros usos,usos_jda,Otros usos.geojson,Usos de interés público (2),line,1,P2_L_Usos_DPMT,"""Id_T3 in ('155', '156')""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-VIA,VI-LIM,MA-SOC,,Local
+Otros usos,usos_jda,Otros usos.geojson,Usos de interés público (2),line,1,P2_L_Usos_ZSP,"""Id_T3 in ('155', '156')""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-VIA,VI-LIM,MA-SOC,,Local
+Otros usos,usos_jda,Otros usos.geojson,Extracción de áridos,polygon,,XA_S_Elem_DPMT,"""Id_T3 in ('103', '104')""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Extracción de áridos,polygon,,XA_S_Elem_ZSP,"""Id_T3 in ('103', '104')""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Extracción de áridos,polygon,,XA_S_Usos_DPMT,"""Id_T3 in ('103', '104')""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Extracción de áridos,polygon,,XA_S_Usos_ZSP,"""Id_T3 in ('103', '104')""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Extracción de áridos,point,200,XA_P_Elem_DPMT,"""Id_T3 in ('103', '104')""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Extracción de áridos,point,200,XA_P_Elem_ZSP,"""Id_T3 in ('103', '104')""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Extracción de áridos,point,200,XA_P_Usos_DPMT,"""Id_T3 in ('103', '104')""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Extracción de áridos,point,200,XA_P_Usos_ZSP,"""Id_T3 in ('103', '104')""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Obras defensa costera,line,5,DC_L_Elem_DPMT,"""Id_T3 == '105'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-IND,,MA-HID,,Local
+Otros usos,usos_jda,Otros usos.geojson,Obras defensa costera,line,5,DC_L_Elem_ZSP,"""Id_T3 == '105'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-IND,,MA-HID,,Local
+Otros usos,usos_jda,Otros usos.geojson,Obras defensa costera,line,5,DC_L_Usos_DPMT,"""Id_T3 == '105'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-IND,,MA-HID,,Local
+Otros usos,usos_jda,Otros usos.geojson,Obras defensa costera,line,5,DC_L_Usos_ZSP,"""Id_T3 == '105'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-IND,,MA-HID,,Local
+Otros usos,usos_jda,Otros usos.geojson,Obras defensa costera,point,25,DC_P_Elem_DPMT,"""Id_T3 == '105'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-IND,,MA-HID,,Local
+Otros usos,usos_jda,Otros usos.geojson,Obras defensa costera,point,25,DC_P_Elem_ZSP,"""Id_T3 == '105'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-IND,,MA-HID,,Local
+Otros usos,usos_jda,Otros usos.geojson,Obras defensa costera,point,25,DC_P_Usos_DPMT,"""Id_T3 == '105'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-IND,,MA-HID,,Local
+Otros usos,usos_jda,Otros usos.geojson,Obras defensa costera,point,25,DC_P_Usos_ZSP,"""Id_T3 == '105'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-IND,,MA-HID,,Local
+Otros usos,usos_jda,Otros usos.geojson,Otras obras,polygon,,OO_S_Elem_DPMT,"""Id_T3 == '109'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-VIA,,VI-VIA,,Local
+Otros usos,usos_jda,Otros usos.geojson,Otras obras,polygon,,OO_S_Elem_ZSP,"""Id_T3 == '109'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-VIA,,VI-VIA,,Local
+Otros usos,usos_jda,Otros usos.geojson,Otras obras,polygon,,OO_S_Usos_DPMT,"""Id_T3 == '109'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-VIA,,VI-VIA,,Local
+Otros usos,usos_jda,Otros usos.geojson,Otras obras,polygon,,OO_S_Usos_ZSP,"""Id_T3 == '109'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-VIA,,VI-VIA,,Local
+Otros usos,usos_jda,Otros usos.geojson,Otras obras,point,5,OO_P_Elem_DPMT,"""Id_T3 == '109'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-VIA,,VI-VIA,,Local
+Otros usos,usos_jda,Otros usos.geojson,Otras obras,point,5,OO_P_Elem_ZSP,"""Id_T3 == '109'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-VIA,,VI-VIA,,Local
+Otros usos,usos_jda,Otros usos.geojson,Otras obras,point,5,OO_P_Usos_DPMT,"""Id_T3 == '109'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-VIA,,VI-VIA,,Local
+Otros usos,usos_jda,Otros usos.geojson,Otras obras,point,5,OO_P_Usos_ZSP,"""Id_T3 == '109'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-VIA,,VI-VIA,,Local
+Otros usos,usos_jda,Otros usos.geojson,Publicidad,polygon,,PB_S_Elem_DPMT,"""Id_T3 == '110'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-VIA,,VI-VIA,,Local
+Otros usos,usos_jda,Otros usos.geojson,Publicidad,polygon,,PB_S_Elem_ZSP,"""Id_T3 == '110'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-VIA,,VI-VIA,,Local
+Otros usos,usos_jda,Otros usos.geojson,Publicidad,polygon,,PB_S_Usos_DPMT,"""Id_T3 == '110'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-VIA,,VI-VIA,,Local
+Otros usos,usos_jda,Otros usos.geojson,Publicidad,polygon,,PB_S_Usos_ZSP,"""Id_T3 == '110'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-VIA,,VI-VIA,,Local
+Otros usos,usos_jda,Otros usos.geojson,Publicidad,point,5,PB_P_Elem_DPMT,"""Id_T3 == '110'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-VIA,,VI-VIA,,Local
+Otros usos,usos_jda,Otros usos.geojson,Publicidad,point,5,PB_P_Elem_ZSP,"""Id_T3 == '110'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-VIA,,VI-VIA,,Local
+Otros usos,usos_jda,Otros usos.geojson,Publicidad,point,5,PB_P_Usos_DPMT,"""Id_T3 == '110'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-VIA,,VI-VIA,,Local
+Otros usos,usos_jda,Otros usos.geojson,Publicidad,point,5,PB_P_Usos_ZSP,"""Id_T3 == '110'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-VIA,,VI-VIA,,Local
+Otros usos,usos_jda,Otros usos.geojson,Conservación,polygon,,CS_S_Elem_DPMT,"""Id_T3 == '111'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Conservación,polygon,,CS_S_Elem_ZSP,"""Id_T3 == '111'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Conservación,polygon,,CS_S_Usos_DPMT,"""Id_T3 == '111'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Conservación,polygon,,CS_S_Usos_ZSP,"""Id_T3 == '111'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Conservación,point,5,CS_P_Elem_DPMT,"""Id_T3 == '111'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Conservación,point,5,CS_P_Elem_ZSP,"""Id_T3 == '111'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Conservación,point,5,CS_P_Usos_DPMT,"""Id_T3 == '111'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Conservación,point,5,CS_P_Usos_ZSP,"""Id_T3 == '111'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Circuito vehículos a motor,polygon,,VM_S_Elem_DPMT,"""Id_T3 == '113'""",Id_Elem.notnull() and 'En DPMT' == '-1',MG-IDP,,MG-IDP,,Local
+Otros usos,usos_jda,Otros usos.geojson,Circuito vehículos a motor,polygon,,VM_S_Elem_ZSP,"""Id_T3 == '113'""",Id_Elem.notnull() and 'En ZSP' == '-1',MG-IDP,,MG-IDP,,Local
+Otros usos,usos_jda,Otros usos.geojson,Circuito vehículos a motor,polygon,,VM_S_Usos_DPMT,"""Id_T3 == '113'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',MG-IDP,,MG-IDP,,Local
+Otros usos,usos_jda,Otros usos.geojson,Circuito vehículos a motor,polygon,,VM_S_Usos_ZSP,"""Id_T3 == '113'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',MG-IDP,,MG-IDP,,Local
+Otros usos,usos_jda,Otros usos.geojson,Circuito vehículos a motor,point,400,VM_P_Elem_DPMT,"""Id_T3 == '113'""",Id_Elem.notnull() and 'En DPMT' == '-1',MG-IDP,,MG-IDP,,Local
+Otros usos,usos_jda,Otros usos.geojson,Circuito vehículos a motor,point,400,VM_P_Elem_ZSP,"""Id_T3 == '113'""",Id_Elem.notnull() and 'En ZSP' == '-1',MG-IDP,,MG-IDP,,Local
+Otros usos,usos_jda,Otros usos.geojson,Circuito vehículos a motor,point,400,VM_P_Usos_DPMT,"""Id_T3 == '113'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',MG-IDP,,MG-IDP,,Local
+Otros usos,usos_jda,Otros usos.geojson,Circuito vehículos a motor,point,400,VM_P_Usos_ZSP,"""Id_T3 == '113'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',MG-IDP,,MG-IDP,,Local
+Otros usos,btn25,BCN0564S_INS_DEP_polygon.geojson,Circuito vehículos a motor,polygon,,BTN_IP_VM_S,"""TIPO_0564 == '06'""",,MG-IDP,,MG-IDP,,Local
+Otros usos,usos_jda,Otros usos.geojson,Caza,polygon,,CZ_S_Elem_DPMT,"""Id_T3 == '115'""",Id_Elem.notnull() and 'En DPMT' == '-1',MG-IDP,,MG-IDP,,Local
+Otros usos,usos_jda,Otros usos.geojson,Caza,polygon,,CZ_S_Elem_ZSP,"""Id_T3 == '115'""",Id_Elem.notnull() and 'En ZSP' == '-1',MG-IDP,,MG-IDP,,Local
+Otros usos,usos_jda,Otros usos.geojson,Caza,polygon,,CZ_S_Usos_DPMT,"""Id_T3 == '115'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',MG-IDP,,MG-IDP,,Local
+Otros usos,usos_jda,Otros usos.geojson,Caza,polygon,,CZ_S_Usos_ZSP,"""Id_T3 == '115'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',MG-IDP,,MG-IDP,,Local
+Otros usos,usos_jda,Otros usos.geojson,Caza,point,400,CZ_P_Elem_DPMT,"""Id_T3 == '115'""",Id_Elem.notnull() and 'En DPMT' == '-1',MG-IDP,,MG-IDP,,Local
+Otros usos,usos_jda,Otros usos.geojson,Caza,point,400,CZ_P_Elem_ZSP,"""Id_T3 == '115'""",Id_Elem.notnull() and 'En ZSP' == '-1',MG-IDP,,MG-IDP,,Local
+Otros usos,usos_jda,Otros usos.geojson,Caza,point,400,CZ_P_Usos_DPMT,"""Id_T3 == '115'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',MG-IDP,,MG-IDP,,Local
+Otros usos,usos_jda,Otros usos.geojson,Caza,point,400,CZ_P_Usos_ZSP,"""Id_T3 == '115'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',MG-IDP,,MG-IDP,,Local
+Otros usos,usos_jda,Otros usos.geojson,Actividad científica,polygon,,SC_S_Elem_DPMT,"""Id_T3 == '116'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-IND,,VI-IND,,Regional
+Otros usos,usos_jda,Otros usos.geojson,Actividad científica,polygon,,SC_S_Elem_ZSP,"""Id_T3 == '116'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-IND,,VI-IND,,Regional
+Otros usos,usos_jda,Otros usos.geojson,Actividad científica,polygon,,SC_S_Usos_DPMT,"""Id_T3 == '116'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-IND,,VI-IND,,Regional
+Otros usos,usos_jda,Otros usos.geojson,Actividad científica,polygon,,SC_S_Usos_ZSP,"""Id_T3 == '116'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-IND,,VI-IND,,Regional
+Otros usos,usos_jda,Otros usos.geojson,Actividad científica,point,400,SC_P_Elem_DPMT,"""Id_T3 == '116'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-IND,,VI-IND,,Regional
+Otros usos,usos_jda,Otros usos.geojson,Actividad científica,point,400,SC_P_Elem_ZSP,"""Id_T3 == '116'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-IND,,VI-IND,,Regional
+Otros usos,usos_jda,Otros usos.geojson,Actividad científica,point,400,SC_P_Usos_DPMT,"""Id_T3 == '116'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-IND,,VI-IND,,Regional
+Otros usos,usos_jda,Otros usos.geojson,Actividad científica,point,400,SC_P_Usos_ZSP,"""Id_T3 == '116'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-IND,,VI-IND,,Regional
+Otros usos,btn25,BCN0504S_AGR_EDI_polygon.geojson,Actividad científica,polygon,,BTN_AE_SC_S,"""TIPO_0504 =='08'""","""ESTAD_0504 == '01'""",VI-IND,,VI-IND,,Regional
+Otros usos,usos_jda,Otros usos.geojson,Vert. residuos sólidos,polygon,,RS_S_Elem_DPMT,"""Id_T3 == '117'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Vert. residuos sólidos,polygon,,RS_S_Elem_ZSP,"""Id_T3 == '117'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Vert. residuos sólidos,polygon,,RS_S_Usos_DPMT,"""Id_T3 == '117'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Vert. residuos sólidos,polygon,,RS_S_Usos_ZSP,"""Id_T3 == '117'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Vert. residuos sólidos,point,100,RS_P_Elem_DPMT,"""Id_T3 == '117'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Vert. residuos sólidos,point,100,RS_P_Elem_ZSP,"""Id_T3 == '117'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Vert. residuos sólidos,point,100,RS_P_Usos_DPMT,"""Id_T3 == '117'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Vert. residuos sólidos,point,100,RS_P_Usos_ZSP,"""Id_T3 == '117'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-IND,,VI-IND,,Local
+Otros usos,btn25,BCN0573S_ALM_RES_polygon.geojson,Vert. residuos sólidos,polygon,,BTN_ALM_RES_S,"""TIPO_0573 == '01'""",,VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Pérgola o sombrajo,polygon,,PS_S_Elem_DPMT,"""Id_T3 == '118'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Pérgola o sombrajo,polygon,,PS_S_Elem_ZSP,"""Id_T3 == '118'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Pérgola o sombrajo,polygon,,PS_S_Usos_DPMT,"""Id_T3 == '118'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Pérgola o sombrajo,polygon,,PS_S_Usos_ZSP,"""Id_T3 == '118'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Pérgola o sombrajo,point,10,PS_P_Elem_DPMT,"""Id_T3 == '118'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Pérgola o sombrajo,point,10,PS_P_Elem_ZSP,"""Id_T3 == '118'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Pérgola o sombrajo,point,10,PS_P_Usos_DPMT,"""Id_T3 == '118'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Pérgola o sombrajo,point,10,PS_P_Usos_ZSP,"""Id_T3 == '118'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-IND,,VI-IND,,Local
+Otros usos,usos_jda,Otros usos.geojson,Equipamiento privado,polygon,,PV_S_Elem_DPMT,"""Id_T3 == '159'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-VIA,,VI-VIA,,Local
+Otros usos,usos_jda,Otros usos.geojson,Equipamiento privado,polygon,,PV_S_Elem_ZSP,"""Id_T3 == '159'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-VIA,,VI-VIA,,Local
+Otros usos,usos_jda,Otros usos.geojson,Equipamiento privado,polygon,,PV_S_Usos_DPMT,"""Id_T3 == '159'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-VIA,,VI-VIA,,Local
+Otros usos,usos_jda,Otros usos.geojson,Equipamiento privado,polygon,,PV_S_Usos_ZSP,"""Id_T3 == '159'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-VIA,,VI-VIA,,Local
+Otros usos,usos_jda,Otros usos.geojson,Equipamiento privado,point,10,PV_P_Elem_DPMT,"""Id_T3 == '68'""",Id_Elem.notnull() and 'En DPMT' == '-1',VI-VIA,,VI-VIA,,Local
+Otros usos,usos_jda,Otros usos.geojson,Equipamiento privado,point,10,PV_P_Elem_ZSP,"""Id_T3 == '68'""",Id_Elem.notnull() and 'En ZSP' == '-1',VI-VIA,,VI-VIA,,Local
+Otros usos,usos_jda,Otros usos.geojson,Equipamiento privado,point,10,PV_P_Usos_DPMT,"""Id_T3 == '68'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',VI-VIA,,VI-VIA,,Local
+Otros usos,usos_jda,Otros usos.geojson,Equipamiento privado,point,10,PV_P_Usos_ZSP,"""Id_T3 == '68'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',VI-VIA,,VI-VIA,,Local
+Otros usos,usos_jda,Otros usos.geojson,Imagen monumento símbolo,polygon,,IM_S_Elem_DPMT,"""Id_T3 == '138'""",Id_Elem.notnull() and 'En DPMT' == '-1',MG-PAT,,MG-PAT,,Local
+Otros usos,usos_jda,Otros usos.geojson,Imagen monumento símbolo,polygon,,IM_S_Elem_ZSP,"""Id_T3 == '138'""",Id_Elem.notnull() and 'En ZSP' == '-1',MG-PAT,,MG-PAT,,Local
+Otros usos,usos_jda,Otros usos.geojson,Imagen monumento símbolo,polygon,,IM_S_Usos_DPMT,"""Id_T3 == '138'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',MG-PAT,,MG-PAT,,Local
+Otros usos,usos_jda,Otros usos.geojson,Imagen monumento símbolo,polygon,,IM_S_Usos_ZSP,"""Id_T3 == '138'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',MG-PAT,,MG-PAT,,Local
+Otros usos,usos_jda,Otros usos.geojson,Imagen monumento símbolo,point,5,IM_P_Elem_DPMT,"""Id_T3 == '138'""",Id_Elem.notnull() and 'En DPMT' == '-1',MG-PAT,,MG-PAT,,Local
+Otros usos,usos_jda,Otros usos.geojson,Imagen monumento símbolo,point,5,IM_P_Elem_ZSP,"""Id_T3 == '138'""",Id_Elem.notnull() and 'En ZSP' == '-1',MG-PAT,,MG-PAT,,Local
+Otros usos,usos_jda,Otros usos.geojson,Imagen monumento símbolo,point,5,IM_P_Usos_DPMT,"""Id_T3 == '138'""",Id_Elem.isnull() and ZSP_DPMT == 'DPMT',MG-PAT,,MG-PAT,,Local
+Otros usos,usos_jda,Otros usos.geojson,Imagen monumento símbolo,point,5,IM_P_Usos_ZSP,"""Id_T3 == '138'""",Id_Elem.isnull() and ZSP_DPMT == 'ZSP',MG-PAT,,MG-PAT,,Local
+Otros usos,btn25,BCN0525P_MONUME_point.geojson,Imagen monumento símbolo,point,5,BTN_MONUMEN_P,"""ID_BIC is not None""","""ID_BIC != 'BIC'""",MG-PAT,,MG-PAT,,Local

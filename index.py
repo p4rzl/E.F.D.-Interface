@@ -4,12 +4,16 @@ from flask_socketio import SocketIO, emit
 from datetime import datetime, timezone, timedelta
 from dotenv import load_dotenv
 from predictions import CoastalPredictor
+from pathlib import Path 
+import pandas as pd
+import geopandas as gpd
 import json
 import os
 import logging
 from models import User, ChatMessage
 from forms import LoginForm, RegistrationForm
 from extensions import db, login_manager, csrf
+from reports import get_risk_report, get_hazard_report, get_beaches_graph
 
 # Configurazione logging
 logging.basicConfig(
@@ -160,16 +164,116 @@ MAPBOX_TOKEN = os.getenv('MAPBOX_TOKEN')
 # Gestisce la visualizzazione della home page
 @app.route('/')
 @app.route('/home')
-@login_required
+@login_required 
 def home():
     try:
-        return render_template('home.html',
-                             username=current_user.username,
-                             mapbox_token=MAPBOX_TOKEN,
-                             is_admin=current_user.is_admin)
+        # Carica dati dalle varie cartelle
+        beaches_data = pd.read_csv('data/beaches.csv')
+        risk_data = pd.read_csv('data/risk/risk_weights.csv')
+        hazard_data = pd.read_csv('data/hazard/hazard_weights.csv')
+        
+        # Carica dati curve
+        curves_data = {}
+        curves_path = Path('data/curves')
+        for curve_file in curves_path.glob('*.csv'):
+            curves_data[curve_file.stem] = pd.read_csv(curve_file)
+
+        # Prepara i dati per il template
+        context = {
+            'username': current_user.username,
+            'mapbox_token': MAPBOX_TOKEN,
+            'beaches': beaches_data.to_dict('records'),
+            'risk_data': risk_data.to_dict('records'),
+            'hazard_data': hazard_data.to_dict('records'),
+            'curves_data': curves_data
+        }
+        
+        return render_template('home.html', **context)
     except Exception as e:
         logger.error(f'Errore nel caricamento della home page: {str(e)}')
         return render_template('500.html'), 500
+
+@app.route('/api/map-data')
+@login_required
+def get_map_data():
+    try:
+        # Carica i dati GeoJSON delle spiagge
+        beaches = gpd.read_file('data/beaches.geojson')
+        
+        # Carica altri layers 
+        economy = gpd.read_file('data/risk/economia.geojson')
+        hazards = gpd.read_file('data/risk/peligrosidad.geojson')
+        
+        return jsonify({
+            'beaches': beaches.to_json(),
+            'economy': economy.to_json(),
+            'hazards': hazards.to_json()
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/risk-report')
+@login_required
+def risk_report():
+    data = get_data()
+    if data:
+        return str(get_risk_report("interactive", data))
+    return render_template('500.html'), 500
+
+@app.route('/hazard-report')
+@login_required
+def hazard_report():
+    data = get_data()
+    if data:
+        return str(get_hazard_report("interactive", data))
+    return render_template('500.html'), 500
+
+@app.route('/risk-pdf')
+@login_required
+def risk_pdf():
+    data = get_data()
+    if data:
+        return send_file(
+            io.BytesIO(get_risk_report("static", data)),
+            mimetype="application/pdf",
+            as_attachment=True,
+            download_name="risk-report.pdf"
+        )
+    return render_template('500.html'), 500
+
+@app.route('/hazard-pdf')
+@login_required
+def hazard_pdf():
+    data = get_data()
+    if data:
+        return send_file(
+            io.BytesIO(get_hazard_report("static", data)),
+            mimetype="application/pdf",
+            as_attachment=True,
+            download_name="hazard-report.pdf"
+        )
+    return render_template('500.html'), 500
+
+@app.route('/beaches-graph')
+@login_required
+def beaches_graph():
+    data = get_data()
+    if data:
+        return get_beaches_graph(data)
+    return render_template('500.html'), 500
+
+def get_data():
+    session_data = session.get("data", {})
+    data = {
+        key: pd.read_json(
+            io.StringIO(df_json), 
+            orient="split", 
+            typ="series", 
+            convert_dates=False
+        )
+        for key, df_json in session_data.items()
+    }
+    return data    
 
 @app.route('/api/prediction/<int:year>')
 def get_prediction(year):

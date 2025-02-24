@@ -1,0 +1,6 @@
+hazard,weight
+flood_depth,0.25
+dry_beach_lost_rel,0.25
+coastal_erosion_mean,0.25
+flood_area_rel,0.25
+total_flood,0.25
