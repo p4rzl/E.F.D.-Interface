@@ -14,7 +14,7 @@ from extensions import db, login_manager, csrf
 # Configurazione logging
 logging.basicConfig(
     level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(name)s - %(levellevel)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
@@ -357,6 +357,16 @@ def init_app_db():
             admin.set_password(os.getenv('ADMIN_PASSWORD', 'admin'))
             db.session.add(admin)
             db.session.commit()
+
+@app.route('/api/geojson_files')
+def get_geojson_files():
+    geojson_files = []
+    for root, dirs, files in os.walk('data'):
+        for file in files:
+            if file.endswith('.geojson'):
+                file_path = os.path.join(root, file)
+                geojson_files.append(file_path)
+    return jsonify(geojson_files)
 
 if __name__ == '__main__':
     init_app_db()

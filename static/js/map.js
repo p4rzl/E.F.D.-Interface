@@ -1,4 +1,3 @@
-// Inizializzazione mappa
 const mapboxToken = document.getElementById('map').dataset.token;
 mapboxgl.accessToken = mapboxToken;
 
@@ -11,11 +10,9 @@ const map = new mapboxgl.Map({
 });
 
 map.on('load', () => {
-    // Aggiungi controlli base
     map.addControl(new mapboxgl.NavigationControl());
     map.addControl(new mapboxgl.FullscreenControl());
     
-    // Aggiungi sorgenti dati
     map.addSource('coastlines', {
         type: 'geojson',
         data: {
@@ -32,7 +29,6 @@ map.on('load', () => {
         }
     });
 
-    // Aggiungi layer linea costiera
     map.addLayer({
         'id': 'coastline-layer',
         'type': 'line',
@@ -49,7 +45,6 @@ map.on('load', () => {
         }
     });
 
-    // Aggiungi layer rischio
     map.addLayer({
         'id': 'risk-layer',
         'type': 'fill',
@@ -71,11 +66,10 @@ map.on('load', () => {
         }
     });
 
-    // Aggiungi controlli personalizzati
     map.addControl(new TimeControl(), 'bottom-left');
     map.addControl(new LegendControl(), 'top-right');
 
-    // Carica dati iniziali
+    loadGeoJSONFiles();
     updatePredictedData(2023);
 });
 
@@ -88,7 +82,6 @@ function updatePredictedData(year) {
                 return;
             }
             
-            // Aggiorna layer costiera
             if (map.getSource('coastlines')) {
                 map.getSource('coastlines').setData({
                     type: 'FeatureCollection',
@@ -96,7 +89,6 @@ function updatePredictedData(year) {
                 });
             }
             
-            // Aggiorna layer rischio
             if (map.getSource('risk-areas')) {
                 map.getSource('risk-areas').setData({
                     type: 'FeatureCollection',
@@ -104,10 +96,80 @@ function updatePredictedData(year) {
                 });
             }
 
-            // Aggiorna legenda con fattore di predizione
             updatePredictionFactor(data.prediction_factor);
         })
         .catch(error => {
             console.error('Error loading data:', error);
         });
+}
+
+function loadGeoJSONFiles() {
+    fetch('/api/geojson_files')
+        .then(response => response.json())
+        .then(files => {
+            files.forEach(file => {
+                fetch(file)
+                    .then(response => response.json())
+                    .then(data => {
+                        const sourceId = `geojson-${file}`;
+                        map.addSource(sourceId, {
+                            type: 'geojson',
+                            data: data
+                        });
+                        map.addLayer({
+                            id: `layer-${file}`,
+                            type: 'line',
+                            source: sourceId,
+                            paint: {
+                                'line-color': '#ff0000',
+                                'line-width': 2
+                            }
+                        });
+                    });
+            });
+        });
+}
+
+class LegendControl {
+    onAdd(map) {
+        this._map = map;
+        this._container = document.createElement('div');
+        this._container.className = 'mapboxgl-ctrl legend';
+        this._container.innerHTML = `
+            <h4>Legend</h4>
+            <div><span class="legend-color" style="background-color: #00ff00;"></span> Coastlines</div>
+            <div><span class="legend-color" style="background-color: #ff0000;"></span> Risk Areas</div>
+        `;
+        return this._container;
+    }
+
+    onRemove() {
+        this._container.parentNode.removeChild(this._container);
+        this._map = undefined;
+    }
+}
+
+class TimeControl {
+    onAdd(map) {
+        this._map = map;
+        this._container = document.createElement('div');
+        this._container.className = 'mapboxgl-ctrl time-control';
+        this._container.innerHTML = `
+            <div class="time-label">Year: <span id="year-label">2023</span></div>
+            <input id="year-slider" class="time-slider" type="range" min="2023" max="2100" step="1" value="2023">
+        `;
+
+        this._container.querySelector('#year-slider').addEventListener('input', (e) => {
+            const year = e.target.value;
+            document.getElementById('year-label').textContent = year;
+            updatePredictedData(year);
+        });
+
+        return this._container;
+    }
+
+    onRemove() {
+        this._container.parentNode.removeChild(this._container);
+        this._map = undefined;
+    }
 }
