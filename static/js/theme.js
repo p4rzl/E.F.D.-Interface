@@ -26,4 +26,27 @@ document.addEventListener('DOMContentLoaded', () => {
             icon.classList.replace('fa-sun', 'fa-moon');
         }
     });
+
+    // Apply theme to timeline and legend
+    const applyThemeToElements = () => {
+        const theme = document.documentElement.getAttribute('data-theme');
+        const timeline = document.querySelector('.time-control');
+        const legend = document.querySelector('.legend');
+
+        if (timeline) {
+            timeline.style.backgroundColor = theme === 'dark' ? '#1a1a1a' : '#fff';
+            timeline.style.color = theme === 'dark' ? '#fff' : '#000';
+        }
+
+        if (legend) {
+            legend.style.backgroundColor = theme === 'dark' ? '#1a1a1a' : '#fff';
+            legend.style.color = theme === 'dark' ? '#fff' : '#000';
+        }
+    };
+
+    // Apply theme on load
+    applyThemeToElements();
+
+    // Apply theme on theme change
+    themeToggle.addEventListener('click', applyThemeToElements);
 });
