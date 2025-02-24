@@ -8,6 +8,8 @@ class CoastalPredictor:
     def __init__(self):
         self.base_path = 'data/results_analysis'
         self.risk_path = 'data/risk'
+        self.historical_data_path = 'data/historical_coastal_data.csv'
+        self.model = self._train_model()
     
     def get_data_for_year(self, year):
         period = self._get_period(year)
@@ -39,3 +41,27 @@ class CoastalPredictor:
             if data and 'features' in data:
                 merged_features.extend(data['features'])
         return {'type': 'FeatureCollection', 'features': merged_features}
+
+    def _load_geojson(self, path):
+        if os.path.exists(path):
+            with open(path, 'r') as f:
+                return json.load(f)
+        return {'type': 'FeatureCollection', 'features': []}
+
+    def _calculate_prediction(self, year):
+        if year <= 2023:
+            return 0  # Nessuna predizione per gli anni passati
+        future_years = np.array([[year]])
+        predicted_index = self.model.predict(future_years)
+        return predicted_index[0]
+
+    def _train_model(self):
+        df = pd.read_csv(self.historical_data_path)
+        X = df[['year']]
+        y = df['coastal_index']
+        model = LinearRegression()
+        model.fit(X, y)
+        return model
+
+    def predict_future_data(self, year):
+        return self._calculate_prediction(year)

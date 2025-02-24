@@ -96,10 +96,35 @@
                     </td>
                 </tr>
                 {% endfor %}
+<<<<<<< HEAD
             </tbody>
         </table>
     </div>
 </div>
+=======
+            {% endif %}
+        {% endwith %}
+
+        <section class="welcome-section">
+            <h1>Dashboard Principale</h1>
+            <p>Benvenuto nella tua dashboard personale, {{ username }}.</p>
+        </section>
+
+        <section class="ocean-currents">
+            <div class="section-header">
+                <h2>Visualizzazione Correnti Oceaniche</h2>
+            </div>
+            <div class="plot-container">
+                <div id="map" data-token="{{ mapbox_token }}"></div>
+                <div id="legend"></div>
+                <div id="time-control"></div>
+                <div class="trend-indicator">
+                    <div id="riskTrend"></div>
+                    <div id="coastlineTrend"></div>
+                </div>
+            </div>
+        </section>
+>>>>>>> b6266728e6482190fbe7ceb37343527cae9bd1e2
     </main>
 
     <div class="chat-notification" id="chatNotification"></div>
