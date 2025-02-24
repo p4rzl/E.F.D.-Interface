@@ -39,3 +39,26 @@ class CoastalPredictor:
             if data and 'features' in data:
                 merged_features.extend(data['features'])
         return {'type': 'FeatureCollection', 'features': merged_features}
+    
+    def _load_geojson(self, path):
+        if os.path.exists(path):
+            with open(path, 'r') as f:
+                return json.load(f)
+        return {'type': 'FeatureCollection', 'features': []}
+    
+    def _calculate_prediction(self, year):
+        historical_data = self._load_historical_data()
+        X = historical_data['year'].values.reshape(-1, 1)
+        y = historical_data['value'].values
+        
+        model = LinearRegression()
+        model.fit(X, y)
+        
+        prediction = model.predict(np.array([[year]]))
+        return prediction[0]
+    
+    def _load_historical_data(self):
+        historical_data_path = 'data/historical_coastal_data.csv'
+        if os.path.exists(historical_data_path):
+            return pd.read_csv(historical_data_path)
+        return pd.DataFrame({'year': [], 'value': []})

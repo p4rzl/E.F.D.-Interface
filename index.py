@@ -157,16 +157,29 @@ def logout():
 
 MAPBOX_TOKEN = os.getenv('MAPBOX_TOKEN')
 
+# Funzione per caricare tutti i file GeoJSON dalla cartella data
+def load_all_geojson_files():
+    geojson_data = []
+    for root, dirs, files in os.walk('data'):
+        for file in files:
+            if file.endswith('.geojson'):
+                file_path = os.path.join(root, file)
+                with open(file_path, 'r') as f:
+                    geojson_data.append(json.load(f))
+    return geojson_data
+
 # Gestisce la visualizzazione della home page
 @app.route('/')
 @app.route('/home')
 @login_required
 def home():
     try:
+        geojson_data = load_all_geojson_files()
         return render_template('home.html',
                              username=current_user.username,
                              mapbox_token=MAPBOX_TOKEN,
-                             is_admin=current_user.is_admin)
+                             is_admin=current_user.is_admin,
+                             geojson_data=geojson_data)
     except Exception as e:
         logger.error(f'Errore nel caricamento della home page: {str(e)}')
         return render_template('500.html'), 500
