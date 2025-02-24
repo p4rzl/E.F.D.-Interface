@@ -3,6 +3,8 @@ from flask_login import login_user, login_required, logout_user, current_user
 from flask_socketio import SocketIO, emit
 from datetime import datetime, timezone, timedelta
 from dotenv import load_dotenv
+from predictions import CoastalPredictor
+import json
 import os
 import logging
 from models import User, ChatMessage
@@ -169,29 +171,43 @@ def home():
         logger.error(f'Errore nel caricamento della home page: {str(e)}')
         return render_template('500.html'), 500
 
-# Gestisce la ricarica dell'animazione delle correnti oceaniche
-@app.route('/reload_animation', methods=['POST'])
-@login_required
-def reload_animation():
-    if not current_user.is_admin:
-        flash('Accesso non autorizzato.', 'error')
-        return redirect(url_for('home'))
-    
+@app.route('/api/prediction/<int:year>')
+def get_prediction(year):
     try:
-        animation_path = 'static/img/currents_animation.gif'
-        from rivisit import create_ocean_currents_animation
+        predictor = CoastalPredictor()
+        data = predictor.get_data_for_year(year)
         
-        os.makedirs(os.path.dirname(animation_path), exist_ok=True)
-        if create_ocean_currents_animation(animation_path):
-            flash('Animazione ricaricata con successo!', 'success')
-        else:
-            flash('Errore durante la ricarica dell\'animazione.', 'error')
-            
+        return jsonify({
+            'coastline_features': data['coastline']['features'],
+            'risk_features': data['risk']['features'],
+            'prediction_factor': data['prediction_factor']
+        })
     except Exception as e:
-        logger.error(f'Errore nella ricarica dell\'animazione: {str(e)}')
-        flash('Errore durante la ricarica dell\'animazione.', 'error')
+        return jsonify({'error': str(e)}), 500
+
+def load_geojson(path):
+    if os.path.exists(path):
+        with open(path, 'r') as f:
+            return json.load(f)
+    return {'type': 'FeatureCollection', 'features': []}
+
+@app.route('/api/trend/<int:year>')
+@login_required
+def get_trend(year):
+    current_data = load_data_for_year(year)
+    previous_data = load_data_for_year(year - 1)
     
-    return redirect(url_for('home'))
+    trend = calculate_trend(current_data, previous_data)
+    
+    return jsonify(trend)
+
+def load_data_for_year(year):
+    """Carica i dati per un anno specifico"""
+    try:
+        with open(f'data/yearly_data/{year}.json', 'r') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {'risk': 0, 'coastline': 0}
 
 @app.route('/get_messages')
 @login_required

@@ -1,65 +1,113 @@
-mapboxgl.accessToken = '{{ mapbox_token }}';
+// Inizializzazione mappa
+const mapboxToken = document.getElementById('map').dataset.token;
+mapboxgl.accessToken = mapboxToken;
+
 const map = new mapboxgl.Map({
     container: 'map',
-    style: 'mapbox://styles/mapbox/navigation-night-v1',
-    center: [-3.073377, 36.746367], // Coordinate iniziali basate sui tuoi dati
-    zoom: 12
+    style: 'mapbox://styles/mapbox/satellite-v9',
+    center: [-3.0878, 36.7477],
+    zoom: 12,
+    preserveDrawingBuffer: true
 });
 
-// Aggiungi controlli
-map.addControl(new mapboxgl.NavigationControl());
-map.addControl(new mapboxgl.FullscreenControl());
-
-// Carica i dati quando la mappa è pronta
 map.on('load', () => {
-    // Aggiungi linee della costa
+    // Aggiungi controlli base
+    map.addControl(new mapboxgl.NavigationControl());
+    map.addControl(new mapboxgl.FullscreenControl());
+    
+    // Aggiungi sorgenti dati
     map.addSource('coastlines', {
         type: 'geojson',
-        data: '/data/results_analysis/01_Linea_orilla_2100/A01/A01-001/l_orilla_ini_A01-001_01.geojson'
+        data: {
+            type: 'FeatureCollection',
+            features: []
+        }
     });
     
+    map.addSource('risk-areas', {
+        type: 'geojson',
+        data: {
+            type: 'FeatureCollection',
+            features: []
+        }
+    });
+
+    // Aggiungi layer linea costiera
     map.addLayer({
         'id': 'coastline-layer',
         'type': 'line',
         'source': 'coastlines',
-        'layout': {},
+        'layout': {
+            'line-join': 'round',
+            'line-cap': 'round',
+            'visibility': 'visible'
+        },
         'paint': {
             'line-color': '#00ff00',
-            'line-width': 2
+            'line-width': 3,
+            'line-opacity': 0.8
         }
     });
 
-    // Aggiungi aree ROI
-    map.addSource('roi', {
-        type: 'geojson',
-        data: '/data/roi/A01-001_01/50/roi.geojson'
-    });
-
-    map.addLayer({
-        'id': 'roi-layer',
-        'type': 'fill',
-        'source': 'roi',
-        'layout': {},
-        'paint': {
-            'fill-color': '#ff0000',
-            'fill-opacity': 0.3
-        }
-    });
-
-    // Aggiungi livelli di rischio
-    map.addSource('risk', {
-        type: 'geojson',
-        data: '/data/risk/A01-001_01/50/economia.geojson'
-    });
-
+    // Aggiungi layer rischio
     map.addLayer({
         'id': 'risk-layer',
         'type': 'fill',
-        'source': 'risk',
-        'layout': {},
+        'source': 'risk-areas',
+        'layout': {
+            'visibility': 'visible'
+        },
         'paint': {
-            'fill-color': '#0000ff',
-            'fill-opacity': 0.3
+            'fill-color': [
+                'interpolate',
+                ['linear'],
+                ['get', 'risk_value'],
+                0, '#096',
+                50, '#ffff00',
+                100, '#ff0000'
+            ],
+            'fill-opacity': 0.6,
+            'fill-outline-color': '#000'
         }
     });
+
+    // Aggiungi controlli personalizzati
+    map.addControl(new TimeControl(), 'bottom-left');
+    map.addControl(new LegendControl(), 'top-right');
+
+    // Carica dati iniziali
+    updatePredictedData(2023);
 });
+
+function updatePredictedData(year) {
+    fetch(`/api/prediction/${year}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                console.error('Error:', data.error);
+                return;
+            }
+            
+            // Aggiorna layer costiera
+            if (map.getSource('coastlines')) {
+                map.getSource('coastlines').setData({
+                    type: 'FeatureCollection',
+                    features: data.coastline_features || []
+                });
+            }
+            
+            // Aggiorna layer rischio
+            if (map.getSource('risk-areas')) {
+                map.getSource('risk-areas').setData({
+                    type: 'FeatureCollection',
+                    features: data.risk_features || []
+                });
+            }
+
+            // Aggiorna legenda con fattore di predizione
+            updatePredictionFactor(data.prediction_factor);
+        })
+        .catch(error => {
+            console.error('Error loading data:', error);
+        });
+}

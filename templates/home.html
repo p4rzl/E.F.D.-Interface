@@ -4,9 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home Page</title>
+    <link rel='stylesheet' href='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css'>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon">
-    <link href='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css' rel='stylesheet' />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js'></script>
     <!--<script src='{{ url_for('static', filename='js/map.js') }}'></script>-->
     <style>
@@ -58,31 +59,13 @@
         <section class="ocean-currents">
             <div class="section-header">
                 <h2>Visualizzazione Correnti Oceaniche</h2>
-                {% if current_user.is_admin %}
-                    <form method="POST" action="{{ url_for('reload_animation') }}" class="reload-form">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                        <button type="submit" class="reload-btn">
-                            Ricarica Animazione
-                        </button>
-                    </form>
-                {% endif %}
             </div>
-            <!--<div class="map-legend">
-                <div class="legend-item">
-                    <div class="legend-color" style="background: #00ff00"></div>
-                    <span>Linea costa</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background: rgba(255,0,0,0.3)"></div>
-                    <span>Area ROI</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background: rgba(0,0,255,0.3)"></div>
-                    <span>Area Rischio</span>
-                </div>
-            </div>-->
             <div class="plot-container">
-                <div id="map"></div>
+                <div id="map" data-token="{{ mapbox_token }}"></div>
+                <div class="trend-indicator">
+                    <div id="riskTrend"></div>
+                    <div id="coastlineTrend"></div>
+                </div>
             </div>
         </section>
     </main>
@@ -106,23 +89,9 @@
             <button id="sendMessage">Invia</button>
         </div>
     </div>
-    
-
-    <script>
-        mapboxgl.accessToken = '{{ mapbox_token }}'; // Verrà inserito da Flask
-        const map = new mapboxgl.Map({
-            container: 'map',
-            style: 'mapbox://styles/mapbox/navigation-night-v1',
-            center: [0, 0],
-            zoom: 1
-        });
-        
-        map.addControl(new mapboxgl.NavigationControl());
-        map.addControl(new mapboxgl.FullscreenControl());
-    </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-
+    <script src="{{ url_for('static', filename='js/map.js') }}"></script>
     <script src="{{ url_for('static', filename='js/msg.js') }}"></script>
     <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
 </body>
