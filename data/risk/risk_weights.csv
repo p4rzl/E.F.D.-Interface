@@ -1,5 +1,4 @@
-risk,weight
-ei,0.20
-economia,0.30
-poblacion,0.30
-zp,0.20
+,weight,value
+Economico,0.3,0.65
+Sociale,0.4,0.75
+Ambientale,0.3,0.45

@@ -1,35 +1,61 @@
 // static/js/charts.js
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Inizializza i grafici con i dati
-    function initCharts() {
-        // Grafico rischi
-        const riskData = {
-            type: 'scatterpolar',
-            r: [4, 5, 3, 2], 
-            theta: ['Popolazione', 'Economia', 'Ambiente', 'Infrastrutture'],
-            fill: 'toself'
-        };
+    // Funzione globale per mostrare i grafici di una spiaggia
+    window.showBeachCharts = function(beachId) {
+        // Trova i dati della spiaggia
+        const beach = beachesData.find(b => b.id == beachId);
         
-        Plotly.newPlot('riskChart', [riskData], {
-            polar: {
-                radialaxis: {range: [0, 5]}
-            }
-        });
-
-        // Grafico pericoli
-        const hazardData = {
-            type: 'scatterpolar',
-            r: [3, 4, 2, 5],
-            theta: ['Erosione', 'Inondazione', 'Tempeste', 'Subsidenza'],
-            fill: 'toself'
-        };
+        if (!beach) {
+            console.error('Spiaggia non trovata: ', beachId);
+            return;
+        }
         
-        Plotly.newPlot('hazardChart', [hazardData], {
-            polar: {
-                radialaxis: {range: [0, 5]}
-            }
+        // Implementazione dei grafici
+        // In un'implementazione reale, questi dati verrebbero caricati dinamicamente
+        const years = Array.from({length: 78}, (_, i) => 2023 + i);
+        
+        // Simula dati di erosione (in un'implementazione reale, questi verrebbero dai dati)
+        const erosionRate = beach.erosion_rate || 0;
+        const erosionData = years.map(year => {
+            // Simula erosione progressiva
+            const yearsPassed = year - 2023;
+            return Math.max(0, (beach.width || 100) - (erosionRate * yearsPassed));
         });
-    }
-
-    initCharts();
+        
+        // Crea il grafico
+        const ctx = document.getElementById('erosionChart');
+        if (ctx) {
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: years,
+                    datasets: [{
+                        label: 'Larghezza della spiaggia (m)',
+                        data: erosionData,
+                        borderColor: 'rgb(75, 192, 192)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Larghezza (m)'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Anno'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    };
 });

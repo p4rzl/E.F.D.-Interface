@@ -6,6 +6,11 @@ import plotly.graph_objs as go
 from flask.helpers import get_root_path
 from jinja2 import Environment, FileSystemLoader
 from weasyprint import HTML
+import os
+from datetime import datetime
+from fpdf import FPDF
+import matplotlib.pyplot as plt
+from pathlib import Path
 
 root_path = get_root_path(__name__)
 
@@ -146,3 +151,200 @@ def get_beaches_graph(data):
     )
     
     return fig.to_html()
+
+def ensure_directory(path):
+    """Assicura che una directory esista, creandola se necessario."""
+    os.makedirs(path, exist_ok=True)
+    return path
+
+def generate_risk_report(beach, username):
+    """Genera un report PDF per il rischio di una spiaggia."""
+    try:
+        # Assicura che la directory reports esista
+        report_dir = ensure_directory('static/reports')
+        
+        # Crea un PDF
+        pdf = FPDF()
+        pdf.add_page()
+        
+        # Set font
+        pdf.set_font('Arial', 'B', 16)
+        
+        # Titolo
+        beach_name = beach.get('name', 'Spiaggia sconosciuta')
+        pdf.cell(0, 10, f'Report di Rischio: {beach_name}', 0, 1, 'C')
+        
+        # Informazioni sulla spiaggia
+        pdf.set_font('Arial', '', 12)
+        pdf.cell(0, 10, f'Generato da: {username}', 0, 1)
+        pdf.cell(0, 10, f'Data: {datetime.now().strftime("%d/%m/%Y %H:%M")}', 0, 1)
+        
+        pdf.ln(10)
+        
+        # Caratteristiche della spiaggia
+        pdf.set_font('Arial', 'B', 14)
+        pdf.cell(0, 10, 'Caratteristiche della spiaggia', 0, 1)
+        
+        pdf.set_font('Arial', '', 12)
+        pdf.cell(0, 10, f'Lunghezza: {beach.get("length", "N/A")} m', 0, 1)
+        pdf.cell(0, 10, f'Larghezza: {beach.get("width", "N/A")} m', 0, 1)
+        pdf.cell(0, 10, f'Indice di rischio: {beach.get("risk_index", "N/A")}', 0, 1)
+        pdf.cell(0, 10, f'Tasso di erosione: {beach.get("erosion_rate", "N/A")} m/anno', 0, 1)
+        
+        pdf.ln(10)
+        
+        # Simulazione di grafico di previsione
+        pdf.set_font('Arial', 'B', 14)
+        pdf.cell(0, 10, 'Previsione di erosione', 0, 1)
+        
+        # Crea un grafico con matplotlib
+        fig, ax = plt.subplots(figsize=(10, 6))
+        
+        # Usa valori di default se i dati non sono disponibili
+        try:
+            erosion_rate = float(beach.get('erosion_rate', 0))
+        except (ValueError, TypeError):
+            erosion_rate = 0.5  # valore di default
+            
+        try:
+            initial_width = float(beach.get('width', 100))
+        except (ValueError, TypeError):
+            initial_width = 50  # valore di default
+        
+        years = np.arange(2023, 2100)
+        widths = np.maximum(0, initial_width - erosion_rate * (years - 2023))
+        
+        ax.plot(years, widths, 'b-')
+        ax.set_xlabel('Anno')
+        ax.set_ylabel('Larghezza spiaggia (m)')
+        ax.set_title('Previsione di erosione nel tempo')
+        ax.grid(True)
+        
+        # Salva temporaneamente il grafico
+        beach_id = beach.get("id", "unknown")
+        chart_path = os.path.join(report_dir, f'erosion_chart_{beach_id}.png')
+        plt.savefig(chart_path)
+        plt.close()
+        
+        # Aggiungi il grafico al PDF
+        pdf.image(chart_path, x=10, y=None, w=180)
+        
+        # Aggiungi raccomandazioni
+        pdf.ln(10)
+        pdf.set_font('Arial', 'B', 14)
+        pdf.cell(0, 10, 'Raccomandazioni', 0, 1)
+        
+        pdf.set_font('Arial', '', 12)
+        if erosion_rate > 0.5:
+            pdf.multi_cell(0, 10, 'Questa spiaggia sta subendo un\'erosione significativa. Si raccomanda di considerare misure di mitigazione come ripascimenti periodici o strutture di protezione costiera.')
+        else:
+            pdf.multi_cell(0, 10, 'Questa spiaggia mostra un tasso di erosione moderato. Si consiglia di monitorare regolarmente le condizioni e pianificare interventi preventivi.')
+        
+        # Salva il PDF
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        pdf_filename = f'risk_report_{beach_id}_{timestamp}.pdf'
+        pdf_path = os.path.join(report_dir, pdf_filename)
+        pdf.output(pdf_path)
+        
+        # Rimuovi l'immagine temporanea
+        if os.path.exists(chart_path):
+            os.remove(chart_path)
+        
+        return pdf_path
+    
+    except Exception as e:
+        print(f"Errore durante la generazione del report di rischio: {str(e)}")
+        traceback.print_exc()
+        return None
+
+def generate_hazard_report(beach, username):
+    """Genera un report PDF per il pericolo di una spiaggia."""
+    # Assicura che la directory reports esista
+    report_dir = ensure_directory('static/reports')
+    
+    # Crea un PDF
+    pdf = FPDF()
+    pdf.add_page()
+    
+    # Set font
+    pdf.set_font('Arial', 'B', 16)
+    
+    # Titolo
+    beach_name = beach.get('name', 'Spiaggia sconosciuta')
+    pdf.cell(0, 10, f'Report di Pericolo: {beach_name}', 0, 1, 'C')
+    
+    # Informazioni sulla spiaggia
+    pdf.set_font('Arial', '', 12)
+    pdf.cell(0, 10, f'Generato da: {username}', 0, 1)
+    pdf.cell(0, 10, f'Data: {datetime.now().strftime("%d/%m/%Y %H:%M")}', 0, 1)
+    
+    pdf.ln(10)
+    
+    # Caratteristiche della spiaggia
+    pdf.set_font('Arial', 'B', 14)
+    pdf.cell(0, 10, 'Valutazione del pericolo', 0, 1)
+    
+    pdf.set_font('Arial', '', 12)
+    
+    # Dati di esempio - in un'app reale, questi valori verrebbero dal database
+    hazard_factors = {
+        'Inondazioni': 'Alto',
+        'Erosione costiera': 'Moderato',
+        'Maremoti': 'Basso',
+        'Tempeste': 'Moderato'
+    }
+    
+    for factor, level in hazard_factors.items():
+        pdf.cell(0, 10, f'{factor}: {level}', 0, 1)
+    
+    pdf.ln(10)
+    
+    # Crea un grafico a barre per i livelli di pericolo
+    pdf.set_font('Arial', 'B', 14)
+    pdf.cell(0, 10, 'Livelli di pericolo', 0, 1)
+    
+    fig, ax = plt.subplots(figsize=(10, 6))
+    
+    factors = list(hazard_factors.keys())
+    # Converti livelli testuali in valori numerici
+    values = [{'Alto': 3, 'Moderato': 2, 'Basso': 1}[level] for level in hazard_factors.values()]
+    
+    ax.bar(factors, values, color=['red', 'orange', 'blue', 'orange'])
+    ax.set_xlabel('Fattori di pericolo')
+    ax.set_ylabel('Livello (1=Basso, 2=Moderato, 3=Alto)')
+    ax.set_title('Analisi dei fattori di pericolo')
+    ax.set_ylim(0, 4)
+    plt.xticks(rotation=45, ha='right')
+    plt.tight_layout()
+    
+    # Salva temporaneamente il grafico
+    chart_path = os.path.join(report_dir, f'hazard_chart_{beach.get("id", "unknown")}.png')
+    plt.savefig(chart_path)
+    plt.close()
+    
+    # Aggiungi il grafico al PDF
+    pdf.image(chart_path, x=10, y=None, w=180)
+    
+    # Aggiungi raccomandazioni
+    pdf.ln(10)
+    pdf.set_font('Arial', 'B', 14)
+    pdf.cell(0, 10, 'Raccomandazioni di sicurezza', 0, 1)
+    
+    pdf.set_font('Arial', '', 12)
+    
+    # Raccomandazioni basate sul pericolo principale
+    if 'Alto' in hazard_factors.values():
+        pdf.multi_cell(0, 10, 'ATTENZIONE: È stato identificato un alto livello di pericolo per questa spiaggia. Si raccomandano misure di protezione immediate e la limitazione dell\'accesso durante condizioni meteorologiche avverse.')
+    else:
+        pdf.multi_cell(0, 10, 'Si raccomanda il monitoraggio regolare delle condizioni e l\'implementazione di sistemi di allarme tempestivo per i visitatori della spiaggia.')
+    
+    # Salva il PDF
+    pdf_filename = f'hazard_report_{beach.get("id", "unknown")}_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf'
+    pdf_path = os.path.join(report_dir, pdf_filename)
+    pdf.output(pdf_path)
+    
+    # Rimuovi l'immagine temporanea
+    if os.path.exists(chart_path):
+        os.remove(chart_path)
+    
+    return pdf_path

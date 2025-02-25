@@ -1,60 +1,68 @@
-from flask_login import UserMixin
+from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime, timedelta, timezone
-from flask import current_app
+from flask_login import UserMixin
+from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey
+from sqlalchemy.orm import relationship
 from extensions import db
-import random
 
 class User(UserMixin, db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    password = db.Column(db.String(200), nullable=False)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-    last_login = db.Column(db.DateTime)
-    is_active = db.Column(db.Boolean, default=True)
-    failed_login_attempts = db.Column(db.Integer, default=0)
-    locked_until = db.Column(db.DateTime)
-    is_admin = db.Column(db.Boolean, default=False)
-    avatar_id = db.Column(db.Integer, default=lambda: random.randint(1, 8)) 
-
+    __tablename__ = 'users'
+    
+    id = Column(Integer, primary_key=True)
+    username = Column(String(80), unique=True, nullable=False)
+    email = Column(String(120), unique=True, nullable=True)
+    password_hash = Column(String(256), nullable=False)
+    avatar_id = Column(String(20), default='1')
+    is_admin = Column(Boolean, default=False)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    last_login = Column(DateTime, nullable=True)
+    failed_login_attempts = Column(Integer, default=0)
+    lockout_until = Column(DateTime, nullable=True)
+    messages = relationship('Message', back_populates='user')
+    
     def set_password(self, password):
-        self.password = generate_password_hash(password, method='pbkdf2:sha256:260000')
+        self.password_hash = generate_password_hash(password)
     
     def check_password(self, password):
-        return check_password_hash(self.password, password)
+        return check_password_hash(self.password_hash, password)
     
-    def update_last_login(self):
-        self.last_login = datetime.now(timezone.utc)
-        self.failed_login_attempts = 0
-        self.locked_until = None
-        db.session.commit()
-
     def increment_failed_attempts(self):
+        from flask import current_app
         self.failed_login_attempts += 1
-        if self.failed_login_attempts >= current_app.config['MAX_LOGIN_ATTEMPTS']:
-            self.locked_until = datetime.now(timezone.utc) + timedelta(minutes=current_app.config['LOCKOUT_TIME'])
-        db.session.commit()
-
-    def is_locked(self):
-        if not self.locked_until:
-            return False
         
-        now = datetime.now(timezone.utc)
-        if now < self.locked_until:
-            return True
-            
-        self.locked_until = None
-        self.failed_login_attempts = 0
+        if self.failed_login_attempts >= current_app.config['MAX_LOGIN_ATTEMPTS']:
+            self.lockout_until = datetime.utcnow() + timedelta(minutes=current_app.config['ACCOUNT_LOCKOUT_MINUTES'])
+        
         db.session.commit()
+    
+    def reset_failed_attempts(self):
+        if self.failed_login_attempts > 0 or self.lockout_until:
+            self.failed_login_attempts = 0
+            self.lockout_until = None
+            db.session.commit()
+    
+    def is_locked(self):
+        if self.lockout_until and self.lockout_until > datetime.utcnow():
+            return True
+        elif self.lockout_until:
+            # Sblocco automatico dopo che il periodo di blocco è scaduto
+            self.lockout_until = None
+            db.session.commit()
         return False
+    
+    def get_lockout_remaining_time(self):
+        if not self.lockout_until:
+            return 0
+        
+        delta = self.lockout_until - datetime.utcnow()
+        return max(0, int(delta.total_seconds() / 60))
 
-    def __repr__(self):
-        return f'<User {self.username}>'
+class Message(db.Model):
+    __tablename__ = 'messages'
     
-class ChatMessage(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    message = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-    
-    user = db.relationship('User', backref='messages')
+    id = Column(Integer, primary_key=True)
+    text = Column(Text, nullable=False)
+    timestamp = Column(DateTime, default=datetime.utcnow, index=True)
+    user_id = Column(Integer, ForeignKey('users.id'))
+    user = relationship('User', back_populates='messages')

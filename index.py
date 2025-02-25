@@ -1,85 +1,43 @@
-from flask import Flask, render_template, redirect, url_for, request, flash, jsonify
-from flask_login import login_user, login_required, logout_user, current_user
-from flask_socketio import SocketIO, emit
-from datetime import datetime, timezone, timedelta
-from dotenv import load_dotenv
-from predictions import CoastalPredictor
-from pathlib import Path 
-import pandas as pd
-import geopandas as gpd
-import json
 import os
-import logging
-from models import User, ChatMessage
-from forms import LoginForm, RegistrationForm
-from extensions import db, login_manager, csrf
-from reports import get_risk_report, get_hazard_report, get_beaches_graph
+import json
+import numpy as np
+import pandas as pd
+import traceback
+from flask import Flask, render_template, redirect, url_for, flash, request, session, jsonify
+from flask_login import login_user, login_required, logout_user, current_user
+from datetime import datetime, timedelta
+from pathlib import Path
+from flask_socketio import emit
+from models import User, Message
+from forms import LoginForm, RegisterForm
+from extensions import db, login_manager, csrf, socketio
+from reports import generate_risk_report, generate_hazard_report
+from dotenv import load_dotenv
 
-# Configurazione logging
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levellevel)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+# Carica le variabili d'ambiente dal file .env
+load_dotenv()
 
-# Creazione della directory per le immagini statiche
-if not os.path.exists('static/img'):
-    os.makedirs('static/img')
+# Configurazione dell'app Flask
+app = Flask(__name__)
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'chiave_segreta')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///database.db')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['MAX_LOGIN_ATTEMPTS'] = 5
+app.config['ACCOUNT_LOCKOUT_MINUTES'] = 15
 
-# Crea e configura l'app Flask
-def create_app():
-    app = Flask(__name__)
-    load_dotenv()
+# Inizializza le estensioni
+db.init_app(app)
+csrf.init_app(app)
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+login_manager.login_message = 'Per favore, effettua il login per accedere a questa pagina.'
+login_manager.login_message_category = 'warning'
 
-    # Configurazioni di sicurezza
-    app.secret_key = os.getenv('SECRET_KEY')
-    app.config.update(
-        ENV=os.getenv('FLASK_ENV', 'production'),
-        SQLALCHEMY_DATABASE_URI=os.getenv('DATABASE_URL'),
-        SQLALCHEMY_TRACK_MODIFICATIONS=False,
-        SESSION_COOKIE_HTTPONLY=True,
-        SESSION_COOKIE_SECURE=os.getenv('FLASK_ENV') == 'production',
-        SESSION_COOKIE_SAMESITE='Lax',
-        PERMANENT_SESSION_LIFETIME=1800,
-        WTF_CSRF_TIME_LIMIT=3600,
-        MAX_LOGIN_ATTEMPTS=5,
-        LOCKOUT_TIME=30,
-    )
+# Token per Mapbox
+MAPBOX_TOKEN = os.environ.get('MAPBOX_TOKEN', 'pk.eyJ1IjoicDRyemwiLCJhIjoiY203ZWw3emd5MGN0eDJrc2V0eTdpcWN2ZCJ9.4VJRSR4REamVL1Qdw1wVdA')
 
-    # Inizializzazione delle estensioni
-    db.init_app(app)
-    csrf.init_app(app)
-    login_manager.init_app(app)
-    
-    # Configurazione login manager
-    login_manager.login_view = 'login'
-    login_manager.login_message = 'Per favore, effettua il login per accedere a questa pagina.'
-    login_manager.login_message_category = 'warning'
-    login_manager.refresh_view = 'login'
-    login_manager.needs_refresh_message = 'Per favore, effettua nuovamente il login per confermare la tua identità.'
-    login_manager.needs_refresh_message_category = 'warning'
-
-    # Registrazione dei middleware
-    @app.before_request
-    def require_login():
-        public_endpoints = ['login', 'register', 'static']
-        if not current_user.is_authenticated and request.endpoint not in public_endpoints:
-            return redirect(url_for('login'))
-
-    return app
-
-# Creazione dell'app e inizializzazione di socketio
-app = create_app()
-socketio = SocketIO(app, cors_allowed_origins="*")
-
-def cleanup_old_messages():
-    try:
-        three_days_ago = datetime.now(timezone.utc) - timedelta(days=3)
-        ChatMessage.query.filter(ChatMessage.created_at < three_days_ago).delete()
-        db.session.commit()
-    except Exception as e:
-        db.session.rollback()
-        logger.error(f'Errore nella pulizia dei messaggi: {str(e)}')
+# Inizializza SocketIO
+socketio.init_app(app, cors_allowed_origins="*")
 
 # Carica l'utente dal database
 @login_manager.user_loader
@@ -89,8 +47,15 @@ def load_user(user_id):
 # Gestisce l'accesso non autorizzato
 @login_manager.unauthorized_handler
 def unauthorized():
-    flash('Devi effettuare il login per accedere a questa pagina.', 'error')
+    flash('Devi effettuare il login per accedere a questa pagina.', 'warning')
     return redirect(url_for('login', next=request.url))
+
+# Solo le route pubbliche sono accessibili senza login
+@app.before_request
+def require_login():
+    public_endpoints = ['login', 'register', 'static']
+    if not current_user.is_authenticated and request.endpoint not in public_endpoints:
+        return redirect(url_for('login'))
 
 # Gestisce la registrazione degli utenti
 @app.route('/register', methods=['GET', 'POST'])
@@ -98,21 +63,25 @@ def register():
     if current_user.is_authenticated:
         return redirect(url_for('home'))
     
-    form = RegistrationForm()
+    form = RegisterForm()
     if form.validate_on_submit():
-        try:
-            user = User(
-                username=form.username.data
-            )
-            user.set_password(form.password.data)
-            db.session.add(user)
-            db.session.commit()
-            flash('Registrazione completata con successo! Ora puoi effettuare il login.', 'success')
-            return redirect(url_for('login'))
-        except Exception as e:
-            db.session.rollback()
-            logger.error(f'Errore durante la registrazione: {str(e)}')
-            flash('Si è verificato un errore durante la registrazione. Riprova più tardi.', 'error')
+        # Verifica se username esiste già
+        if User.query.filter_by(username=form.username.data).first():
+            flash('Username già in uso. Scegli un altro username.', 'error')
+            return render_template('register.html', form=form)
+        
+        # Crea nuovo utente
+        user = User(
+            username=form.username.data,
+            email=form.email.data,
+            avatar_id=form.avatar_id.data
+        )
+        user.set_password(form.password.data)
+        db.session.add(user)
+        db.session.commit()
+        
+        flash('Registrazione completata! Ora puoi effettuare il login.', 'success')
+        return redirect(url_for('login'))
     
     return render_template('register.html', form=form)
 
@@ -121,30 +90,30 @@ def register():
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('home'))
-
+    
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
         
-        if not user:
-            flash('Username o password non validi', 'error')
-            return render_template('login.html', form=form)
-            
-        if not user.is_active:
-            flash('Account disattivato. Contatta l\'amministratore.', 'error')
+        # Verifica se l'utente esiste
+        if user is None:
+            flash('Username non trovato. Controlla e riprova.', 'error')
             return render_template('login.html', form=form)
         
+        # Controlla se l'account è bloccato
         if user.is_locked():
-            remaining_time = int((user.locked_until - datetime.now(timezone.utc)).total_seconds() / 60)
+            remaining_time = user.get_lockout_remaining_time()
             flash(f'Account temporaneamente bloccato. Riprova tra {remaining_time} minuti.', 'error')
             return render_template('login.html', form=form)
-
+        
+        # Verifica la password
         if user.check_password(form.password.data):
-            login_user(user, remember=False)
-            user.update_last_login()
+            user.reset_failed_attempts()
+            login_user(user, remember=form.remember.data)
             next_page = request.args.get('next')
             return redirect(next_page if next_page and url_for('login') not in next_page else url_for('home'))
         
+        # Incrementa il contatore di tentativi falliti
         user.increment_failed_attempts()
         remaining_attempts = app.config['MAX_LOGIN_ATTEMPTS'] - user.failed_login_attempts
         flash(f'Password non valida. Tentativi rimanenti: {remaining_attempts}', 'error')
@@ -159,319 +128,495 @@ def logout():
     flash('Logout effettuato con successo', 'success')
     return redirect(url_for('login'))
 
-MAPBOX_TOKEN = os.getenv('MAPBOX_TOKEN')
-
-# Gestisce la visualizzazione della home page
+# Modifica le funzioni di caricamento dati per gestire meglio i casi di file mancanti
 @app.route('/')
 @app.route('/home')
-@login_required 
+@login_required
 def home():
     try:
-        # Carica dati dalle varie cartelle
-        beaches_data = pd.read_csv('data/beaches.csv')
-        risk_data = pd.read_csv('data/risk/risk_weights.csv')
-        hazard_data = pd.read_csv('data/hazard/hazard_weights.csv')
+        # Crea il percorso assoluto alla directory data
+        data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')
         
-        # Carica dati curve
-        curves_data = {}
-        curves_path = Path('data/curves')
-        for curve_file in curves_path.glob('*.csv'):
-            curves_data[curve_file.stem] = pd.read_csv(curve_file)
-
+        # Prepara dizionari vuoti per i dati
+        beaches_data = []
+        risk_data = {}
+        hazard_data = {}
+        beaches_geojson = None
+        economy_geojson = None
+        hazards_geojson = None
+        
+        # Carica dati delle spiagge se il file esiste
+        beaches_path = os.path.join(data_dir, 'beaches.csv')
+        if (os.path.exists(beaches_path)):
+            beaches_data = pd.read_csv(beaches_path)
+            # Converte valori problematici in float o None
+            numeric_columns = ['length', 'width', 'risk_index', 'erosion_rate']
+            for col in numeric_columns:
+                if col in beaches_data.columns:
+                    beaches_data[col] = pd.to_numeric(beaches_data[col], errors='coerce')
+            
+            # Converti NaN in None per gestire correttamente il template Jinja
+            beaches_data = beaches_data.replace({np.nan: None})
+            beaches_data = beaches_data.to_dict('records')
+        else:
+            print(f"File non trovato: {beaches_path}")
+            # Crea dati di esempio se il file non esiste
+            beaches_data = [
+                {"id": 1, "name": "Spiaggia di Esempio 1", "length": 500, "width": 25, "risk_index": 0.65, "erosion_rate": 0.5},
+                {"id": 2, "name": "Spiaggia di Esempio 2", "length": 800, "width": 30, "risk_index": 0.45, "erosion_rate": 0.3}
+            ]
+        
+        # Carica dati di rischio e pericolo
+        risk_path = os.path.join(data_dir, 'risk', 'risk_weights.csv')
+        if os.path.exists(risk_path):
+            # Legge il file CSV con indice
+            risk_df = pd.read_csv(risk_path, comment="#", index_col=0)
+            risk_df = risk_df.replace({np.nan: None})
+            
+            # Converti DataFrame in formato più accessibile per il template
+            risk_data = {}
+            for idx, row in risk_df.iterrows():
+                risk_data[idx] = {
+                    'weight': row.get('weight'),
+                    'value': row.get('value')
+                }
+        else:
+            # Dati di esempio per rischio
+            risk_data = {
+                'Economico': {'weight': 0.3, 'value': 0.65},
+                'Sociale': {'weight': 0.4, 'value': 0.75},
+                'Ambientale': {'weight': 0.3, 'value': 0.45}
+            }
+        
+        hazard_path = os.path.join(data_dir, 'hazard', 'hazard_weights.csv')
+        if os.path.exists(hazard_path):
+            # Legge il file CSV con indice
+            hazard_df = pd.read_csv(hazard_path, comment="#", index_col=0)
+            hazard_df = hazard_df.replace({np.nan: None})
+            
+            # Converti DataFrame in formato più accessibile per il template
+            hazard_data = {}
+            for idx, row in hazard_df.iterrows():
+                hazard_data[idx] = {
+                    'weight': row.get('weight'),
+                    'value': row.get('value')
+                }
+        else:
+            # Dati di esempio per pericolo
+            hazard_data = {
+                'Erosione': {'weight': 0.4, 'value': 0.8},
+                'Inondazione': {'weight': 0.3, 'value': 0.6},
+                'Tempeste': {'weight': 0.3, 'value': 0.5}
+            }
+        
+        # Prepara i dati geojson per la mappa
+        beaches_geojson_path = os.path.join(data_dir, 'beaches.geojson')
+        if os.path.exists(beaches_geojson_path):
+            with open(beaches_geojson_path, 'r') as f:
+                beaches_geojson = json.load(f)
+        else:
+            # Crea GeoJSON di esempio
+            beaches_geojson = {
+                "type": "FeatureCollection",
+                "features": [
+                    {
+                        "type": "Feature",
+                        "properties": {
+                            "id": 1,
+                            "name": "Spiaggia di Esempio 1",
+                            "length": 500,
+                            "width": 25,
+                            "risk_index": 0.65,
+                            "erosion_rate": 0.5
+                        },
+                        "geometry": {
+                            "type": "Polygon",
+                            "coordinates": [[[1.29, 41.11], [1.30, 41.11], [1.30, 41.12], [1.29, 41.12], [1.29, 41.11]]]
+                        }
+                    }
+                ]
+            }
+            
+        # Carica dati di economia e pericolo per la mappa
+        economy_geojson_path = os.path.join(data_dir, 'risk', 'economia.geojson')
+        if os.path.exists(economy_geojson_path):
+            with open(economy_geojson_path, 'r') as f:
+                economy_geojson = json.load(f)
+        
+        hazards_geojson_path = os.path.join(data_dir, 'risk', 'peligrosidad.geojson')
+        if os.path.exists(hazards_geojson_path):
+            with open(hazards_geojson_path, 'r') as f:
+                hazards_geojson = json.load(f)
+        
         # Prepara i dati per il template
         context = {
             'username': current_user.username,
             'mapbox_token': MAPBOX_TOKEN,
-            'beaches': beaches_data.to_dict('records'),
-            'risk_data': risk_data.to_dict('records'),
-            'hazard_data': hazard_data.to_dict('records'),
-            'curves_data': curves_data
+            'beaches': beaches_data,
+            'risk_data': risk_data,
+            'hazard_data': hazard_data,
+            'beaches_geojson': beaches_geojson,
+            'economy_geojson': economy_geojson,
+            'hazards_geojson': hazards_geojson
         }
         
         return render_template('home.html', **context)
+        
     except Exception as e:
-        logger.error(f'Errore nel caricamento della home page: {str(e)}')
+        import traceback
+        error_msg = f'Errore nel caricamento della home page: {str(e)}'
+        error_traceback = traceback.format_exc()
+        print(error_msg)
+        print(error_traceback)
+        flash(error_msg, 'error')
         return render_template('500.html'), 500
 
+# API per dati mappa con previsioni migliorate
 @app.route('/api/map-data')
 @login_required
 def get_map_data():
+    year = request.args.get('year', 2023, type=int)
+    layer_type = request.args.get('layer', 'all')
+    
     try:
-        # Carica i dati GeoJSON delle spiagge
-        beaches = gpd.read_file('data/beaches.geojson')
+        # Crea il percorso assoluto alla directory data
+        data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')
+        beaches_path = os.path.join(data_dir, 'beaches.csv')
         
-        # Carica altri layers 
-        economy = gpd.read_file('data/risk/economia.geojson')
-        hazards = gpd.read_file('data/risk/peligrosidad.geojson')
+        # Carica dati delle spiagge
+        if os.path.exists(beaches_path):
+            beaches_data = pd.read_csv(beaches_path)
+        else:
+            # Dati di esempio se il file non esiste
+            beaches_data = pd.DataFrame({
+                'id': range(1, 3),
+                'name': ['Spiaggia di Esempio 1', 'Spiaggia di Esempio 2'],
+                'length': [500, 800],
+                'width': [25, 30],
+                'risk_index': [0.65, 0.45],
+                'erosion_rate': [0.5, 0.3]
+            })
         
+        # Converti valori problematici in float
+        numeric_columns = ['length', 'width', 'risk_index', 'erosion_rate']
+        for col in numeric_columns:
+            if col in beaches_data.columns:
+                beaches_data[col] = pd.to_numeric(beaches_data[col], errors='coerce')
+        
+        # Crea una copia dei dati originali per confronto
+        original_data = beaches_data.copy()
+        
+        # Applica previsioni in base all'anno selezionato
+        if year > 2023:
+            years_forward = year - 2023
+            
+            # Simulazione di erosione (sottraendo larghezza basata sul tasso di erosione)
+            for i, beach in beaches_data.iterrows():
+                if pd.notna(beach['erosion_rate']) and pd.notna(beach['width']):
+                    # Calcola la nuova larghezza
+                    new_width = max(0, beach['width'] - (beach['erosion_rate'] * years_forward))
+                    beaches_data.at[i, 'width'] = new_width
+                    
+                    # Aggiorna l'indice di rischio (aumenta con l'erosione)
+                    if beach['width'] > 0:
+                        # Formula semplice: rischio aumenta proporzionalmente alla riduzione della larghezza
+                        width_reduction_ratio = (beach['width'] - new_width) / beach['width']
+                        risk_increase = min(0.5, width_reduction_ratio * 0.5)  # max 0.5 aumento
+                        new_risk = min(1.0, beach['risk_index'] + risk_increase)
+                        beaches_data.at[i, 'risk_index'] = new_risk
+        
+        # Converti dati in GeoJSON per la mappa
+        beaches_geojson = None
+        beaches_geojson_path = os.path.join(data_dir, 'beaches.geojson')
+        
+        if os.path.exists(beaches_geojson_path):
+            with open(beaches_geojson_path, 'r') as f:
+                beaches_geojson = json.load(f)
+                
+            # Aggiorna i dati GeoJSON con i valori previsti
+            if beaches_geojson and 'features' in beaches_geojson:
+                for feature in beaches_geojson['features']:
+                    if 'properties' in feature and 'id' in feature['properties']:
+                        beach_id = feature['properties']['id']
+                        beach_row = beaches_data[beaches_data['id'] == beach_id]
+                        
+                        if not beach_row.empty:
+                            feature['properties']['width'] = float(beach_row['width'].iloc[0])
+                            feature['properties']['risk_index'] = float(beach_row['risk_index'].iloc[0])
+        
+        # Prepara statistiche comparative
+        stats = {
+            'year': year,
+            'avg_width_reduction': (original_data['width'].mean() - beaches_data['width'].mean()) if year > 2023 else 0,
+            'avg_risk_increase': (beaches_data['risk_index'].mean() - original_data['risk_index'].mean()) if year > 2023 else 0,
+            'critically_eroded': beaches_data[beaches_data['width'] < 5].shape[0],
+            'total_beaches': beaches_data.shape[0]
+        }
+        
+        # Converti NaN in None
+        beaches_data = beaches_data.replace({np.nan: None})
+        
+        # Restituisci i dati
         return jsonify({
-            'beaches': beaches.to_json(),
-            'economy': economy.to_json(),
-            'hazards': hazards.to_json()
+            'beaches': beaches_data.to_dict('records'),
+            'geojson': beaches_geojson,
+            'stats': stats
         })
+    
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        print(f'Errore nella generazione dei dati della mappa: {str(e)}')
+        traceback.print_exc()
+        return jsonify({'error': 'Errore nel caricamento dei dati'}), 500
 
+# Gestisce la generazione di report di rischio
 @app.route('/risk-report')
 @login_required
 def risk_report():
-    data = get_data()
-    if data:
-        return str(get_risk_report("interactive", data))
-    return render_template('500.html'), 500
+    beach_id = request.args.get('beach', type=int)
+    if not beach_id:
+        flash('ID spiaggia non valido', 'error')
+        return redirect(url_for('home'))
+    
+    try:
+        beaches_data = pd.read_csv('data/beaches.csv')
+        beach = beaches_data[beaches_data['id'] == beach_id].iloc[0] if not beaches_data[beaches_data['id'] == beach_id].empty else None
+        
+        if beach is None:
+            flash('Spiaggia non trovata', 'error')
+            return redirect(url_for('home'))
+        
+        return render_template('risk_report.html', 
+                              beach=beach.to_dict(), 
+                              username=current_user.username)
+    except Exception as e:
+        flash(f'Errore nella generazione del report: {str(e)}', 'error')
+        return redirect(url_for('home'))
 
+# Gestisce la generazione di report di pericolo
 @app.route('/hazard-report')
 @login_required
 def hazard_report():
-    data = get_data()
-    if data:
-        return str(get_hazard_report("interactive", data))
-    return render_template('500.html'), 500
+    beach_id = request.args.get('beach', type=int)
+    if not beach_id:
+        flash('ID spiaggia non valido', 'error')
+        return redirect(url_for('home'))
+    
+    try:
+        beaches_data = pd.read_csv('data/beaches.csv')
+        beach = beaches_data[beaches_data['id'] == beach_id].iloc[0] if not beaches_data[beaches_data['id'] == beach_id].empty else None
+        
+        if beach is None:
+            flash('Spiaggia non trovata', 'error')
+            return redirect(url_for('home'))
+        
+        return render_template('hazard_report.html', 
+                              beach=beach.to_dict(), 
+                              username=current_user.username)
+    except Exception as e:
+        flash(f'Errore nella generazione del report: {str(e)}', 'error')
+        return redirect(url_for('home'))
 
+# Genera PDF del report di rischio
 @app.route('/risk-pdf')
 @login_required
 def risk_pdf():
-    data = get_data()
-    if data:
-        return send_file(
-            io.BytesIO(get_risk_report("static", data)),
-            mimetype="application/pdf",
-            as_attachment=True,
-            download_name="risk-report.pdf"
-        )
-    return render_template('500.html'), 500
-
-@app.route('/hazard-pdf')
-@login_required
-def hazard_pdf():
-    data = get_data()
-    if data:
-        return send_file(
-            io.BytesIO(get_hazard_report("static", data)),
-            mimetype="application/pdf",
-            as_attachment=True,
-            download_name="hazard-report.pdf"
-        )
-    return render_template('500.html'), 500
-
-@app.route('/beaches-graph')
-@login_required
-def beaches_graph():
-    data = get_data()
-    if data:
-        return get_beaches_graph(data)
-    return render_template('500.html'), 500
-
-def get_data():
-    session_data = session.get("data", {})
-    data = {
-        key: pd.read_json(
-            io.StringIO(df_json), 
-            orient="split", 
-            typ="series", 
-            convert_dates=False
-        )
-        for key, df_json in session_data.items()
-    }
-    return data    
-
-@app.route('/api/prediction/<int:year>')
-def get_prediction(year):
+    beach_id = request.args.get('beach', type=int)
+    if not beach_id:
+        return jsonify({'error': 'ID spiaggia non valido'}), 400
+    
     try:
-        predictor = CoastalPredictor()
-        data = predictor.get_data_for_year(year)
+        beaches_data = pd.read_csv('data/beaches.csv')
+        beach = beaches_data[beaches_data['id'] == beach_id].iloc[0] if not beaches_data[beaches_data['id'] == beach_id].empty else None
         
-        return jsonify({
-            'coastline_features': data['coastline']['features'],
-            'risk_features': data['risk']['features'],
-            'prediction_factor': data['prediction_factor']
-        })
+        if beach is None:
+            return jsonify({'error': 'Spiaggia non trovata'}), 404
+        
+        pdf_path = generate_risk_report(beach.to_dict(), current_user.username)
+        return jsonify({'success': True, 'pdf_path': pdf_path})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-def load_geojson(path):
-    if os.path.exists(path):
-        with open(path, 'r') as f:
-            return json.load(f)
-    return {'type': 'FeatureCollection', 'features': []}
-
-@app.route('/api/trend/<int:year>')
+# Genera PDF del report di pericolo
+@app.route('/hazard-pdf')
 @login_required
-def get_trend(year):
-    current_data = load_data_for_year(year)
-    previous_data = load_data_for_year(year - 1)
+def hazard_pdf():
+    beach_id = request.args.get('beach', type=int)
+    if not beach_id:
+        return jsonify({'error': 'ID spiaggia non valido'}), 400
     
-    trend = calculate_trend(current_data, previous_data)
-    
-    return jsonify(trend)
-
-def load_data_for_year(year):
-    """Carica i dati per un anno specifico"""
     try:
-        with open(f'data/yearly_data/{year}.json', 'r') as f:
-            return json.load(f)
-    except FileNotFoundError:
-        return {'risk': 0, 'coastline': 0}
-
-@app.route('/get_messages')
-@login_required
-def get_messages():
-    cleanup_old_messages()
-    messages = ChatMessage.query.order_by(ChatMessage.created_at.desc()).limit(50).all()
-    return jsonify([{
-        'username': msg.user.username,
-        'message': msg.message,
-        'timestamp': msg.created_at.strftime('%d/%m/%Y %H:%M'),
-        'avatar_id': msg.user.avatar_id
-    } for msg in messages])
-    
-def cleanup_old_messages():
-    try:
-        three_days_ago = datetime.now(timezone.utc) - timedelta(days=3)
-        ChatMessage.query.filter(ChatMessage.created_at < three_days_ago).delete()
-        db.session.commit()
+        beaches_data = pd.read_csv('data/beaches.csv')
+        beach = beaches_data[beaches_data['id'] == beach_id].iloc[0] if not beaches_data[beaches_data['id'] == beach_id].empty else None
+        
+        if beach is None:
+            return jsonify({'error': 'Spiaggia non trovata'}), 404
+        
+        pdf_path = generate_hazard_report(beach.to_dict(), current_user.username)
+        return jsonify({'success': True, 'pdf_path': pdf_path})
     except Exception as e:
-        db.session.rollback()
-        logger.error(f'Errore nella pulizia dei messaggi: {str(e)}')
+        return jsonify({'error': str(e)}), 500
 
-# WebSocket per i messaggi in tempo reale
-@socketio.on('send_message')
+# Gestione della chat
+@socketio.on('message')
 def handle_message(data):
-    if not current_user.is_authenticated:
-        return
-    
-    try:
-        message = ChatMessage(
-            user_id=current_user.id,
-            message=data['message']
-        )
-        db.session.add(message)
-        db.session.commit()
-        
-        emit('new_message', {
-            'username': current_user.username,
-            'message': message.message,
-            'timestamp': message.created_at.strftime('%d/%m/%Y %H:%M'),
-            'isAdmin': current_user.is_admin,
-            'avatar_id': current_user.avatar_id
-        }, broadcast=True)
-        
-    except Exception as e:
-        logger.error(f'Errore nell\'invio del messaggio: {str(e)}')
-        db.session.rollback()
-        
-# Gestisce la visualizzazione della pagina admin
+    if current_user.is_authenticated:
+        message_text = data.get('message', '').strip()
+        if message_text:
+            # Salva il messaggio nel database
+            message = Message(text=message_text, user_id=current_user.id)
+            db.session.add(message)
+            db.session.commit()
+            
+            # Invia il messaggio a tutti i client connessi
+            emit('message', {
+                'user': current_user.username,
+                'message': message_text,
+                'avatar_id': current_user.avatar_id,
+                'time': datetime.now().strftime('%H:%M')
+            }, broadcast=True)
+
+# Admin route
 @app.route('/admin')
 @login_required
 def admin():
     if not current_user.is_admin:
-        flash('Accesso non autorizzato.', 'error')
-        return redirect(url_for('home'))
-    return render_template('admin.html', users=User.query.all())
-
-# Gestisce la promozione/rimozione degli amministratori
-@app.route('/toggle_admin/<int:user_id>', methods=['POST'])
-@login_required
-def toggle_admin(user_id):
-    if not current_user.is_admin:
-        flash('Accesso non autorizzato.', 'error')
+        flash('Accesso negato: devi essere un amministratore per accedere a questa pagina', 'error')
         return redirect(url_for('home'))
     
-    try:
-        user_to_toggle = User.query.get_or_404(user_id)
-        
-        # Impedisci di modificare l'admin principale
-        if user_to_toggle.username == 'admin':
-            flash('Non puoi modificare i permessi dell\'amministratore principale.', 'error')
-            return redirect(url_for('admin'))
-        
-        # Impedisci di modificare il proprio stato di admin
-        if user_to_toggle == current_user:
-            flash('Non puoi modificare il tuo stato di amministratore.', 'error')
-            return redirect(url_for('admin'))
-            
-        # Controlla che ci sia sempre almeno un admin
-        if user_to_toggle.is_admin and User.query.filter_by(is_admin=True).count() <= 1:
-            flash('Deve esistere almeno un amministratore nel sistema.', 'error')
-            return redirect(url_for('admin'))
-        
-        user_to_toggle.is_admin = not user_to_toggle.is_admin
-        db.session.commit()
-        
-        action = "rimosso da" if not user_to_toggle.is_admin else "promosso ad"
-        flash(f'Utente {user_to_toggle.username} {action} amministratore.', 'success')
-        
-    except Exception as e:
-        db.session.rollback()
-        logger.error(f'Errore nella modifica dei permessi: {str(e)}')
-        flash('Errore durante la modifica dei permessi.', 'error')
-        
-    return redirect(url_for('admin'))
+    users = User.query.all()
+    return render_template('admin.html', users=users)
 
-# Gestisce l'attivazione/disattivazione degli utenti
+# Route per attivare/disattivare utenti
 @app.route('/toggle_user/<int:user_id>', methods=['POST'])
 @login_required
 def toggle_user(user_id):
     if not current_user.is_admin:
-        flash('Accesso non autorizzato.', 'error')
+        flash('Accesso negato: devi essere un amministratore per eseguire questa azione', 'error')
         return redirect(url_for('home'))
     
-    user_to_toggle = User.query.get_or_404(user_id)
+    user = User.query.get_or_404(user_id)
     
-    # Impedisci di disattivare l'admin principale
-    if user_to_toggle.username == 'admin':
-        flash('Non puoi disattivare l\'amministratore principale.', 'error')
+    # Previene la modifica dell'utente admin principale e dell'utente corrente
+    if user.username == 'admin' or user == current_user:
+        flash('Non puoi modificare questo utente', 'error')
         return redirect(url_for('admin'))
     
-    if user_to_toggle == current_user:
-        flash('Non puoi disattivare il tuo account.', 'error')
-        return redirect(url_for('admin'))
-        
-    user_to_toggle.is_active = not user_to_toggle.is_active
+    user.is_active = not user.is_active
     db.session.commit()
-    flash(f'Stato utente {user_to_toggle.username} aggiornato.', 'success')
+    
+    status = "attivato" if user.is_active else "disattivato"
+    flash(f'Utente {user.username} {status} con successo', 'success')
     return redirect(url_for('admin'))
 
-# Gestisce l'errore 404
+# Route per promuovere/declassare utenti ad admin
+@app.route('/toggle_admin/<int:user_id>', methods=['POST'])
+@login_required
+def toggle_admin(user_id):
+    if not current_user.is_admin:
+        flash('Accesso negato: devi essere un amministratore per eseguire questa azione', 'error')
+        return redirect(url_for('home'))
+    
+    user = User.query.get_or_404(user_id)
+    
+    # Previene la modifica dell'utente admin principale e dell'utente corrente
+    if user.username == 'admin' or user == current_user:
+        flash('Non puoi modificare questo utente', 'error')
+        return redirect(url_for('admin'))
+    
+    user.is_admin = not user.is_admin
+    db.session.commit()
+    
+    status = "promosso ad amministratore" if user.is_admin else "rimosso da amministratore"
+    flash(f'Utente {user.username} {status} con successo', 'success')
+    return redirect(url_for('admin'))
+
+# Gestione degli errori
 @app.errorhandler(404)
-def not_found_error(e):
+def page_not_found(e):
     return render_template('404.html'), 404
 
-# Gestisce l'errore 500
 @app.errorhandler(500)
 def internal_error(e):
     db.session.rollback()
     return render_template('500.html'), 500
 
-# Forza l'uso di HTTPS in produzione
+# HTTPS redirect in produzione
 @app.before_request
 def before_request():
-    if os.getenv('FLASK_ENV') == 'production':
+    if os.environ.get('FLASK_ENV') == 'production':
         if not request.is_secure and request.host != '127.0.0.1:5000':
             secure_url = request.url.replace('http://', 'https://', 1)
             return redirect(secure_url, code=301)
 
-# Inizializza il database dell'app
+# Pulizia dei messaggi vecchi (ridotta a 3 giorni)
+def cleanup_old_messages():
+    cutoff = datetime.now() - timedelta(days=3)  # Modificato da 7 a 3 giorni
+    old_messages = Message.query.filter(Message.timestamp < cutoff).all()
+    for message in old_messages:
+        db.session.delete(message)
+    db.session.commit()
+
+# Aggiungi una route per eseguire la pulizia dei messaggi
+@app.route('/admin/cleanup-messages', methods=['POST'])
+@login_required
+def admin_cleanup_messages():
+    if not current_user.is_admin:
+        flash('Accesso negato: devi essere un amministratore per eseguire questa azione', 'error')
+        return redirect(url_for('home'))
+    
+    try:
+        cleanup_old_messages()
+        flash('Pulizia dei messaggi vecchi completata con successo', 'success')
+    except Exception as e:
+        flash(f'Errore durante la pulizia dei messaggi: {str(e)}', 'error')
+    
+    return redirect(url_for('admin'))
+
+# Aggiungi un comando per eseguire automaticamente la pulizia dei messaggi
+@app.cli.command("cleanup-messages")
+def cleanup_messages_command():
+    """Pulisce i messaggi più vecchi di 3 giorni."""
+    with app.app_context():
+        cleanup_old_messages()
+        print("Pulizia dei messaggi completata.")
+
+# Inizializzazione del database
 def init_app_db():
     with app.app_context():
         db.create_all()
         # Crea utente admin se non esiste
         if not User.query.filter_by(username='admin').first():
             admin = User(username='admin', is_admin=True)
-            admin.set_password(os.getenv('ADMIN_PASSWORD', 'admin'))
+            admin_password = os.environ.get('ADMIN_PASSWORD', 'admin')
+            print(f"Creazione admin con password: {admin_password}")
+            admin.set_password(admin_password)
             db.session.add(admin)
             db.session.commit()
 
-@app.route('/api/geojson_files')
-def get_geojson_files():
-    geojson_files = []
-    for root, dirs, files in os.walk('data'):
-        for file in files:
-            if file.endswith('.geojson'):
-                file_path = os.path.join(root, file)
-                geojson_files.append(file_path)
-    return jsonify(geojson_files)
-
+# Esecuzione dell'applicazione
 if __name__ == '__main__':
+    # Crea le directory necessarie se non esistono
+    os.makedirs('data', exist_ok=True)
+    os.makedirs('static/reports', exist_ok=True)
+    
+    # Inizializza il database e l'utente admin
+    print("Inizializzazione del database...")
     init_app_db()
-    socketio.run(app, debug=False, host='0.0.0.0', port=5000)
+    
+    # Pulizia dei messaggi vecchi all'avvio
+    with app.app_context():
+        try:
+            cleanup_old_messages()
+            print("Pulizia automatica dei messaggi completata.")
+        except Exception as e:
+            print(f"Attenzione: Errore durante la pulizia dei messaggi: {e}")
+    
+    # Stampa un messaggio di avvio
+    print("============================================")
+    print("Applicazione avviata!")
+    print("Accedi a http://localhost:5000 nel browser")
+    print("Credenziali predefinite: admin/admin")
+    print("============================================")
+    
+    # Avvia l'app
+    socketio.run(app, debug=(os.environ.get('FLASK_ENV') == 'development'), host='0.0.0.0')

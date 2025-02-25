@@ -3,42 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style-login.css') }}">
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon">
-    <title>Login Page</title>
 </head>
 <body>
     <div class="login-container">
-        <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo Azienda" class="logo">
-        <h2>Login</h2>
+        <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo" class="logo">
+        <h2>Accedi</h2>
+        
         {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
         {% endwith %}
+        
         <form method="POST" action="{{ url_for('login') }}">
             {{ form.hidden_tag() }}
+            
             <div class="form-group">
-                {{ form.username.label }}
-                {{ form.username(class="form-control") }}
-                {% for error in form.username.errors %}
-                    <span class="error">{{ error }}</span>
-                {% endfor %}
+                {{ form.username(placeholder="Username") }}
+                {% if form.username.errors %}
+                    {% for error in form.username.errors %}
+                    <div class="error">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
             </div>
+            
             <div class="form-group">
-                {{ form.password.label }}
-                {{ form.password(class="form-control") }}
-                {% for error in form.password.errors %}
-                    <span class="error">{{ error }}</span>
-                {% endfor %}
+                {{ form.password(placeholder="Password") }}
+                {% if form.password.errors %}
+                    {% for error in form.password.errors %}
+                    <div class="error">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
             </div>
-            {{ form.submit(class="btn-login") }}
+            
+            <div class="form-group">
+                {{ form.remember() }} {{ form.remember.label }}
+            </div>
+            
+            <div class="form-group">
+                {{ form.submit(class="btn-login") }}
+            </div>
+            
+            <div class="register-link">
+                Non hai un account? <a href="{{ url_for('register') }}">Registrati</a>
+            </div>
         </form>
-        <div class="register-link">
-            <p>Non hai un account? <a href="{{ url_for('register') }}">Registrati</a></p>
-        </div>
     </div>
 </body>
 </html>

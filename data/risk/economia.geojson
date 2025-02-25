@@ -1,0 +1,1 @@
+{"type": "FeatureCollection", "features": [{"type": "Feature", "properties": {"name": "Zona Economica 1", "value": 0.75}, "geometry": {"type": "Polygon", "coordinates": [[[1.28, 41.1], [1.32, 41.1], [1.32, 41.13], [1.28, 41.13], [1.28, 41.1]]]}}]}

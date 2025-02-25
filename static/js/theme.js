@@ -1,52 +1,35 @@
-document.addEventListener('DOMContentLoaded', () => {
+// static/js/theme.js
+
+document.addEventListener('DOMContentLoaded', function() {
     const themeToggle = document.getElementById('theme-toggle');
+    const htmlElement = document.documentElement;
     const icon = themeToggle.querySelector('i');
     
-    // Controlla se c'è una preferenza salvata
-    const currentTheme = localStorage.getItem('theme') || 'light';
-    document.documentElement.setAttribute('data-theme', currentTheme);
+    // Controlla se l'utente ha già una preferenza salvata
+    const currentTheme = localStorage.getItem('theme');
     
-    // Aggiorna l'icona
-    if (currentTheme === 'dark') {
-        icon.classList.replace('fa-moon', 'fa-sun');
+    if (currentTheme) {
+        htmlElement.setAttribute('data-theme', currentTheme);
+        updateIcon(currentTheme);
     }
     
-    themeToggle.addEventListener('click', () => {
-        const currentTheme = document.documentElement.getAttribute('data-theme');
+    themeToggle.addEventListener('click', function() {
+        const currentTheme = htmlElement.getAttribute('data-theme') || 'light';
         const newTheme = currentTheme === 'light' ? 'dark' : 'light';
         
-        // Cambia il tema
-        document.documentElement.setAttribute('data-theme', newTheme);
+        htmlElement.setAttribute('data-theme', newTheme);
         localStorage.setItem('theme', newTheme);
         
-        // Cambia l'icona
-        if (newTheme === 'dark') {
-            icon.classList.replace('fa-moon', 'fa-sun');
-        } else {
-            icon.classList.replace('fa-sun', 'fa-moon');
-        }
+        updateIcon(newTheme);
     });
-
-    // Apply theme to timeline and legend
-    const applyThemeToElements = () => {
-        const theme = document.documentElement.getAttribute('data-theme');
-        const timeline = document.querySelector('.time-control');
-        const legend = document.querySelector('.legend');
-
-        if (timeline) {
-            timeline.style.backgroundColor = theme === 'dark' ? '#1a1a1a' : '#fff';
-            timeline.style.color = theme === 'dark' ? '#fff' : '#000';
+    
+    function updateIcon(theme) {
+        if (icon) {
+            if (theme === 'dark') {
+                icon.className = 'fas fa-sun';
+            } else {
+                icon.className = 'fas fa-moon';
+            }
         }
-
-        if (legend) {
-            legend.style.backgroundColor = theme === 'dark' ? '#1a1a1a' : '#fff';
-            legend.style.color = theme === 'dark' ? '#fff' : '#000';
-        }
-    };
-
-    // Apply theme on load
-    applyThemeToElements();
-
-    // Apply theme on theme change
-    themeToggle.addEventListener('click', applyThemeToElements);
+    }
 });

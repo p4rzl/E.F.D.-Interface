@@ -1,13 +1,10 @@
-
 <!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon">
-    <title>Errore del Server</title>
-</head>
-<body>
+    <title>Errore del server</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -20,34 +17,52 @@
             margin: 0;
         }
         .error-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 80vh;
             text-align: center;
             background: #fff;
             padding: 30px;
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
-        .error-container h1 {
-            font-size: 3em;
-            margin-bottom: 20px;
-            color: #dc3545;
-        }
-        .error-container p {
-            font-size: 1.2em;
-            margin-bottom: 20px;
-        }
-        .error-container a {
-            text-decoration: none;
-            color: #007bff;
+        
+        .error-code {
+            font-size: 8rem;
             font-weight: bold;
+            color: var(--primary-color);
+            margin: 0;
         }
-        .error-container a:hover {
-            text-decoration: underline;
+        
+        .error-message {
+            font-size: 1.5rem;
+            margin: 1rem 0 2rem;
+        }
+        
+        .back-btn {
+            padding: 10px 20px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+        
+        .back-btn:hover {
+            background-color: var(--secondary-color);
         }
     </style>
+</head>
+<body>
     <div class="error-container">
-        <h1>500 - Errore del Server</h1>
-        <p>Si è verificato un errore interno del server.</p>
-        <a href="{{ url_for('home') }}">Torna alla Home</a>
+        <h1 class="error-code">500</h1>
+        <p class="error-message">Si è verificato un errore interno del server.</p>
+        <a href="{{ url_for('home') }}" class="back-btn">Torna alla Home</a>
     </div>
 </body>
 </html>

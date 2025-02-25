@@ -3,49 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrazione</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style-login.css') }}">
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon">
-    <title>Registrazione</title>
 </head>
 <body>
     <div class="register-container">
-        <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo Azienda" class="logo">
+        <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo" class="logo">
         <h2>Registrazione</h2>
+        
         {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
         {% endwith %}
+        
         <form method="POST" action="{{ url_for('register') }}">
             {{ form.hidden_tag() }}
+            
             <div class="form-group">
-                {{ form.username.label }}
-                {{ form.username(class="form-control") }}
-                {% for error in form.username.errors %}
-                    <span class="error">{{ error }}</span>
-                {% endfor %}
+                {{ form.username(placeholder="Username") }}
+                {% if form.username.errors %}
+                    {% for error in form.username.errors %}
+                    <div class="error">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
             </div>
+            
             <div class="form-group">
-                {{ form.password.label }}
-                {{ form.password(class="form-control") }}
-                {% for error in form.password.errors %}
-                    <span class="error">{{ error }}</span>
-                {% endfor %}
+                {{ form.email(placeholder="Email") }}
+                {% if form.email.errors %}
+                    {% for error in form.email.errors %}
+                    <div class="error">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
             </div>
+            
             <div class="form-group">
-                {{ form.confirm_password.label }}
-                {{ form.confirm_password(class="form-control") }}
-                {% for error in form.confirm_password.errors %}
-                    <span class="error">{{ error }}</span>
-                {% endfor %}
+                {{ form.password(placeholder="Password") }}
+                {% if form.password.errors %}
+                    {% for error in form.password.errors %}
+                    <div class="error">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
             </div>
-            {{ form.submit(class="btn-register") }}
+            
+            <div class="form-group">
+                {{ form.confirm_password(placeholder="Conferma Password") }}
+                {% if form.confirm_password.errors %}
+                    {% for error in form.confirm_password.errors %}
+                    <div class="error">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label>Scegli un avatar</label>
+                <div class="avatar-selection">
+                    {% for i in range(1, 9) %}
+                    <div class="avatar-option">
+                        <input type="radio" name="avatar_id" id="avatar{{ i }}" value="{{ i }}" class="avatar-radio" {% if i == 1 %}checked{% endif %}>
+                        <label for="avatar{{ i }}">
+                            <img src="{{ url_for('static', filename='img/avatars/' ~ i ~ '.png') }}" alt="Avatar {{ i }}" class="avatar-img {% if i == 1 %}selected{% endif %}" onclick="selectAvatar({{ i }})">
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="form-group">
+                {{ form.submit(class="btn-register") }}
+            </div>
+            
+            <div class="login-link">
+                Hai già un account? <a href="{{ url_for('login') }}">Accedi</a>
+            </div>
         </form>
-        <div class="login-link">
-            <p>Hai già un account? <a href="{{ url_for('login') }}">Accedi</a></p>
-        </div>
     </div>
+    
+    <script>
+        function selectAvatar(id) {
+            // Rimuovi la classe "selected" da tutti
+            document.querySelectorAll('.avatar-img').forEach(img => {
+                img.classList.remove('selected');
+            });
+            
+            // Aggiungi la classe "selected" all'immagine cliccata
+            document.querySelector('#avatar' + id + ' + label img').classList.add('selected');
+            
+            // Seleziona il radio button
+            document.querySelector('#avatar' + id).checked = true;
+        }
+    </script>
 </body>
 </html>

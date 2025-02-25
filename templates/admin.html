@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pannello Amministratore</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon">
 </head>
 <body>
@@ -14,6 +16,7 @@
                 <li><a href="{{ url_for('home') }}">Home</a></li>
                 <li><a href="{{ url_for('admin') }}" class="active">Admin Panel</a></li>
                 <li class="user-info">
+                    <img src="{{ url_for('static', filename='img/avatars/' + current_user.avatar_id|string + '.png') }}" alt="Avatar" class="user-avatar">
                     <span>{{ current_user.username }}</span>
                     <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
                 </li>
@@ -21,10 +24,10 @@
         </nav>
     </header>
 
-    <main>
+    <div class="dashboard-container">
         <section class="welcome-section">
             <h1>Pannello di Amministrazione</h1>
-            <p>Gestisci gli utenti e i loro permessi</p>
+            <p>Gestisci gli utenti e i loro permessi nel sistema</p>
         </section>
 
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -35,12 +38,32 @@
             {% endif %}
         {% endwith %}
 
+        <!-- Statistiche -->
+        <div class="admin-stats">
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-users"></i></div>
+                <div class="stat-value">{{ users|length }}</div>
+                <div class="stat-label">Totale Utenti</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-user-shield"></i></div>
+                <div class="stat-value">{{ users|selectattr('is_admin', 'eq', True)|list|length }}</div>
+                <div class="stat-label">Amministratori</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon"><i class="fas fa-user-slash"></i></div>
+                <div class="stat-value">{{ users|selectattr('is_active', 'eq', False)|list|length }}</div>
+                <div class="stat-label">Utenti Inattivi</div>
+            </div>
+        </div>
+
         <section class="admin-panel">
+            <h2><i class="fas fa-users-cog"></i> Gestione Utenti</h2>
             <div class="table-container">
                 <table>
                     <thead>
                         <tr>
-                            <th>Username</th>
+                            <th>Utente</th>
                             <th>Stato</th>
                             <th>Ruolo</th>
                             <th>Azioni</th>
@@ -48,19 +71,21 @@
                     </thead>
                     <tbody>
                         {% for user in users %}
-                        <tr class="{{ 'current-user' if user == current_user }}">
+                        <tr class="{{ 'current-user' if user == current_user }} {{ 'user-row-locked' if not user.is_active }}">
                             <td class="user-cell">
                                 <img src="{{ url_for('static', filename='img/avatars/' + user.avatar_id|string + '.png') }}" 
-                                     alt="Avatar" 
-                                     class="user-avatar">
+                                    alt="Avatar" 
+                                    class="user-avatar">
                                 <div class="user-info-admin">
-                                    {{ user.username }}
-                                    {% if user.username == 'admin' %}
-                                        <span class="admin-badge">Admin Principale</span>
-                                    {% endif %}
-                                    {% if user == current_user %}
-                                        <span class="current-user-badge">Tu</span>
-                                    {% endif %}
+                                    <span class="username">{{ user.username }}</span>
+                                    <div>
+                                        {% if user.username == 'admin' %}
+                                            <span class="admin-badge">Admin Principale</span>
+                                        {% endif %}
+                                        {% if user == current_user %}
+                                            <span class="current-user-badge">Tu</span>
+                                        {% endif %}
+                                    </div>
                                 </div>
                             </td>
                             <td class="status-cell">
@@ -79,6 +104,7 @@
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button type="submit" class="btn-toggle" 
                                                 {{ 'disabled' if user == current_user or user.username == 'admin' }}>
+                                            <i class="fas {{ 'fa-user-slash' if user.is_active else 'fa-user-check' }}"></i>
                                             {{ "Disattiva" if user.is_active else "Attiva" }}
                                         </button>
                                     </form>
@@ -87,6 +113,7 @@
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button type="submit" class="btn-admin" 
                                                 {{ 'disabled' if user == current_user or user.username == 'admin' }}>
+                                            <i class="fas {{ 'fa-user-minus' if user.is_admin else 'fa-user-plus' }}"></i>
                                             {{ "Rimuovi Admin" if user.is_admin else "Rendi Admin" }}
                                         </button>
                                     </form>
@@ -98,7 +125,21 @@
                 </table>
             </div>
         </section>
-    </main>
+        
+        <section class="admin-actions">
+            <h2><i class="fas fa-cogs"></i> Azioni di Manutenzione</h2>
+            
+            <div class="action-card">
+                <h3>Pulizia dei Messaggi</h3>
+                <p>Elimina tutti i messaggi più vecchi di 3 giorni dal database per ottimizzare le prestazioni e lo spazio di archiviazione.</p>
+                <form method="POST" action="{{ url_for('admin_cleanup_messages') }}" class="cleanup-action">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit">Esegui Pulizia Messaggi</button>
+                </form>
+            </div>
+        </section>
+    </div>
+    
     <div class="chat-notification" id="chatNotification"></div>
     
     <div class="chat-button" id="chatButton">
@@ -120,8 +161,7 @@
     </div>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-
     <script src="{{ url_for('static', filename='js/msg.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
 </body>
 </html>

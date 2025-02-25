@@ -1,125 +1,94 @@
-document.addEventListener('DOMContentLoaded', function () {
-    // Inizializza socket.io
-    const socket = io();
+// static/js/msg.js
+
+document.addEventListener('DOMContentLoaded', function() {
     const chatButton = document.getElementById('chatButton');
     const chatContainer = document.getElementById('chatContainer');
     const closeChat = document.getElementById('closeChat');
     const messageInput = document.getElementById('messageInput');
     const sendMessage = document.getElementById('sendMessage');
     const chatMessages = document.getElementById('chatMessages');
-
-    // Imposta isAdmin come variabile JavaScript
-    const isAdmin = document.body.dataset.isAdmin === 'true';
-
-    // Funzione per mostrare le notifiche
-    function showNotification(message, username) {
-        if (!chatContainer.classList.contains('active')) {
-            const notification = document.getElementById('chatNotification');
-            notification.textContent = `${username}: ${message}`;
-            notification.classList.add('show');
-            chatButton.classList.add('new-message');
-
-            setTimeout(() => {
-                notification.classList.add('hide');
+    
+    // Socket.io per la chat in tempo reale
+    let socket;
+    try {
+        socket = io();
+    } catch (e) {
+        console.error('Errore nella connessione Socket.IO:', e);
+    }
+    
+    if (socket) {
+        // Gestione connessione socket
+        socket.on('connect', function() {
+            console.log('Connesso al server');
+        });
+        
+        // Ricezione messaggi
+        socket.on('message', function(data) {
+            appendMessage(data.user, data.message, data.avatar_id);
+            
+            // Notifica se la chat è chiusa
+            if (chatContainer.style.display !== 'flex') {
+                chatButton.classList.add('new-message');
+                const notification = document.getElementById('chatNotification');
+                notification.textContent = 'Nuovo messaggio!';
+                notification.style.display = 'block';
+                
                 setTimeout(() => {
-                    notification.classList.remove('show', 'hide');
-                    chatButton.classList.remove('new-message');
-                }, 300);
-            }, 5000);
-        }
+                    notification.style.display = 'none';
+                }, 3000);
+            }
+        });
     }
-
-    // Modifica la funzione addMessage per il corretto allineamento
-    function addMessage(data) {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = 'message';
-
-        const avatarImg = document.createElement('img');
-        avatarImg.src = `/static/img/avatars/${data.avatar_id}.png`;
-        avatarImg.alt = 'Avatar';
-        avatarImg.className = 'message-avatar';
-
-        const userInfoDiv = document.createElement('div');
-        userInfoDiv.className = 'message-user-info';
-
-        const usernameSpan = document.createElement('span');
-        usernameSpan.className = `username ${data.isAdmin ? 'admin' : ''}`;
-        usernameSpan.textContent = data.username;
-
-        const timestampSpan = document.createElement('span');
-        timestampSpan.className = 'timestamp';
-        timestampSpan.textContent = data.timestamp;
-
-        const contentDiv = document.createElement('div');
-        contentDiv.className = 'message-content';
-        contentDiv.textContent = data.message;
-
-        userInfoDiv.appendChild(usernameSpan);
-        userInfoDiv.appendChild(timestampSpan);
-
-        const messageContentWrapper = document.createElement('div');
-        messageContentWrapper.className = 'message-wrapper';
-        messageContentWrapper.appendChild(userInfoDiv);
-        messageContentWrapper.appendChild(contentDiv);
-
-        messageDiv.appendChild(avatarImg);
-        messageDiv.appendChild(messageContentWrapper);
-
-        chatMessages.appendChild(messageDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-
-        // Mostra notifica se la chat è chiusa
-        if (!chatContainer.classList.contains('active')) {
-            showNotification(data.message, data.username);
-        }
-    }
-
-    // Gestione eventi chat
-    chatButton.addEventListener('click', () => {
-        chatContainer.classList.toggle('active');
-        if (chatContainer.classList.contains('active')) {
-            loadMessages();
+    
+    // Mostra/nascondi chat
+    chatButton.addEventListener('click', function() {
+        if (chatContainer.style.display === 'flex') {
+            chatContainer.style.display = 'none';
+        } else {
+            chatContainer.style.display = 'flex';
+            chatButton.classList.remove('new-message');
         }
     });
-
-    closeChat.addEventListener('click', () => {
-        chatContainer.classList.remove('active');
+    
+    closeChat.addEventListener('click', function() {
+        chatContainer.style.display = 'none';
     });
-
-    // Carica messaggi esistenti
-    function loadMessages() {
-        fetch('/get_messages')
-            .then(response => response.json())
-            .then(messages => {
-                chatMessages.innerHTML = '';
-                messages.reverse().forEach(msg => {
-                    msg.isAdmin = msg.username === 'admin';
-                    addMessage(msg);
-                });
-            });
-    }
-
-    // Gestione invio messaggi
-    function sendNewMessage() {
+    
+    // Invio messaggi
+    function sendChatMessage() {
         const message = messageInput.value.trim();
-        if (message) {
-            socket.emit('send_message', { message: message });
+        
+        if (message && socket) {
+            socket.emit('message', { message: message });
             messageInput.value = '';
         }
     }
-
-    sendMessage.addEventListener('click', sendNewMessage);
-    messageInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') sendNewMessage();
+    
+    sendMessage.addEventListener('click', sendChatMessage);
+    
+    messageInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            sendChatMessage();
+        }
     });
-
-    // Socket.io event listeners
-    socket.on('connect', () => {
-        console.log('Connected to socket.io');
-    });
-
-    socket.on('new_message', (data) => {
-        data.isAdmin = data.username === 'admin';
-        addMessage(data);
-    });
+    
+    // Funzione per aggiungere messaggi alla chat
+    function appendMessage(user, message, avatarId) {
+        const messageElement = document.createElement('div');
+        messageElement.className = 'message';
+        
+        messageElement.innerHTML = `
+            <img src="/static/img/avatars/${avatarId}.png" alt="${user}" class="message-avatar">
+            <div class="message-content">
+                <div class="message-user-info">
+                    <span class="message-username">${user}</span>
+                    <span class="message-time">${new Date().toLocaleTimeString()}</span>
+                </div>
+                <div class="message-text">${message}</div>
+            </div>
+        `;
+        
+        chatMessages.appendChild(messageElement);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
 });
