@@ -4,7 +4,7 @@
 
 1. Clona questo repository e installa le dipendenze:
 ```bash
-git clone <repository-url>
+git clone https://github.com/p4rzl/spagna-login.git
 cd spagna-login
 chmod +x install_dependencies.sh
 ./install_dependencies.sh
