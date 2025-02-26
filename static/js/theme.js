@@ -2,34 +2,61 @@
 
 document.addEventListener('DOMContentLoaded', function() {
     const themeToggle = document.getElementById('theme-toggle');
-    const htmlElement = document.documentElement;
-    const icon = themeToggle.querySelector('i');
+    const currentTheme = localStorage.getItem('theme') || 'light';
+    const iconElement = themeToggle ? themeToggle.querySelector('i') : null;
     
-    // Controlla se l'utente ha già una preferenza salvata
-    const currentTheme = localStorage.getItem('theme');
+    // Applica il tema iniziale
+    document.body.classList.toggle('dark-theme', currentTheme === 'dark');
     
-    if (currentTheme) {
-        htmlElement.setAttribute('data-theme', currentTheme);
-        updateIcon(currentTheme);
+    // Aggiorna l'icona se esiste
+    if (iconElement) {
+        iconElement.className = currentTheme === 'dark' 
+            ? 'fas fa-sun' 
+            : 'fas fa-moon';
     }
     
-    themeToggle.addEventListener('click', function() {
-        const currentTheme = htmlElement.getAttribute('data-theme') || 'light';
-        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-        
-        htmlElement.setAttribute('data-theme', newTheme);
-        localStorage.setItem('theme', newTheme);
-        
-        updateIcon(newTheme);
-    });
-    
-    function updateIcon(theme) {
-        if (icon) {
-            if (theme === 'dark') {
-                icon.className = 'fas fa-sun';
-            } else {
-                icon.className = 'fas fa-moon';
+    // Gestione dell'evento di cambio tema
+    if (themeToggle) {
+        themeToggle.addEventListener('click', function() {
+            const isDark = document.body.classList.toggle('dark-theme');
+            const theme = isDark ? 'dark' : 'light';
+            
+            // Salva in localStorage
+            localStorage.setItem('theme', theme);
+            
+            // Aggiorna l'icona
+            if (iconElement) {
+                iconElement.className = isDark 
+                    ? 'fas fa-sun' 
+                    : 'fas fa-moon';
             }
-        }
+            
+            // Emetti un evento custom per notificare il cambio tema
+            document.dispatchEvent(new CustomEvent('themeChanged', {
+                detail: {
+                    theme: theme
+                }
+            }));
+        });
+    }
+    
+    // Applica il tema per i report
+    const reportContainer = document.querySelector('.report-container');
+    if (reportContainer) {
+        // Per assicurarsi che il cambio di tema funzioni nei report
+        const applyThemeToReport = function() {
+            const theme = localStorage.getItem('theme') || 'light';
+            document.body.classList.toggle('dark-theme', theme === 'dark');
+        };
+        
+        // Applica il tema all'avvio
+        applyThemeToReport();
+        
+        // Ascolta eventuali cambi di tema
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'theme') {
+                applyThemeToReport();
+            }
+        });
     }
 });

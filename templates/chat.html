@@ -1,0 +1,147 @@
+{% extends "layout.html" %}
+
+{% block title %}Chat - Sistema di Gestione Costiera{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chat-page.css') }}">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="chat-page-container">
+    <div class="chat-sidebar">
+        <div class="sidebar-header">
+            <h2>Utenti</h2>
+        </div>
+        <div class="users-list">
+            <div class="users-section">
+                <h3>Online</h3>
+                {% for user in users %}
+                    <div class="user-item">
+                        <img src="{{ url_for('static', filename='img/avatars/' + user.avatar_id|string + '.png') }}" alt="Avatar" class="user-avatar">
+                        <span class="user-name">{{ user.username }}</span>
+                        {% if user.is_admin %}
+                            <span class="admin-badge">Admin</span>
+                        {% endif %}
+                        {% if user == current_user %}
+                            <span class="current-user-badge">Tu</span>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="chat-main">
+        <div class="chat-header">
+            <h3 class="chat-title">
+                <i class="fas fa-comments"></i>
+                Discussione Generale
+            </h3>
+        </div>
+        
+        <div class="chat-messages-container" id="chat-messages">
+            {% for message in messages %}
+                <div class="chat-message {% if message.user_id == current_user.id %}own-message{% endif %}" id="{{ 'msg-' ~ message.id }}">
+                    <img src="{{ url_for('static', filename='img/avatars/' + message.user.avatar_id|string + '.png') }}" alt="Avatar" class="message-avatar">
+                    <div class="message-content">
+                        <div class="message-header">
+                            <span class="message-sender {% if message.user.is_admin %}admin-name{% endif %}">{{ message.user.username }}</span>
+                            <span class="message-time">{{ message.timestamp.strftime('%H:%M') }}</span>
+                        </div>
+                        <div class="message-text">{{ message.text }}</div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <div class="chat-input-container">
+            <form class="chat-input-form" id="message-form">
+                <input type="text" class="chat-input" id="message-input" placeholder="Scrivi un messaggio..." autocomplete="off">
+                <button type="submit" class="send-button">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const socket = io();
+        const messageForm = document.getElementById('message-form');
+        const messageInput = document.getElementById('message-input');
+        const messagesContainer = document.getElementById('chat-messages');
+        
+        // Auto scroll al fondo all'avvio
+        scrollToBottom();
+        
+        // Gestione invio messaggi
+        messageForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const message = messageInput.value.trim();
+            if (message) {
+                socket.emit('message', { message: message });
+                messageInput.value = '';
+                messageInput.focus();
+            }
+        });
+        
+        // Ricezione messaggi
+        socket.on('message', function(data) {
+            // Verifica se è un messaggio già presente (per evitare duplicati)
+            if (document.getElementById(data.id)) {
+                return;
+            }
+            
+            const isOwnMessage = data.user === "{{ current_user.username }}";
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${isOwnMessage ? 'own-message' : ''}`;
+            messageDiv.id = data.id;
+            
+            messageDiv.innerHTML = `
+                <img src="{{ url_for('static', filename='img/avatars/') }}${data.avatar_id}.png" alt="Avatar" class="message-avatar">
+                <div class="message-content">
+                    <div class="message-header">
+                        <span class="message-sender ${data.is_admin ? 'admin-name' : ''}">${data.user}</span>
+                        <span class="message-time">${data.time}</span>
+                    </div>
+                    <div class="message-text">${data.message}</div>
+                </div>
+            `;
+            
+            messagesContainer.appendChild(messageDiv);
+            scrollToBottom();
+            
+            // Riproduci suono per nuovi messaggi (solo se non è il proprio messaggio)
+            if (!isOwnMessage) {
+                playMessageSound();
+            }
+        });
+        
+        // Funzione per scorrere in fondo alla chat
+        function scrollToBottom() {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+        
+        // Funzione per riprodurre suono messaggio
+        function playMessageSound() {
+            try {
+                const sound = new Audio('{{ url_for("static", filename="audio/message.mp3") }}');
+                sound.volume = 0.5;
+                sound.play().catch(e => console.log('Errore nella riproduzione del suono:', e));
+            } catch (error) {
+                console.log('Errore nel caricamento del suono:', error);
+            }
+        }
+        
+        // Rimuovi la classe di caricamento quando tutti i messaggi sono caricati
+        window.addEventListener('load', function() {
+            document.body.classList.remove('loading');
+        });
+    });
+</script>
+{% endblock %}

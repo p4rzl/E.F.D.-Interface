@@ -1,0 +1,200 @@
+/* Stili per i report di rischio e pericolo */
+
+:root {
+    /* Assicuriamo che la variabile font-headers sia disponibile */
+    --font-headers: "Scala", "Garamond", serif;
+}
+
+/* Titoli in font serif per i report invece che in corsivo */
+.report-container h1,
+.report-container h2, 
+.report-container h3, 
+.report-container h4, 
+.report-container h5, 
+.report-container h6 {
+    font-family: var(--font-headers);
+    font-weight: 500;
+    color: var(--primary-color);
+}
+
+/* Contenitore principale del report */
+.report-container {
+    max-width: 1100px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    box-shadow: var(--shadow-standard);
+    border-radius: var(--border-radius);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+/* Report header */
+.report-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.report-title {
+    margin: 0;
+    color: var(--primary-color);
+}
+
+.report-meta {
+    text-align: right;
+    color: var(--text-muted);
+    font-size: 0.9em;
+}
+
+.report-meta p {
+    margin: 5px 0;
+}
+
+/* Report sections */
+.report-section {
+    margin-bottom: 30px;
+    padding: 20px;
+    background-color: var(--bg-color-secondary);
+    border-radius: var(--border-radius);
+    border-left: 4px solid var(--primary-color);
+}
+
+.report-section h2 {
+    margin-top: 0;
+    color: var(--primary-color);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+}
+
+/* Report table */
+.report-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+}
+
+.report-table th, 
+.report-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.report-table thead th {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.report-table tbody tr:nth-child(even) {
+    background-color: var(--hover-color);
+}
+
+/* Bottoni di azione */
+.report-actions {
+    margin-top: 30px;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+/* Stili per il pulsante di azione e status del PDF */
+.report-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    margin-top: 10px;
+}
+
+.report-action-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+    transition: all 0.3s;
+}
+
+.report-action-btn i {
+    margin-right: 8px;
+}
+
+.report-action-btn:hover {
+    background-color: var(--primary-color-dark);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-standard);
+}
+
+.pdf-status {
+    margin-top: 8px;
+    padding: 5px 10px;
+    border-radius: var(--border-radius);
+    font-size: 0.85rem;
+    display: none;
+}
+
+.pdf-status.loading {
+    display: block;
+    background-color: rgba(52, 152, 219, 0.2);
+    color: var(--primary-color);
+}
+
+.pdf-status.success {
+    display: block;
+    background-color: rgba(46, 204, 113, 0.2);
+    color: #27ae60;
+}
+
+.pdf-status.error {
+    display: block;
+    background-color: rgba(231, 76, 60, 0.2);
+    color: #e74c3c;
+}
+
+.report-button {
+    padding: 10px 20px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.report-button:hover {
+    background-color: var(--primary-color-dark);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-standard);
+}
+
+.report-button i {
+    font-size: 1.1em;
+}
+
+/* Fix per il tema scuro nei report */
+body.dark-theme .report-container {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
+
+body.dark-theme .report-section {
+    background-color: var(--bg-color-secondary);
+}
+
+body.dark-theme .report-table thead th {
+    background-color: var(--primary-color-dark);
+}
+
+body.dark-theme .report-table tbody tr:nth-child(even) {
+    background-color: var(--hover-color);
+}

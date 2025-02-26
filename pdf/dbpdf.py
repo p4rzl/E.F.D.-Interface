@@ -10,6 +10,9 @@ import matplotlib.pyplot as plt
 from reportlab.lib.utils import ImageReader
 import io
 
+
+
+
 # Define directory paths
 pdf_dir = os.path.join(os.getcwd(), "pdf")
 if not os.path.exists(pdf_dir):
@@ -17,6 +20,7 @@ if not os.path.exists(pdf_dir):
 
 file_path = os.path.join(pdf_dir, "esempio.pdf")
 output_path = os.path.join(pdf_dir, "output.pdf")
+
 
 def create_gradient(drawing, width, height, y_pos):
     """Create gradient effect"""

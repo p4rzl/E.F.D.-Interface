@@ -1,0 +1,386 @@
+/* Stili specifici per la home page */
+
+/* Stili dei controlli della mappa */
+.map-controls {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    padding: 15px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-standard);
+    z-index: 100;
+    transition: background-color 0.3s, color 0.3s;
+    top: 15px;
+    right: 15px;
+    position: absolute;
+}
+
+/* Sistemazione dei controlli della mappa */
+.map-controls {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    padding: 15px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-standard);
+    z-index: 100;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.control-group {
+    margin-bottom: 12px;
+}
+
+.control-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.control-select, .control-input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+}
+
+body.dark-theme .control-select, 
+body.dark-theme .control-input {
+    background-color: var(--bg-color-secondary);
+    color: var(--text-color);
+    border-color: var(--border-color);
+}
+
+.control-select:focus, 
+.control-input:focus {
+    outline: none;
+    border-color: var (--primary-color);
+    box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+.time-slider {
+    width: 100%;
+    margin-top: 10px;
+    background-color: var(--text-muted);
+}
+
+.time-slider::-webkit-slider-thumb {
+    background-color: var(--primary-color);
+}
+
+.time-slider::-moz-range-thumb {
+    background-color: var(--primary-color);
+}
+
+/* Stili per il pannello informativo */
+.info-panel {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    padding: 15px;
+    border-radius: var(--border-radius);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    margin-bottom: 15px;
+    max-width: 320px;
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    z-index: 100;
+    animation: slideInLeft 0.5s forwards;
+    border-left: 4px solid var(--secondary-color);
+}
+
+.info-panel:hover {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.info-panel h3 {
+    margin-top: 0;
+    color: var(--primary-color);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 8px;
+    font-size: 1.1rem;
+}
+
+.stats-item {
+    margin: 8px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.stats-label {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.stats-value {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.year-display {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+/* Aggiungere stili specifici per la home qui se necessario */
+
+/* Stile della home page con navbar consistente con quella di chat e admin */
+.map-container {
+    margin-top: 15px; /* Spazio extra dopo la navbar */
+    position: relative;
+    width: 100%;
+    height: 550px; /* Altezza aumentata */
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+}
+
+.map-container:hover {
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Animazione caricamento mappa */
+.map-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    z-index: 10;
+    animation: loadingBar 2s infinite;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.map-container.loading::before {
+    opacity: 1;
+}
+
+@keyframes loadingBar {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+#map {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+/* Stili per tab e contenuto */
+.tab-container {
+    margin-top: 20px; /* Spazio extra dopo la navbar */
+}
+
+.tab-buttons {
+    display: flex;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-color);
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
+}
+
+.tab-button {
+    background-color: inherit;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 10px 16px;
+    transition: 0.3s;
+    font-size: 16px;
+    color: var(--text-color);
+}
+
+.tab-button:hover {
+    background-color: var(--bg-color-secondary);
+}
+
+.tab-button.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.tab-content {
+    display: none;
+    padding: 15px;
+    border: 1px solid var(--border-color);
+    border-top: none;
+    border-radius: 0 0 var(--border-radius) var(--border-radius);
+    background-color: var(--bg-color);
+}
+
+/* Correzioni per i popup di Mapbox */
+.mapboxgl-popup-content {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    border-radius: var(--border-radius);
+    padding: 15px;
+    box-shadow: var(--shadow-standard);
+}
+
+.mapboxgl-popup-close-button {
+    color: var(--text-color);
+}
+
+.popup-button {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    margin-top: 5px;
+    font-size: 0.9rem;
+}
+
+.popup-button:hover {
+    background-color: var(--primary-color-dark);
+}
+
+/* Adattamenti per tema scuro */
+body.dark-theme .mapboxgl-popup-content {
+    background-color: var(--bg-color-secondary);
+}
+
+body.dark-theme .tab-button {
+    color: var(--text-color);
+}
+
+body.dark-theme .tab-content {
+    background-color: var(--bg-color-secondary);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .tab-buttons {
+        flex-direction: column;
+    }
+    
+    .tab-button {
+        width: 100%;
+        border-radius: 0;
+    }
+    
+    .map-controls {
+        width: 180px;
+    }
+    
+    .info-panel {
+        width: 180px;
+    }
+}
+
+/* Compensiamo lo spazio aggiuntivo nella content-container */
+.content-container {
+    padding-top: 70px; /* Un po' più di spazio per compensare la navbar fissa */
+}
+
+/* Stile per messaggio di errore mappa */
+.map-error-message {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    color: white;
+    text-align: center;
+}
+
+.error-content {
+    background-color: rgba(231, 76, 60, 0.9);
+    padding: 20px;
+    border-radius: var(--border-radius);
+    max-width: 80%;
+}
+
+.error-content i {
+    font-size: 2rem;
+    margin-bottom: 10px;
+}
+
+/* Tabella dati */
+.data-section {
+    margin-top: 15px;
+    overflow-x: auto;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-standard);
+}
+
+.data-table th {
+    padding: 12px 15px;
+    background-color: var(--primary-color);
+    color: white;
+    text-align: left;
+}
+
+.data-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.data-table tr:last-child td {
+    border-bottom: none;
+}
+
+.data-table tr:nth-child(even) {
+    background-color: var(--bg-color-secondary);
+}
+
+/* Classi per i livelli di rischio nel popup */
+.low-risk {
+    color: #27ae60;
+    font-weight: 600;
+}
+
+.medium-risk {
+    color: #f39c12;
+    font-weight: 600;
+}
+
+.high-risk {
+    color: #e74c3c;
+    font-weight: 600;
+}

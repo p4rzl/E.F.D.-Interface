@@ -17,11 +17,11 @@
 }
 
 .welcome-section {
-    background-color: var(--bg-color);
-    padding: 2rem;
+    background-color: var(--bg-color-secondary);
+    padding: 20px;
     border-radius: var(--border-radius);
+    margin-bottom: 30px;
     box-shadow: var(--shadow-standard);
-    margin-bottom: 2rem;
     position: relative;
     overflow: hidden;
 }
@@ -37,8 +37,9 @@
 }
 
 .welcome-section h1 {
-    font-size: 2rem;
-    color: var(--admin-primary);
+    font-size: 1.8rem;
+    color: var(--primary-color);
+    margin-top: 0;
     margin-bottom: 0.5rem;
 }
 
@@ -52,21 +53,31 @@
     background-color: var(--bg-color);
     border-radius: var(--border-radius);
     box-shadow: var(--shadow-standard);
-    margin-bottom: 2rem;
+    margin-bottom: 30px;
+    padding: 20px;
     overflow: hidden;
 }
 
 .admin-panel h2 {
     padding: 1.5rem;
     margin: 0;
-    color: var(--admin-primary);
+    color: var(--text-color);
     border-bottom: 1px solid var(--admin-border);
     font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    padding-bottom: 10px;
+}
+
+.admin-panel h2 i {
+    color: var(--primary-color);
+    margin-right: 10px;
 }
 
 .table-container {
     padding: 0;
     overflow-x: auto;
+    margin-top: 20px;
 }
 
 table {
@@ -74,6 +85,13 @@ table {
     border-collapse: separate;
     border-spacing: 0;
     margin: 0;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+}
+
+thead {
+    background-color: var(--bg-color-secondary);
+    color: var(--text-color);
 }
 
 th {
@@ -103,6 +121,10 @@ tr:last-child td {
 
 tr:hover td {
     background-color: rgba(0, 0, 0, 0.02);
+}
+
+tbody tr:hover {
+    background-color: var(--hover-color);
 }
 
 .current-user {
@@ -141,7 +163,7 @@ tr:hover td {
 }
 
 .status-badge.inactive {
-    background-color: rgba(231, 76, 60, 0.15);
+    background-color: rgba(192, 57, 43, 0.15);
     color: #c0392b;
 }
 
@@ -150,21 +172,21 @@ tr:hover td {
 }
 
 .role-badge.admin {
-    background-color: rgba(52, 152, 219, 0.15);
-    color: #2980b9;
+    background-color: rgba(231, 76, 60, 0.15);
+    color: #e74c3c;
 }
 
 .role-badge.admin::before {
-    background-color: #2980b9;
+    background-color: #e74c3c;
 }
 
 .role-badge.user {
-    background-color: rgba(149, 165, 166, 0.15);
-    color: #7f8c8d;
+    background-color: rgba(52, 152, 219, 0.15);
+    color: #3498db;
 }
 
 .role-badge.user::before {
-    background-color: #7f8c8d;
+    background-color: #3498db;
 }
 
 /* User cell e avatar */
@@ -175,22 +197,29 @@ tr:hover td {
 }
 
 .user-avatar {
-    width: 40px;
-    height: 40px;
+    width: 32px;  /* Dimensione uniforme */
+    height: 32px; /* Dimensione uniforme */
     border-radius: 50%;
     border: 2px solid white;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     transition: all 0.3s;
+    object-fit: cover;
 }
 
 .user-info-admin {
     display: flex;
     flex-direction: column;
     line-height: 1.3;
+    margin-left: 10px;
 }
 
 .user-info-admin .username {
     font-weight: 600;
+}
+
+.username {
+    font-weight: 500;
+    display: block;
 }
 
 .admin-badge, .current-user-badge {
@@ -204,12 +233,12 @@ tr:hover td {
 }
 
 .admin-badge {
-    background-color: var(--admin-primary);
+    background-color: var(--danger-color);
     color: white;
 }
 
 .current-user-badge {
-    background-color: var(--admin-warning);
+    background-color: var(--primary-color);
     color: white;
 }
 
@@ -219,6 +248,7 @@ tr:hover td {
     gap: 0.5rem;
     justify-content: flex-start;
     flex-wrap: wrap;
+    align-items: center;
 }
 
 .btn-toggle, .btn-admin {
@@ -285,19 +315,64 @@ tr:hover td {
     box-shadow: none;
 }
 
+.btn-toggle i, .btn-admin i {
+    margin-right: 5px;
+}
+
+.btn-toggle {
+    background-color: #f39c12;
+    color: white;
+}
+
+.btn-toggle:hover {
+    background-color: #e67e22;
+}
+
+.btn-admin {
+    background-color: #3498db;
+    color: white;
+}
+
+.btn-admin:hover {
+    background-color: #2980b9;
+}
+
+button[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+button[disabled]:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+.inline-form {
+    display: inline-block;
+}
+
 /* Sezione azioni di manutenzione */
 .admin-actions {
     background-color: var(--bg-color);
-    padding: 1.5rem;
+    padding: 20px;
     border-radius: var(--border-radius);
     box-shadow: var(--shadow-standard);
+    margin-bottom: 30px;
 }
 
 .admin-actions h2 {
-    color: var(--admin-primary);
+    color: var(--text-color);
     margin-bottom: 1.5rem;
     padding-bottom: 0.75rem;
     border-bottom: 1px solid var(--admin-border);
+    display: flex;
+    align-items: center;
+    padding-bottom: 10px;
+}
+
+.admin-actions h2 i {
+    color: var(--primary-color);
+    margin-right: 10px;
 }
 
 .action-card {
@@ -365,8 +440,8 @@ tr:hover td {
 
 /* Messaggi flash e alert */
 .alert {
-    padding: 1rem 1.5rem;
-    margin-bottom: 1.5rem;
+    padding: 10px 15px;
+    margin-bottom: 20px;
     border-radius: var(--border-radius);
     border-left: 5px solid;
     position: relative;
@@ -374,19 +449,19 @@ tr:hover td {
 }
 
 .alert-success {
-    background-color: rgba(46, 204, 113, 0.1);
+    background-color: rgba(46, 204, 113, 0.2);
     border-left-color: #2ecc71;
     color: #27ae60;
 }
 
 .alert-error {
-    background-color: rgba(231, 76, 60, 0.1);
+    background-color: rgba(231, 76, 60, 0.2);
     border-left-color: #e74c3c;
     color: #c0392b;
 }
 
 .alert-warning {
-    background-color: rgba(243, 156, 18, 0.1);
+    background-color: rgba(241, 196, 15, 0.2);
     border-left-color: #f39c12;
     color: #d35400;
 }
@@ -436,6 +511,16 @@ tr:hover td {
         flex-direction: column;
         align-items: flex-start;
         gap: 0.5rem;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .btn-toggle, .btn-admin {
+        width: 100%;
+        margin-bottom: 5px;
     }
 }
 
@@ -500,6 +585,12 @@ tr:hover td {
     flex-direction: column;
     align-items: center;
     text-align: center;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
 }
 
 .stat-card .stat-icon {
@@ -540,4 +631,46 @@ tr:hover td {
     font-size: 1rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+}
+
+.stat-icon {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    margin-bottom: 10px;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-color);
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Stili per il tema scuro */
+body.dark-theme .stat-card,
+body.dark-theme .admin-panel,
+body.dark-theme .admin-actions {
+    background-color: var(--bg-color-secondary);
+}
+
+body.dark-theme .status-badge.active {
+    background-color: rgba(46, 204, 113, 0.3);
+}
+
+body.dark-theme .status-badge.inactive {
+    background-color: rgba(192, 57, 43, 0.3);
+}
+
+body.dark-theme .role-badge.admin {
+    background-color: rgba(231, 76, 60, 0.3);
+}
+
+body.dark-theme .role-badge.user {
+    background-color: rgba(52, 152, 219, 0.3);
 }

@@ -1,0 +1,23 @@
+/* File di inizializzazione CSS con definizione variabili base */
+
+:root {
+    /* Variabili font principali */
+    --font-main: 'Roboto', sans-serif;
+    --font-headers: "Scala", "Garamond", serif;
+    --font-size-base: 16px;
+    
+    /* Colori base */
+    --primary-color: #105579;
+    --primary-color-dark: #0a3d5c;
+    --secondary-color: #659047;
+    --bg-color: #ffffff;
+    --bg-color-secondary: #f5f7fa;
+    --text-color: #333333;
+    --text-muted: #6c757d;
+}
+
+/* Stile di fallback per i titoli */
+h1, h2, h3, h4, h5, h6 {
+    font-family: "Scala", "Garamond", serif;
+    font-weight: 500;
+}

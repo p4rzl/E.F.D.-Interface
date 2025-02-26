@@ -3,7 +3,7 @@ import json
 import numpy as np
 import pandas as pd
 import traceback
-from flask import Flask, render_template, redirect, url_for, flash, request, session, jsonify
+from flask import Flask, render_template, redirect, url_for, flash, request, session, jsonify, send_from_directory
 from flask_login import login_user, login_required, logout_user, current_user
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -57,6 +57,12 @@ def require_login():
     if not current_user.is_authenticated and request.endpoint not in public_endpoints:
         return redirect(url_for('login'))
 
+# Funzione di utilità per creare dati di base per il template
+def get_base_template_data():
+    return {
+        'current_user': current_user
+    }
+
 # Gestisce la registrazione degli utenti
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -74,7 +80,7 @@ def register():
         user = User(
             username=form.username.data,
             email=form.email.data,
-            avatar_id=form.avatar_id.data
+            avatar_id=form.avatar_id.data  # Questo sarà già un integer grazie a coerce=int nel form
         )
         user.set_password(form.password.data)
         db.session.add(user)
@@ -211,7 +217,7 @@ def home():
         
         # Prepara i dati geojson per la mappa
         beaches_geojson_path = os.path.join(data_dir, 'beaches.geojson')
-        if os.path.exists(beaches_geojson_path):
+        if (os.path.exists(beaches_geojson_path)):
             with open(beaches_geojson_path, 'r') as f:
                 beaches_geojson = json.load(f)
         else:
@@ -249,8 +255,8 @@ def home():
                 hazards_geojson = json.load(f)
         
         # Prepara i dati per il template
-        context = {
-            'username': current_user.username,
+        template_data = get_base_template_data()
+        template_data.update({
             'mapbox_token': MAPBOX_TOKEN,
             'beaches': beaches_data,
             'risk_data': risk_data,
@@ -258,9 +264,9 @@ def home():
             'beaches_geojson': beaches_geojson,
             'economy_geojson': economy_geojson,
             'hazards_geojson': hazards_geojson
-        }
+        })
         
-        return render_template('home.html', **context)
+        return render_template('home.html', **template_data)
         
     except Exception as e:
         import traceback
@@ -387,7 +393,8 @@ def risk_report():
         
         return render_template('risk_report.html', 
                               beach=beach.to_dict(), 
-                              username=current_user.username)
+                              username=current_user.username,
+                              datetime=datetime)  # Passa l'oggetto datetime
     except Exception as e:
         flash(f'Errore nella generazione del report: {str(e)}', 'error')
         return redirect(url_for('home'))
@@ -411,7 +418,8 @@ def hazard_report():
         
         return render_template('hazard_report.html', 
                               beach=beach.to_dict(), 
-                              username=current_user.username)
+                              username=current_user.username,
+                              datetime=datetime)  # Passa l'oggetto datetime
     except Exception as e:
         flash(f'Errore nella generazione del report: {str(e)}', 'error')
         return redirect(url_for('home'))
@@ -457,6 +465,42 @@ def hazard_pdf():
         return jsonify({'error': str(e)}), 500
 
 # Gestione della chat
+@socketio.on('connect')
+def handle_connect():
+    if current_user.is_authenticated:
+        # Aggiungi un flag per evitare duplicazioni
+        session['messages_sent'] = session.get('messages_sent', False)
+        
+        # Invia la cronologia dei messaggi solo la prima volta
+        if not session['messages_sent']:
+            # Recupera gli ultimi 50 messaggi dal database
+            recent_messages = Message.query.order_by(Message.timestamp.desc()).limit(50).all()
+            recent_messages.reverse()  # Inverti per ordine cronologico
+            
+            # Invia la cronologia dei messaggi al client che si è connesso
+            for message in recent_messages:
+                user = User.query.get(message.user_id)
+                if user:
+                    emit('message', {
+                        'id': f'msg-{message.id}',  # ID univoco
+                        'user': user.username,
+                        'message': message.text,
+                        'avatar_id': user.avatar_id,
+                        'is_admin': user.is_admin,
+                        'time': message.timestamp.strftime('%H:%M')
+                    }, broadcast=False)  # Invia solo al client connesso
+            
+            # Imposta il flag per evitare reinvii
+            session['messages_sent'] = True
+
+# Aggiunta per gestire la disconnessione
+@socketio.on('disconnect')
+def handle_disconnect():
+    if current_user.is_authenticated:
+        # Resetta il flag di messaggi inviati alla disconnessione
+        if 'messages_sent' in session:
+            session.pop('messages_sent', None)
+
 @socketio.on('message')
 def handle_message(data):
     if current_user.is_authenticated:
@@ -467,11 +511,13 @@ def handle_message(data):
             db.session.add(message)
             db.session.commit()
             
-            # Invia il messaggio a tutti i client connessi
+            # Invia il messaggio a tutti i client connessi con ID univoco
             emit('message', {
+                'id': f'msg-{message.id}',  # ID univoco per questo messaggio
                 'user': current_user.username,
                 'message': message_text,
                 'avatar_id': current_user.avatar_id,
+                'is_admin': current_user.is_admin,  # Aggiungi flag per amministratore
                 'time': datetime.now().strftime('%H:%M')
             }, broadcast=True)
 
@@ -572,6 +618,25 @@ def admin_cleanup_messages():
     
     return redirect(url_for('admin'))
 
+# Aggiungi una route per eliminare tutti i messaggi
+@app.route('/admin/delete-all-messages', methods=['POST'])
+@login_required
+def admin_delete_all_messages():
+    if not current_user.is_admin:
+        flash('Accesso negato: devi essere un amministratore per eseguire questa azione', 'error')
+        return redirect(url_for('home'))
+    
+    try:
+        # Elimina tutti i messaggi dal database
+        Message.query.delete()
+        db.session.commit()
+        flash('Tutti i messaggi sono stati eliminati con successo', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Errore durante l\'eliminazione dei messaggi: {str(e)}', 'error')
+    
+    return redirect(url_for('admin'))
+
 # Aggiungi un comando per eseguire automaticamente la pulizia dei messaggi
 @app.cli.command("cleanup-messages")
 def cleanup_messages_command():
@@ -579,6 +644,29 @@ def cleanup_messages_command():
     with app.app_context():
         cleanup_old_messages()
         print("Pulizia dei messaggi completata.")
+
+# Nuova route dedicata alla chat
+@app.route('/chat')
+@login_required
+def chat_page():
+    # Recupera gli ultimi 100 messaggi per mostrarli nella pagina
+    messages = Message.query.order_by(Message.timestamp.asc()).limit(100).all()
+    
+    # Recupera gli utenti per mostrare la lista degli utenti
+    users = User.query.filter_by(is_active=True).all()
+    
+    template_data = get_base_template_data()
+    template_data.update({
+        'messages': messages, 
+        'users': users
+    })
+    
+    return render_template('chat.html', **template_data)
+
+# Aggiungiamo una route specifica per i suoni
+@app.route('/static/audio/<filename>')
+def serve_audio(filename):
+    return send_from_directory(os.path.join(app.root_path, 'static', 'audio'), filename)
 
 # Inizializzazione del database
 def init_app_db():

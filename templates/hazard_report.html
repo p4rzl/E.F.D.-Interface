@@ -1,0 +1,252 @@
+{% extends "layout.html" %}
+
+{% block title %}Report di Pericolo{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/report.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="report-container">
+    <div class="report-header">
+        <div>
+            <h1 class="report-title">Report di Pericolo</h1>
+            <h2>{{ beach.name }}</h2>
+        </div>
+        <div class="report-meta">
+            <p>Generato da: {{ username }}</p>
+            <p>Data: {{ datetime.now().strftime('%d/%m/%Y') }}</p>
+            <div class="report-actions">
+                <button id="downloadPdf" class="report-action-btn">
+                    <i class="fas fa-file-pdf"></i> Scarica PDF
+                </button>
+                <div id="pdfStatus" class="pdf-status"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="report-section">
+        <h2 class="report-section-title">Informazioni generali</h2>
+        <div class="beach-attributes">
+            <div class="beach-attribute">
+                <div class="attribute-label">Lunghezza</div>
+                <div class="attribute-value">{{ beach.length|int if beach.length else 'N/A' }} m</div>
+            </div>
+            <div class="beach-attribute">
+                <div class="attribute-label">Larghezza</div>
+                <div class="attribute-value">{{ beach.width|int if beach.width else 'N/A' }} m</div>
+            </div>
+            <div class="beach-attribute">
+                <div class="attribute-label">Indice di rischio</div>
+                <div class="attribute-value {% if beach.risk_index > 0.7 %}risk-high{% elif beach.risk_index > 0.4 %}risk-medium{% else %}risk-low{% endif %}">
+                    {{ "%.2f"|format(beach.risk_index) if beach.risk_index else 'N/A' }}
+                </div>
+            </div>
+            <div class="beach-attribute">
+                <div class="attribute-label">Tasso di erosione</div>
+                <div class="attribute-value">{{ "%.2f"|format(beach.erosion_rate) if beach.erosion_rate else 'N/A' }} m/anno</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="report-section">
+        <h2 class="report-section-title">Analisi dei pericoli</h2>
+        
+        <div class="hazard-description">
+            <p>Questo report analizza i fattori di pericolo per la spiaggia di {{ beach.name }}, considerando vari parametri come erosione, tempeste, e inondazioni.</p>
+        </div>
+        
+        <div class="hazard-chart-container">
+            <canvas id="hazardChart"></canvas>
+        </div>
+        
+        <div class="two-columns">
+            <div>
+                <h3>Fattori di pericolo</h3>
+                <div class="risk-details">
+                    <div class="risk-detail">
+                        <div class="risk-name">Erosione</div>
+                        <div class="risk-value {% if beach.risk_index > 0.7 %}risk-high{% elif beach.risk_index > 0.4 %}risk-medium{% else %}risk-low{% endif %}">
+                            {{ "%.2f"|format(beach.risk_index * 0.8) if beach.risk_index else 'N/A' }}
+                        </div>
+                    </div>
+                    <div class="risk-detail">
+                        <div class="risk-name">Inondazione</div>
+                        <div class="risk-value {% if beach.risk_index > 0.7 %}risk-high{% elif beach.risk_index > 0.4 %}risk-medium{% else %}risk-low{% endif %}">
+                            {{ "%.2f"|format(beach.risk_index * 0.6) if beach.risk_index else 'N/A' }}
+                        </div>
+                    </div>
+                    <div class="risk-detail">
+                        <div class="risk-name">Tempeste</div>
+                        <div class="risk-value {% if beach.risk_index > 0.7 %}risk-high{% elif beach.risk_index > 0.4 %}risk-medium{% else %}risk-low{% endif %}">
+                            {{ "%.2f"|format(beach.risk_index * 0.7) if beach.risk_index else 'N/A' }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <h3>Impatti potenziali</h3>
+                <div class="hazard-description">
+                    <p>Con l'attuale tasso di erosione di {{ "%.2f"|format(beach.erosion_rate) if beach.erosion_rate else '0' }} m/anno, potrebbero verificarsi:</p>
+                    <ul>
+                        <li>Perdita di habitat naturali per la fauna costiera</li>
+                        <li>Riduzione della capacità protettiva della spiaggia contro tempeste e mareggiate</li>
+                        <li>Aumento del rischio di danni alle infrastrutture vicine</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="report-section">
+        <h2 class="report-section-title">Raccomandazioni</h2>
+        <div class="recommendations">
+            <div class="recommendation-item">
+                <i class="fas fa-shield-alt"></i>
+                <div>Implementare sistemi di monitoraggio per l'innalzamento del livello del mare</div>
+            </div>
+            <div class="recommendation-item">
+                <i class="fas fa-exclamation-triangle"></i>
+                <div>Creare piani di evacuazione e risposta alle emergenze</div>
+            </div>
+            <div class="recommendation-item">
+                <i class="fas fa-water"></i>
+                <div>Installare barriere temporanee contro le inondazioni durante eventi estremi</div>
+            </div>
+            <div class="recommendation-item">
+                <i class="fas fa-hard-hat"></i>
+                <div>Rafforzare le strutture esistenti contro l'erosione costiera</div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="pdfStatus"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Crea il grafico dei pericoli
+        const ctx = document.getElementById('hazardChart').getContext('2d');
+        
+        // Valori di esempio per il grafico
+        const hazardChart = new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: ['Erosione', 'Inondazione', 'Tempeste', 'Tsunami', 'Inquinamento'],
+                datasets: [{
+                    label: 'Livello di pericolo',
+                    data: [
+                        {{ beach.risk_index * 0.8 if beach.risk_index else 0.5 }},
+                        {{ beach.risk_index * 0.6 if beach.risk_index else 0.4 }},
+                        {{ beach.risk_index * 0.7 if beach.risk_index else 0.6 }},
+                        {{ beach.risk_index * 0.4 if beach.risk_index else 0.3 }},
+                        {{ beach.risk_index * 0.5 if beach.risk_index else 0.2 }}
+                    ],
+                    backgroundColor: 'rgba(231, 76, 60, 0.2)',
+                    borderColor: 'rgba(231, 76, 60, 1)',
+                    pointBackgroundColor: 'rgba(231, 76, 60, 1)',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: 'rgba(231, 76, 60, 1)'
+                }]
+            },
+            options: {
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        max: 1,
+                        ticks: {
+                            stepSize: 0.2
+                        }
+                    }
+                },
+                elements: {
+                    line: {
+                        tension: 0.3
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    }
+                }
+            }
+        });
+        
+        // Gestisci il download del PDF
+        document.getElementById('downloadPdf').addEventListener('click', function() {
+            const statusEl = document.getElementById('pdfStatus');
+            statusEl.style.display = 'block';
+            statusEl.textContent = 'Generazione PDF in corso...';
+            statusEl.className = 'pdf-status loading';
+            
+            fetch(`/hazard-pdf?beach={{ beach.id }}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.pdf_path) {
+                        statusEl.textContent = 'PDF generato con successo! Download in corso...';
+                        statusEl.className = 'pdf-status success';
+                        
+                        // Scarica il file
+                        const a = document.createElement('a');
+                        a.href = data.pdf_path;
+                        a.download = 'hazard_report_{{ beach.name }}.pdf';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                    } else {
+                        throw new Error(data.error || 'Errore durante la generazione del PDF');
+                    }
+                })
+                .catch(error => {
+                    console.error('Errore:', error);
+                    statusEl.textContent = 'Errore durante la generazione del PDF: ' + error.message;
+                    statusEl.className = 'pdf-status error';
+                });
+        });
+
+        // Aggiungi gestione del toggle tema
+        const themeToggle = document.getElementById('theme-toggle');
+        if (themeToggle) {
+            themeToggle.addEventListener('click', function() {
+                document.body.classList.toggle('dark-theme');
+                const isDark = document.body.classList.contains('dark-theme');
+                localStorage.setItem('theme', isDark ? 'dark' : 'light');
+                this.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon'></i>';
+                
+                // Aggiorna i colori del grafico per il tema corrente
+                updateChartTheme(hazardChart, isDark);
+            });
+        }
+        
+        // Funzione per aggiornare i colori del grafico in base al tema
+        function updateChartTheme(chart, isDark) {
+            if (!chart) return;
+            
+            if (isDark) {
+                chart.options.plugins.legend.labels.color = '#ecf0f1';
+                chart.options.scales.r.angleLines.color = 'rgba(255, 255, 255, 0.2)';
+                chart.options.scales.r.grid.color = 'rgba(255, 255, 255, 0.2)';
+                chart.options.scales.r.pointLabels.color = '#ecf0f1';
+                chart.options.scales.r.ticks.color = '#ecf0f1';
+            } else {
+                chart.options.plugins.legend.labels.color = '#333333';
+                chart.options.scales.r.angleLines.color = 'rgba(0, 0, 0, 0.1)';
+                chart.options.scales.r.grid.color = 'rgba(0, 0, 0, 0.1)';
+                chart.options.scales.r.pointLabels.color = '#333333';
+                chart.options.scales.r.ticks.color = '#333333';
+            }
+            
+            chart.update();
+        }
+        
+        // Applica il tema iniziale al grafico
+        const isDark = document.body.classList.contains('dark-theme');
+        updateChartTheme(hazardChart, isDark);
+    });
+</script>
+{% endblock %}

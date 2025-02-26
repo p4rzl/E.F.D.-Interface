@@ -6,6 +6,32 @@
     <title>Registrazione</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style-login.css') }}">
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon">
+    <style>
+        .avatar-selection {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .avatar-option {
+            display: inline-block;
+            margin: 5px;
+        }
+        .avatar-radio {
+            display: none;
+        }
+        .avatar-img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: border-color 0.3s;
+        }
+        .avatar-img.selected, .avatar-radio:checked + label .avatar-img {
+            border-color: #2196F3;
+        }
+    </style>
 </head>
 <body>
     <div class="register-container">
@@ -62,11 +88,11 @@
             <div class="form-group">
                 <label>Scegli un avatar</label>
                 <div class="avatar-selection">
-                    {% for i in range(1, 9) %}
+                    {% for value, label in form.avatar_id.choices %}
                     <div class="avatar-option">
-                        <input type="radio" name="avatar_id" id="avatar{{ i }}" value="{{ i }}" class="avatar-radio" {% if i == 1 %}checked{% endif %}>
-                        <label for="avatar{{ i }}">
-                            <img src="{{ url_for('static', filename='img/avatars/' ~ i ~ '.png') }}" alt="Avatar {{ i }}" class="avatar-img {% if i == 1 %}selected{% endif %}" onclick="selectAvatar({{ i }})">
+                        <input type="radio" name="avatar_id" id="avatar{{ value }}" value="{{ value }}" class="avatar-radio" {% if value == 1 %}checked{% endif %}>
+                        <label for="avatar{{ value }}">
+                            <img src="{{ url_for('static', filename='img/avatars/' ~ value ~ '.png') }}" alt="Avatar {{ value }}" class="avatar-img {% if value == 1 %}selected{% endif %}">
                         </label>
                     </div>
                     {% endfor %}
@@ -84,18 +110,23 @@
     </div>
     
     <script>
-        function selectAvatar(id) {
-            // Rimuovi la classe "selected" da tutti
-            document.querySelectorAll('.avatar-img').forEach(img => {
-                img.classList.remove('selected');
+        document.addEventListener('DOMContentLoaded', function() {
+            const avatarOptions = document.querySelectorAll('.avatar-radio');
+            const avatarImages = document.querySelectorAll('.avatar-img');
+            
+            avatarOptions.forEach(function(radio) {
+                radio.addEventListener('change', function() {
+                    // Rimuovi la classe "selected" da tutte le immagini
+                    avatarImages.forEach(img => img.classList.remove('selected'));
+                    
+                    // Aggiungi la classe "selected" all'immagine selezionata
+                    if (this.checked) {
+                        const label = document.querySelector('label[for="' + this.id + '"]');
+                        label.querySelector('.avatar-img').classList.add('selected');
+                    }
+                });
             });
-            
-            // Aggiungi la classe "selected" all'immagine cliccata
-            document.querySelector('#avatar' + id + ' + label img').classList.add('selected');
-            
-            // Seleziona il radio button
-            document.querySelector('#avatar' + id).checked = true;
-        }
+        });
     </script>
 </body>
 </html>

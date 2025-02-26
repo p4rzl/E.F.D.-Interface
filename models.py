@@ -12,7 +12,7 @@ class User(UserMixin, db.Model):
     username = Column(String(80), unique=True, nullable=False)
     email = Column(String(120), unique=True, nullable=True)
     password_hash = Column(String(256), nullable=False)
-    avatar_id = Column(String(20), default='1')
+    avatar_id = Column(Integer, default=1)  # Aggiunto campo per l'avatar
     is_admin = Column(Boolean, default=False)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.utcnow)
