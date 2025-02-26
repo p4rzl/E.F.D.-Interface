@@ -1,152 +1,22 @@
+/* Assicuriamo che il gradiente del body sia ben visibile */
 body {
     font-family: 'Roboto', sans-serif;
-    background: linear-gradient(135deg, #001f3f, #0074cc);
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, #105579, #659047) !important;
+    background-size: 200% 200% !important;
+    animation: gradientBG 15s ease infinite !important;
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
-    margin: 0;
-}
-
-.login-container, .register-container {
-    max-width: 400px;
-    margin: 50px auto;
-    padding: 30px;
-    border-radius: 8px;
-    background-color: white;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-    text-align: center;
-}
-
-.logo {
-    max-width: 350px;
-    margin-bottom: 20px;
-}
-
-.login-container h2, .register-container h2 {
-    font-size: 26px;
-    font-weight: bold;
-    color: #004c97;
-    margin-bottom: 20px;
-}
-
-.login-container input[type="text"],
-.login-container input[type="password"],
-.register-container input[type="text"],
-.register-container input[type="password"] {
+    min-height: 100vh;
     width: 100%;
-    padding: 14px;
-    margin: 10px 0;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    box-sizing: border-box;
-    transition: all 0.3s;
+    position: fixed; /* Impedisce lo scrolling nella pagina */
+    overflow: hidden;
 }
 
-.login-container input:focus,
-.register-container input:focus {
-    border-color: #004c97;
-    outline: none;
-    box-shadow: 0 0 5px rgba(0, 76, 151, 0.5);
-}
-
-.login-container button, .register-container button {
-    width: 100%;
-    padding: 14px;
-    background-color: #004c97;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s;
-}
-
-.login-container button:hover, .register-container button:hover {
-    background-color: #003366;
-}
-
-.form-group {
-    margin-bottom: 15px;
-}
-
-.error {
-    color: red;
-    font-size: 0.9em;
-    margin-top: 5px;
-}
-
-.alert {
-    padding: 12px;
-    margin-bottom: 15px;
-    border-radius: 6px;
-}
-
-.alert-error {
-    background-color: #ffebee;
-    color: #c62828;
-    border: 1px solid #ef9a9a;
-}
-
-.alert-success {
-    background-color: #e8f5e9;
-    color: #2e7d32;
-    border: 1px solid #a5d6a7;
-}
-
-.btn-login, .btn-register {
-    width: 100%;
-    padding: 12px;
-    background-color: #004c97;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 16px;
-}
-
-.btn-login:hover, .btn-register:hover {
-    background-color: #003366;
-}
-
-.register-link, .login-link {
-    text-align: center;
-    margin-top: 15px;
-    color: #004c97;
-}
-
-.register-link a, .login-link a {
-    text-decoration: none;
-    color: #004c97;
-    font-weight: bold;
-}
-
-.register-link a:hover, .login-link a:hover {
-    text-decoration: underline;
-}
-
-/* Aggiungi le animazioni keyframes */
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes scaleIn {
-    from {
-        opacity: 0;
-        transform: scale(0.95);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
-}
+/* Rimuoviamo la classe register-body che permetteva lo scroll nel body */
+/* Invece, implementiamo lo scroll solo nei container quando necessario */
 
 @keyframes gradientBG {
     0% { background-position: 0% 50%; }
@@ -154,17 +24,175 @@ body {
     100% { background-position: 0% 50%; }
 }
 
-/* Modifica il body per l'animazione del background */
-body {
-    font-family: 'Roboto', sans-serif;
-    background: linear-gradient(135deg, #001f3f, #0074cc, #004c97);
-    background-size: 200% 200%;
-    animation: gradientBG 15s ease infinite;
+/* Stili specifici per il container di login (non scrollabile) */
+.login-container {
+    max-width: 380px;
+    width: 90%;
+    margin: 0 auto;
+    padding: 25px 20px;
+    border-radius: 10px;
+    background-color: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    position: relative;
     display: flex;
+    flex-direction: column;
+}
+
+/* Stili specifici per il container di registrazione (scrollabile e ottimizzato) */
+.register-container {
+    max-width: 380px;
+    width: 90%;
+    margin: 15px auto;
+    padding: 20px;
+    border-radius: 10px;
+    background-color: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    position: relative;
+    overflow-y: auto;
+    max-height: 85vh;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 76, 151, 0.5) rgba(255, 255, 255, 0.2);
+}
+
+/* Stile scrollbar personalizzato solo per il container di registrazione */
+.register-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.register-container::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+.register-container::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 76, 151, 0.5);
+    border-radius: 3px;
+}
+
+/* Ottimizzazioni per il form di login */
+.login-container .form-group {
+    margin-bottom: 15px;
+}
+
+.login-container h1 {
+    margin-top: 5px;
+    margin-bottom: 10px;
+}
+
+.login-container .logo {
+    margin-bottom: 15px;
+}
+
+/* Ottimizzazioni specifiche per il form di registrazione */
+.register-container .form-group {
+    margin-bottom: 10px;
+}
+
+.register-container label {
+    font-size: 0.9rem;
+    margin-bottom: 3px;
+    text-align: left;
+    display: block;
+}
+
+.register-container .avatar-selection {
+    margin: 8px 0;
     justify-content: center;
-    align-items: center;
-    height: 100vh;
-    margin: 0;
+    gap: 6px;
+}
+
+.register-container .avatar-option img {
+    width: 32px;
+    height: 32px;
+}
+
+/* Media query ottimizzate */
+@media (max-height: 700px) {
+    .login-container {
+        padding: 20px;
+        transform: scale(0.95);
+    }
+    
+    .register-container {
+        max-height: 90vh;
+        padding: 15px;
+    }
+    
+    body {
+        padding: 10px 0;
+    }
+}
+
+.login-container, .register-container {
+    max-width: 430px;
+    margin: 20px auto; /* Aggiunta margine verticale */
+    padding: 30px 25px; /* Riduzione del padding */
+    border-radius: 10px;
+    background-color: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.form-group {
+    margin-bottom: 12px; /* Ridotto spazio tra i gruppi */
+}
+
+.avatar-selection {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px; /* Ridotto gap tra avatar */
+    justify-content: center;
+    margin: 8px 0; /* Ridotto margine verticale */
+}
+
+.avatar-option img {
+    width: 40px; /* Dimensione avatar ridotta */
+    height: 40px;
+}
+
+@media (max-height: 700px) {
+    .login-container, .register-container {
+        padding: 20px;
+        margin: 10px auto;
+    }
+    
+    .form-group {
+        margin-bottom: 10px;
+    }
+    
+    .logo {
+        max-width: 180px; /* Logo più piccolo */
+        margin-bottom: 15px;
+    }
+    
+    .login-container h1, .register-container h1 {
+        font-size: 24px;
+        margin-bottom: 5px;
+    }
+    
+    .login-container p, .register-container p {
+        margin-bottom: 15px;
+    }
+
+    body {
+        align-items: flex-start; /* Allineamento superiore per facilitare lo scorrimento */
+        padding: 20px 0;
+        height: auto;
+    }
+    
+    .register-container {
+        margin: 10px auto 30px auto; /* Aggiunge margine in basso per lo scorrimento */
+    }
 }
 
 /* Aggiungi animazioni ai container */
@@ -181,6 +209,22 @@ body {
 /* Animazione per il logo */
 .logo {
     animation: fadeInUp 0.8s ease-out;
+}
+
+/* Miglioramenti per il logo */
+.logo {
+    max-width: 220px;
+    height: auto;
+    margin: 0 auto 20px;
+    display: block;
+}
+
+/* Logo specifico per la schermata di registrazione */
+.register-container .logo {
+    max-width: 200px;
+    margin: 0 auto 15px;
+    display: block;
+    align-self: center; /* Assicura centratura all'interno del flex container */
 }
 
 /* Animazione per i campi input */
@@ -319,4 +363,660 @@ label {
     margin-bottom: 8px;
     color: #004c97;
     font-weight: 500;
+}
+
+/* Stili specifici per le pagine di login e registrazione */
+
+/* Contenitore principale - reso con sfondo trasparente */
+.auth-container {
+    max-width: 400px;
+    width: 90%;
+    margin: 20px auto;
+    padding: 30px 25px;
+    border-radius: 15px;
+    background-color: rgba(255, 255, 255, 0.7);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    text-align: center;
+    position: relative;
+    overflow: auto;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    transition: all 0.4s ease;
+}
+
+.auth-container:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+}
+
+/* Miglioramento dell'aspetto del logo */
+.auth-container .logo {
+    max-width: 180px;
+    margin: 0 auto 20px;
+    filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.1));
+}
+
+/* Stile per il titolo */
+.auth-container h1 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 28px;
+    color: #105579;  /* Colore che riprende il gradiente */
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.auth-subtitle {
+    margin-bottom: 25px;
+    color: #555;
+    font-size: 0.95rem;
+    font-weight: 400;
+}
+
+/* Miglioramento dell'aspetto dei campi input */
+.auth-form .form-control {
+    width: 100%;
+    padding: 12px 15px;
+    margin: 8px 0;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    transition: all 0.3s;
+    font-size: 1rem;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.auth-form .form-control:focus {
+    background-color: #fff;
+    border-color: #1a2a6c;
+    box-shadow: 0 0 0 3px rgba(26, 42, 108, 0.2);
+    outline: none;
+}
+
+/* Miglioramento del bottone */
+.auth-form .btn-primary {
+    background: linear-gradient(135deg, #105579, #659047);
+    color: white;
+    padding: 12px 0;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin-top: 8px;
+    box-shadow: 0 4px 10px rgba(16, 85, 121, 0.3);
+    transition: all 0.3s;
+}
+
+.auth-form .btn-primary:hover {
+    background: linear-gradient(135deg, #0a4462, #527a39);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(16, 85, 121, 0.4);
+}
+
+/* Miglioramento degli avatar */
+.avatar-selection {
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.avatar-option img {
+    width: 45px;
+    height: 45px;
+    border: 3px solid transparent;
+    transition: all 0.3s;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+}
+
+.avatar-option input[type="radio"]:checked + label img {
+    border-color: #105579;
+    transform: scale(1.15);
+    box-shadow: 0 5px 15px rgba(16, 85, 121, 0.4);
+}
+
+/* Miglioramento dei link */
+.auth-links {
+    margin-top: 25px;
+}
+
+.auth-links a {
+    color: #105579;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s;
+    position: relative;
+}
+
+.auth-links a::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    bottom: -3px;
+    left: 0;
+    background-color: #105579;
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.auth-links a:hover {
+    color: #659047;
+}
+
+.auth-links a:hover::after {
+    transform: scaleX(1);
+    background-color: #659047;
+}
+
+/* Miglioramento "Ricordami" */
+.remember-me {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    margin-top: 5px;
+}
+
+.form-checkbox {
+    margin-right: 8px;
+    transform: scale(1.2);
+    accent-color: #1a2a6c;
+}
+
+.form-checkbox-label {
+    color: #555;
+    user-select: none;
+    font-size: 0.9rem;
+}
+
+/* Adattamenti per temi scuri */
+body.dark-theme .auth-container {
+    background-color: rgba(30, 30, 40, 0.7) !important;
+    border-color: rgba(50, 50, 70, 0.4);
+}
+
+body.dark-theme .auth-container h1 {
+    color: #659047;
+}
+
+body.dark-theme .auth-subtitle {
+    color: #aaa;
+}
+
+body.dark-theme .auth-form .form-control {
+    background-color: rgba(30, 30, 40, 0.8);
+    border-color: #444;
+    color: #eee;
+}
+
+body.dark-theme .auth-form .form-control:focus {
+    border-color: #fdbb2d;
+    background-color: rgba(40, 40, 50, 0.9);
+}
+
+body.dark-theme .form-checkbox-label {
+    color: #aaa;
+}
+
+body.dark-theme .auth-links a {
+    color: #fdbb2d;
+}
+
+body.dark-theme .auth-links a:hover {
+    color: #fff;
+}
+
+body.dark-theme .auth-links a:hover::after {
+    background-color: #fff;
+}
+
+/* Form container - ottimizzato per contenere gli elementi */
+.auth-form-container {
+    width: 100%;
+    max-width: 450px;
+    background-color: var(--bg-color);
+    padding: 25px;  /* Ridotto leggermente il padding */
+    border-radius: var(--border-radius);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    animation: fadeIn 0.5s ease-in-out;
+    box-sizing: border-box; /* Assicura che padding sia incluso nella larghezza */
+    margin: 0 auto; /* Centra il contenitore */
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.auth-form-container h1 {
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+    font-size: 1.8rem;
+    font-weight: 600;
+}
+
+.auth-form-container p {
+    color: var(--text-muted);
+    margin-bottom: 30px;
+}
+
+/* Stile del form - migliorato per adattarsi al contenitore */
+.form-group {
+    margin-bottom: 15px; /* Ridotto il margine tra i gruppi */
+    width: 100%;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--text-color);
+    font-weight: 500;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px 12px; /* Padding leggermente ridotto */
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    font-size: 0.95rem; /* Dimensione font leggermente ridotta */
+    box-sizing: border-box; /* Assicura che padding sia incluso nella larghezza */
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+}
+
+/* Checkbox per "Ricordami" */
+.remember-me {
+    display: flex;
+    align-items: center;
+}
+
+.form-checkbox {
+    margin-right: 8px;
+    cursor: pointer;
+}
+
+.form-checkbox-label {
+    cursor: pointer;
+    user-select: none;
+    color: var(--text-color);
+}
+
+/* Pulsante di invio */
+.btn {
+    width: 100%;
+    padding: 12px 20px;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-color-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+/* Errori del form */
+.form-error {
+    color: var(--danger-color);
+    font-size: 0.875rem;
+    margin-top: 5px;
+}
+
+/* Link aggiuntivi */
+.auth-links {
+    margin-top: 20px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.auth-links a {
+    color: var(--primary-color);
+    font-weight: 500;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.auth-links a:hover {
+    color: var(--primary-color-dark);
+    text-decoration: underline;
+}
+
+/* Selezione avatar - ottimizzata per stare nel contenitore */
+.avatar-selection {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px; /* Gap ridotto */
+    justify-content: center;
+    margin: 10px 0;
+    padding: 0;
+    width: 100%;
+}
+
+.avatar-option {
+    position: relative;
+    margin: 0; /* Rimuove margini extra */
+    padding: 0;
+}
+
+.avatar-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+}
+
+.avatar-option label {
+    display: inline-block;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.avatar-option img {
+    width: 45px; /* Leggermente più piccoli */
+    height: 45px;
+    border-radius: 50%;
+    border: 2px solid transparent; /* Border più sottile */
+    transition: all 0.3s ease;
+}
+
+.avatar-option input[type="radio"]:checked + label img {
+    border-color: var(--primary-color);
+    transform: scale(1.1);
+    box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.25);
+}
+
+.avatar-option:hover img {
+    transform: scale(1.1);
+}
+
+/* Adattamenti per il tema scuro */
+body.dark-theme .auth-form-container {
+    background-color: var(--bg-color-secondary);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+body.dark-theme .form-control {
+    background-color: var(--bg-color);
+    border-color: var(--border-color);
+    color: var(--text-color);
+}
+
+/* Responsive design - migliorato */
+@media (max-width: 576px) {
+    .auth-form-container {
+        padding: 15px;
+        width: 95%;
+        margin: 0 auto;
+    }
+    
+    .auth-container {
+        padding: 10px;
+    }
+    
+    .avatar-selection {
+        gap: 6px;
+    }
+    
+    .avatar-option img {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .form-group {
+        margin-bottom: 12px;
+    }
+    
+    .form-control {
+        padding: 8px 10px;
+    }
+    
+    .btn {
+        padding: 10px 15px;
+    }
+}
+
+/* Posizione delle notifiche in queste pagine */
+.notifications-container {
+    position: fixed; 
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+}
+
+/* Ritorna ai vecchi contenitori per username e password */
+.login-container input[type="text"],
+.login-container input[type="password"],
+.login-container input[type="email"],
+.register-container input[type="text"],
+.register-container input[type="password"],
+.register-container input[type="email"] {
+    width: 100%;
+    padding: 10px 12px;
+    margin: 8px 0;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-sizing: border-box;
+    transition: all 0.3s;
+    font-size: 0.95rem;
+}
+
+/* Ottimizza il contenitore per adattarsi meglio allo schermo */
+.register-container {
+    max-width: 400px;
+    margin: 20px auto;
+    padding: 25px 20px;
+    max-height: 90vh; /* Limita l'altezza massima */
+    overflow-y: auto; /* Permette lo scorrimento all'interno del container */
+    width: 90%;
+    margin: 15px auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Riduci ulteriormente i margini e padding nei gruppi di form */
+.register-container .form-group {
+    margin-bottom: 10px;
+}
+
+.register-container label {
+    margin-bottom: 4px;
+    font-size: 0.9rem;
+}
+
+/* Ridimensiona ulteriormente gli avatar per la registrazione */
+.register-container .avatar-selection {
+    gap: 5px;
+    margin: 8px 0;
+    justify-content: center;
+    gap: 8px;
+}
+
+.register-container .avatar-option img {
+    width: 35px;
+    height: 35px;
+    border-width: 1px;
+}
+
+.register-container .btn {
+    margin-top: 5px;
+    padding: 10px;
+}
+
+/* Ulteriore ottimizzazione per schermi molto piccoli */
+@media (max-height: 650px) {
+    .register-container {
+        padding: 15px;
+        margin: 10px auto;
+    }
+    
+    .register-container .form-group {
+        margin-bottom: 8px;
+    }
+    
+    .register-container .logo {
+        max-width: 150px;
+        margin-bottom: 10px;
+    }
+    
+    .register-container h1 {
+        font-size: 20px;
+        margin-bottom: 5px;
+    }
+    
+    .register-container p {
+        margin-bottom: 10px;
+        font-size: 0.85rem;
+    }
+    
+    .register-container .btn {
+        padding: 8px 15px;
+    }
+    
+    .register-container .avatar-selection {
+        margin: 5px 0;
+    }
+}
+
+/* Stile unificato per i form di autenticazione */
+.auth-container {
+    max-width: 430px;
+    width: 90%;
+    margin: 20px auto;
+    padding: 30px 25px;
+    border-radius: 10px;
+    background-color: rgba(255, 255, 255, 0.7);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    position: relative;
+    overflow: auto;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.auth-container .logo {
+    max-width: 200px;
+    margin: 0 auto 15px;
+    display: block;
+}
+
+.auth-container h1 {
+    margin-top: 5px;
+    margin-bottom: 8px;
+    font-size: 24px;
+    color: #004c97;
+}
+
+.auth-subtitle {
+    margin-bottom: 20px;
+    color: #666;
+    font-size: 0.95rem;
+}
+
+.auth-form {
+    width: 100%;
+    margin: 0 auto;
+}
+
+@media (max-height: 700px) {
+    .auth-container {
+        padding: 20px;
+        margin: 10px auto 30px auto;
+    }
+    
+    .auth-container .logo {
+        max-width: 150px;
+    }
+    
+    .auth-container h1 {
+        font-size: 22px;
+    }
+}
+
+/* Container per la pagina di login (non scrollabile) */
+.auth-container.login-page {
+    max-width: 400px;
+    width: 90%;
+    margin: auto;
+    padding: 30px 25px;
+    border-radius: 15px;
+    background-color: rgba(255, 255, 255, 0.7);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    text-align: center;
+    position: relative;
+    overflow: hidden; /* Impedisce lo scrolling dentro il container login */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    transition: all 0.4s ease;
+    max-height: 80vh; /* Limitiamo l'altezza massima */
+}
+
+/* Container per la pagina di registrazione (scrollabile solo all'interno) */
+.auth-container.register-page {
+    max-width: 400px;
+    width: 90%;
+    margin: auto;
+    padding: 30px 25px;
+    border-radius: 15px;
+    background-color: rgba(255, 255, 255, 0.7);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    text-align: center;
+    position: relative;
+    overflow-y: auto; /* Permette lo scrolling verticale solo all'interno del container */
+    max-height: 85vh; /* Limita l'altezza per forzare lo scroll interno quando necessario */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    transition: all 0.4s ease;
+}
+
+/* Scrollbar personalizzata solo per il container di registrazione */
+.auth-container.register-page::-webkit-scrollbar {
+    width: 6px;
+}
+
+.auth-container.register-page::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+.auth-container.register-page::-webkit-scrollbar-thumb {
+    background-color: rgba(52, 152, 219, 0.5);
+    border-radius: 3px;
+}
+
+/* Tema scuro adattato per mantenere la trasparenza */
+body.dark-theme .login-container,
+body.dark-theme .register-container {
+    background-color: rgba(30, 30, 40, 0.7) !important;
+    border-color: rgba(50, 50, 70, 0.4);
 }

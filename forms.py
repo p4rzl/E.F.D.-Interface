@@ -30,7 +30,11 @@ class RegisterForm(FlaskForm):
         validators.EqualTo('password', message='Le password devono coincidere')
     ])
     
-    avatar_id = SelectField('Avatar', coerce=int, choices=[(i, f'Avatar {i}') for i in range(1, 9)], default=1)
+    avatar_id = SelectField('Avatar', 
+                           validators=[DataRequired()],  # Assicuriamoci che sia richiesto
+                           coerce=int, 
+                           choices=[(i, f'Avatar {i}') for i in range(1, 9)], 
+                           default=1)
     
     submit = SubmitField('Registrati')
     

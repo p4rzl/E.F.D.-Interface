@@ -77,18 +77,26 @@ def register():
             flash('Username già in uso. Scegli un altro username.', 'error')
             return render_template('register.html', form=form)
         
-        # Crea nuovo utente
+        # Debug - stampiamo i valori ricevuti
+        print(f"Avatar ID ricevuto dal form: {form.avatar_id.data}, tipo: {type(form.avatar_id.data)}")
+        
+        # Crea nuovo utente con l'avatar scelto
         user = User(
             username=form.username.data,
             email=form.email.data,
-            avatar_id=form.avatar_id.data  # Questo sarà già un integer grazie a coerce=int nel form
+            avatar_id=int(form.avatar_id.data)  # Convertiamo esplicitamente in int
         )
         user.set_password(form.password.data)
-        db.session.add(user)
-        db.session.commit()
         
-        flash('Registrazione completata! Ora puoi effettuare il login.', 'success')
-        return redirect(url_for('login'))
+        try:
+            db.session.add(user)
+            db.session.commit()
+            flash('Registrazione completata! Ora puoi effettuare il login.', 'success')
+            return redirect(url_for('login'))
+        except Exception as e:
+            db.session.rollback()
+            print(f"Errore durante la registrazione: {e}")
+            flash('Si è verificato un errore durante la registrazione. Riprova.', 'error')
     
     return render_template('register.html', form=form)
 

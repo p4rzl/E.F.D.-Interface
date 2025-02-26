@@ -1,33 +1,25 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Seleziona tutte le notifiche
+    // Trova tutte le notifiche presenti nella pagina
     const notifications = document.querySelectorAll('.notification');
     
-    // Aggiungi un listener per ogni notifica per chiuderla al click
+    // Per ogni notifica, imposta un timer per nasconderla
     notifications.forEach(notification => {
-        notification.addEventListener('click', function() {
-            // Aggiungi classe per l'animazione di uscita
-            this.style.opacity = '0';
-            this.style.transform = 'translateY(-10px)';
-            
-            // Rimuovi l'elemento dopo l'animazione
-            setTimeout(() => {
-                this.remove();
-            }, 300);
-        });
+        // Determina il tempo di visualizzazione in base al tipo di notifica
+        let displayTime = 5000; // Default 5 secondi
+        if (notification.classList.contains('error')) {
+            displayTime = 8000; // Errori mostrati più a lungo (8 secondi)
+        } else if (notification.classList.contains('success')) {
+            displayTime = 5000; // Successi mostrati per 5 secondi
+        }
         
-        // Aggiungi un timeout per rimuovere automaticamente la notifica
+        // Imposta il timer per far scomparire la notifica
         setTimeout(() => {
-            if (notification && notification.parentNode) {
-                notification.style.opacity = '0';
-                notification.style.transform = 'translateY(-10px)';
-                
-                // Rimuovi l'elemento dopo l'animazione
-                setTimeout(() => {
-                    if (notification && notification.parentNode) {
-                        notification.remove();
-                    }
-                }, 300);
-            }
-        }, 8000); // Rimuovi dopo 8 secondi
+            notification.classList.add('fade-out');
+            
+            // Rimuovi la notifica dal DOM dopo l'animazione
+            setTimeout(() => {
+                notification.remove();
+            }, 500);
+        }, displayTime);
     });
 });
