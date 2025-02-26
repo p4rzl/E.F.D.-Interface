@@ -13,6 +13,7 @@ from forms import LoginForm, RegisterForm
 from extensions import db, login_manager, csrf, socketio
 from reports import generate_risk_report, generate_hazard_report
 from dotenv import load_dotenv
+import glob
 
 # Carica le variabili d'ambiente dal file .env
 load_dotenv()
@@ -116,6 +117,7 @@ def login():
         if user.check_password(form.password.data):
             user.reset_failed_attempts()
             login_user(user, remember=form.remember.data)
+            # Rimosso aggiornamento last_login
             next_page = request.args.get('next')
             return redirect(next_page if next_page and url_for('login') not in next_page else url_for('home'))
         
@@ -433,6 +435,9 @@ def risk_pdf():
         return jsonify({'error': 'ID spiaggia non valido'}), 400
     
     try:
+        # Pulizia dei report vecchi prima di generarne di nuovi
+        cleanup_old_reports()
+        
         beaches_data = pd.read_csv('data/beaches.csv')
         beach = beaches_data[beaches_data['id'] == beach_id].iloc[0] if not beaches_data[beaches_data['id'] == beach_id].empty else None
         
@@ -453,6 +458,9 @@ def hazard_pdf():
         return jsonify({'error': 'ID spiaggia non valido'}), 400
     
     try:
+        # Pulizia dei report vecchi prima di generarne di nuovi
+        cleanup_old_reports()
+        
         beaches_data = pd.read_csv('data/beaches.csv')
         beach = beaches_data[beaches_data['id'] == beach_id].iloc[0] if not beaches_data[beaches_data['id'] == beach_id].empty else None
         
@@ -576,6 +584,34 @@ def toggle_admin(user_id):
     flash(f'Utente {user.username} {status} con successo', 'success')
     return redirect(url_for('admin'))
 
+# Route per eliminare un utente (solo admin)
+@app.route('/delete_user/<int:user_id>', methods=['POST'])
+@login_required
+def delete_user(user_id):
+    if not current_user.is_admin:
+        flash('Accesso negato: devi essere un amministratore per eseguire questa azione', 'error')
+        return redirect(url_for('home'))
+    
+    user = User.query.get_or_404(user_id)
+    
+    # Previene l'eliminazione dell'utente admin principale e dell'utente corrente
+    if user.username == 'admin' or user == current_user:
+        flash('Non puoi eliminare questo utente', 'error')
+        return redirect(url_for('admin'))
+    
+    # Salva le informazioni per il messaggio flash
+    username = user.username
+    
+    # Elimina tutti i messaggi dell'utente
+    Message.query.filter_by(user_id=user.id).delete()
+    
+    # Elimina l'utente
+    db.session.delete(user)
+    db.session.commit()
+    
+    flash(f'Utente {username} eliminato con successo', 'success')
+    return redirect(url_for('admin'))
+
 # Gestione degli errori
 @app.errorhandler(404)
 def page_not_found(e):
@@ -681,6 +717,64 @@ def init_app_db():
             db.session.add(admin)
             db.session.commit()
 
+# Funzione per eliminare i report vecchi
+def cleanup_old_reports():
+    """Elimina i report PDF più vecchi di 10 minuti"""
+    try:
+        reports_dir = os.path.join(app.static_folder, 'reports')
+        if not os.path.exists(reports_dir):
+            return
+        
+        # Tempo limite: 10 minuti fa
+        cutoff_time = datetime.now() - timedelta(minutes=10)
+        
+        # Trova tutti i file PDF nella directory reports
+        pdf_files = glob.glob(os.path.join(reports_dir, "*.pdf"))
+        
+        cleaned = 0
+        for pdf_path in pdf_files:
+            # Ottieni la data di modifica del file
+            file_mod_time = datetime.fromtimestamp(os.path.getmtime(pdf_path))
+            
+            # Se il file è più vecchio del tempo limite, eliminalo
+            if file_mod_time < cutoff_time:
+                try:
+                    os.remove(pdf_path)
+                    cleaned += 1
+                except (PermissionError, OSError) as e:
+                    print(f"Errore nell'eliminazione del file {pdf_path}: {str(e)}")
+        
+        if cleaned > 0:
+            print(f"Pulizia report: {cleaned} file PDF eliminati.")
+        
+    except Exception as e:
+        print(f"Errore durante la pulizia dei report: {str(e)}")
+        traceback.print_exc()
+
+# Aggiungiamo una route per la pulizia dei report all'area admin
+@app.route('/admin/cleanup-reports', methods=['POST'])
+@login_required
+def admin_cleanup_reports():
+    if not current_user.is_admin:
+        flash('Accesso negato: devi essere un amministratore per eseguire questa azione', 'error')
+        return redirect(url_for('home'))
+    
+    try:
+        cleanup_old_reports()
+        flash('Pulizia dei report vecchi completata con successo', 'success')
+    except Exception as e:
+        flash(f'Errore durante la pulizia dei report: {str(e)}', 'error')
+    
+    return redirect(url_for('admin'))
+
+# Aggiungi un comando CLI per pulire i report vecchi
+@app.cli.command("cleanup-reports")
+def cleanup_reports_command():
+    """Pulisce i report PDF più vecchi di 10 minuti."""
+    with app.app_context():
+        cleanup_old_reports()
+        print("Pulizia dei report completata.")
+
 # Esecuzione dell'applicazione
 if __name__ == '__main__':
     # Crea le directory necessarie se non esistono
@@ -696,8 +790,11 @@ if __name__ == '__main__':
         try:
             cleanup_old_messages()
             print("Pulizia automatica dei messaggi completata.")
+            # Aggiungiamo anche la pulizia dei report all'avvio
+            cleanup_old_reports()
+            print("Pulizia automatica dei report completata.")
         except Exception as e:
-            print(f"Attenzione: Errore durante la pulizia dei messaggi: {e}")
+            print(f"Attenzione: Errore durante la pulizia automatica: {e}")
     
     # Stampa un messaggio di avvio
     print("============================================")
@@ -708,3 +805,5 @@ if __name__ == '__main__':
     
     # Avvia l'app
     socketio.run(app, debug=(os.environ.get('FLASK_ENV') == 'development'), host='0.0.0.0')
+    
+# Assicuriamoci che non ci siano caratteri extra alla fine del file

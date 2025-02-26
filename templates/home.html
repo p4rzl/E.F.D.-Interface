@@ -79,7 +79,7 @@
                             <th>Larghezza (m)</th>
                             <th>Indice di Rischio</th>
                             <th>Erosione (m/anno)</th>
-                            <th>Azioni</th>
+                            <th>Report</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -91,10 +91,12 @@
                             <td>{% if beach.risk_index is defined and beach.risk_index is not none %}{{ beach.risk_index|round(2) }}{% else %}N/A{% endif %}</td>
                             <td>{% if beach.erosion_rate is defined and beach.erosion_rate is not none %}{{ beach.erosion_rate|round(2) }}{% else %}N/A{% endif %}</td>
                             <td>
-                                <button class="action-button" 
-                                        onclick="showBeachDetails('{{ beach.id if beach.id is defined else '' }}')">
-                                    Dettagli
-                                </button>
+                                <a href="{{ url_for('risk_report', beach=beach.id) }}" class="action-button">
+                                    <i class="fas fa-chart-line"></i> Rischio
+                                </a>
+                                <a href="{{ url_for('hazard_report', beach=beach.id) }}" class="action-button action-button-secondary">
+                                    <i class="fas fa-exclamation-triangle"></i> Pericolo
+                                </a>
                             </td>
                         </tr>
                         {% endfor %}

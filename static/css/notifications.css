@@ -1,0 +1,117 @@
+/* Stili globali per il sistema di notifiche */
+
+/* Container per le notifiche */
+.notifications-container {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    width: 350px;
+    z-index: 9999;
+    pointer-events: none; /* Permette di cliccare attraverso il container */
+}
+
+/* Stile di base per tutte le notifiche */
+.notification {
+    background-color: var(--bg-color);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    margin-bottom: 10px;
+    padding: 12px 15px;
+    border-radius: var(--border-radius);
+    opacity: 0;
+    transform: translateX(30px);
+    animation: slideInNotification 0.3s forwards, fadeOutNotification 0.5s 5s forwards;
+    display: flex;
+    align-items: flex-start;
+    pointer-events: auto; /* Riabilita l'interazione con l'alert */
+    transition: all 0.3s ease;
+}
+
+.notification:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px);
+}
+
+.notification i {
+    margin-right: 10px;
+    font-size: 1.1rem;
+    margin-top: 3px;
+}
+
+/* Stili per i diversi tipi di notifiche */
+.notification.success {
+    background-color: var(--bg-color);
+    border-left: 4px solid #2ecc71;
+}
+
+.notification.success i {
+    color: #2ecc71;
+}
+
+.notification.error {
+    background-color: var(--bg-color);
+    border-left: 4px solid #e74c3c;
+}
+
+.notification.error i {
+    color: #e74c3c;
+}
+
+.notification.warning {
+    background-color: var(--bg-color);
+    border-left: 4px solid #f39c12;
+}
+
+.notification.warning i {
+    color: #f39c12;
+}
+
+.notification.info {
+    background-color: var(--bg-color);
+    border-left: 4px solid #3498db;
+}
+
+.notification.info i {
+    color: #3498db;
+}
+
+/* Animazioni per le notifiche */
+@keyframes slideInNotification {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeOutNotification {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+}
+
+/* Adattamenti per il tema scuro */
+body.dark-theme .notification {
+    background-color: var(--bg-color-secondary);
+    color: var(--text-color);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .notifications-container {
+        width: 290px;
+        top: 70px;
+        right: 10px;
+    }
+    
+    .notification {
+        padding: 10px 12px;
+        font-size: 0.9rem;
+    }
+}

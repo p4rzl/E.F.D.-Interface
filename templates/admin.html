@@ -8,18 +8,13 @@
 
 {% block content %}
 <div class="dashboard-container">
+    <!-- Rimuoviamo il container di notifiche speciale per admin -->
+    <!-- Le notifiche verranno ora mostrate tramite il sistema globale -->
+
     <section class="welcome-section">
         <h1>Pannello di Amministrazione</h1>
         <p>Gestisci gli utenti e i loro permessi nel sistema</p>
     </section>
-
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="alert alert-{{ category }}">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
 
     <!-- Statistiche -->
     <div class="admin-stats">
@@ -47,6 +42,8 @@
                 <thead>
                     <tr>
                         <th>Utente</th>
+                        <th>Data di creazione</th>
+                        <!-- Rimosso l'intestazione della colonna ultimo accesso -->
                         <th>Stato</th>
                         <th>Ruolo</th>
                         <th>Azioni</th>
@@ -71,6 +68,8 @@
                                 </div>
                             </div>
                         </td>
+                        <td>{{ user.created_at.strftime('%d/%m/%Y') }}</td>
+                        <!-- Rimossa la colonna ultimo accesso -->
                         <td class="status-cell">
                             <span class="status-badge {{ 'active' if user.is_active else 'inactive' }}">
                                 {{ "Attivo" if user.is_active else "Disattivo" }}
@@ -98,6 +97,15 @@
                                             {{ 'disabled' if user == current_user or user.username == 'admin' }}>
                                         <i class="fas {{ 'fa-user-minus' if user.is_admin else 'fa-user-plus' }}"></i>
                                         {{ "Rimuovi Admin" if user.is_admin else "Rendi Admin" }}
+                                    </button>
+                                </form>
+                                
+                                <!-- Aggiungiamo il pulsante per eliminare utenti -->
+                                <form method="POST" action="{{ url_for('delete_user', user_id=user.id) }}" class="inline-form" onsubmit="return confirm('Sei sicuro di voler eliminare l\'utente {{ user.username }}? Questa azione è irreversibile.');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn-delete" {{ 'disabled' if user.username == 'admin' or user.id == current_user.id }}>
+                                        <i class="fas fa-trash-alt"></i>
+                                        Elimina
                                     </button>
                                 </form>
                             </div>
@@ -131,7 +139,28 @@
                     </button>
                 </form>
             </div>
+            
+            <!-- Aggiungiamo una nuova action card per la pulizia dei report -->
+            <div class="action-card">
+                <h3><i class="fas fa-file-pdf"></i> Gestione Report</h3>
+                
+                <form action="{{ url_for('admin_cleanup_reports') }}" method="post">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="action-button">
+                        <i class="fas fa-broom"></i> Pulisci Report Vecchi (10+ minuti)
+                    </button>
+                </form>
+                
+                <p class="action-info">
+                    <i class="fas fa-info-circle"></i> 
+                    I report PDF vengono automaticamente eliminati dopo 10 minuti dalla loro generazione.
+                </p>
+            </div>
         </div>
     </section>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Non c'è più bisogno dello script admin-notifications.js -->
 {% endblock %}

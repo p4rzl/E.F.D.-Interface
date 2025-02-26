@@ -54,10 +54,10 @@ body {
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Modifica per titoli: cambio da italic a font serif */
+/* Modifica per titoli: cambio da italic a font serif e aggiunto grassetto */
 h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-headers);
-    font-weight: 500;
+    font-weight: 600; /* Cambiato da 500 a 600 per renderlo più grassetto */
 }
 
 /* Header e Navigation */
@@ -679,6 +679,35 @@ html, body {
     box-shadow: var(--shadow-standard);
 }
 
+.report-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.report-theme-toggle {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    font-size: 1.2em;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--bg-color-secondary);
+}
+
+.report-theme-toggle:hover {
+    background-color: var(--hover-color);
+    transform: rotate(15deg);
+}
+
 /* Stili per il popup della mappa */
 .mapboxgl-popup {
     max-width: 320px !important; /* Aumentata larghezza massima */
@@ -721,6 +750,7 @@ html, body {
     border-left: 4px solid var(--primary-color); /* Bordo a sinistra */
     transform-origin: center bottom; /* Origine per l'animazione */
     transition: all 0.2s ease;
+    font-weight: 600; /* Aggiunto grassetto */
 }
 
 /* Effetto hover sui popup */
@@ -731,6 +761,7 @@ html, body {
 
 .mapboxgl-popup-content h3 {
     font-family: var(--font-headers);
+    font-weight: 600; /* Aggiunto grassetto */
     color: var(--primary-color);
     margin-top: 0;
     margin-bottom: 15px;
@@ -875,5 +906,362 @@ body.dark-theme .mapboxgl-popup-close-button:hover {
     }
     50% {
         opacity: 1;
+    }
+}
+
+/* Stile per i pulsanti nei popup */
+.popup-buttons {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.popup-button {
+    flex: 1;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 10px 5px;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+    font-weight: 500;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.popup-button i {
+    margin-right: 5px;
+}
+
+.popup-button-risk {
+    background-color: var(--primary-color);
+}
+
+.popup-button-risk:hover {
+    background-color: var(--primary-color-dark);
+}
+
+.popup-button-hazard {
+    background-color: var(--danger-color);
+}
+
+.popup-button-hazard:hover {
+    background-color: #c0392b;
+}
+
+/* Stile per i pulsanti di azione nella tabella */
+.action-button {
+    padding: 8px 12px;
+    margin-right: 5px;
+    margin-bottom: 5px;
+    font-size: 0.8rem;
+    display: inline-flex;
+    align-items: center;
+}
+
+.action-button i {
+    margin-right: 5px;
+}
+
+.action-button-secondary {
+    background-color: var(--danger-color);
+}
+
+.action-button-secondary:hover {
+    background-color: #c0392b;
+}
+
+/* Fix per il toggle del tema nei report */
+.report-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.report-theme-toggle {
+    background-color: var(--bg-color-secondary);
+    border: none;
+    color: var(--text-color);
+    font-size: 1.2em;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.report-theme-toggle:hover {
+    background-color: var(--hover-color);
+    transform: rotate(15deg);
+}
+
+/* Fix per il toggle del tema nei report */
+.report-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.report-theme-toggle {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    font-size: 1.2em;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--bg-color-secondary);
+}
+
+.report-theme-toggle:hover {
+    background-color: var(--hover-color);
+    transform: rotate(15deg);
+}
+
+/* Stili comuni per entrambi i report (risk e hazard) */
+.report-container {
+    max-width: 1100px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: var(--bg-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-standard);
+}
+
+.report-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 30px;
+    border-bottom: 2px solid var(--primary-color);
+    padding-bottom: 20px;
+}
+
+.report-title {
+    margin: 0 0 10px 0;
+    color: var(--primary-color);
+}
+
+.beach-name {
+    font-size: 1.4rem;
+    color: var(--text-color);
+}
+
+.report-meta {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.report-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.report-action-btn {
+    padding: 8px 15px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+
+.report-action-btn i {
+    margin-right: 8px;
+}
+
+.report-action-btn:hover {
+    background-color: var(--primary-color-dark);
+    transform: translateY(-2px);
+}
+
+.report-section {
+    margin-bottom: 30px;
+}
+
+.report-section-title {
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+    color: var(--primary-color);
+    font-size: 1.3rem;
+}
+
+.beach-attributes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.beach-attribute {
+    background-color: var(--bg-color-secondary);
+    padding: 15px;
+    border-radius: var(--border-radius);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.attribute-label {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+}
+
+.attribute-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+/* Stili comuni per grafico rischio e pericolo */
+.risk-chart-container,
+.hazard-chart-container {
+    height: 300px;
+    margin-bottom: 30px;
+}
+
+/* Stili per pericolo */
+.hazard-description {
+    background-color: var(--bg-color-secondary);
+    padding: 15px;
+    border-radius: var(--border-radius);
+    margin-bottom: 20px;
+}
+
+.risk-description {
+    background-color: var(--bg-color-secondary);
+    padding: 15px;
+    border-radius: var(--border-radius);
+    margin-bottom: 20px;
+}
+
+.risk-detail {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.risk-detail:last-child {
+    border-bottom: none;
+}
+
+.risk-name {
+    font-weight: 500;
+}
+
+.risk-value {
+    font-weight: 700;
+}
+
+.risk-low {
+    color: #28a745;
+}
+
+.risk-medium {
+    color: #ffc107;
+}
+
+.risk-high {
+    color: #dc3545;
+}
+
+.recommendations {
+    background-color: var(--bg-color-secondary);
+    padding: 20px;
+    border-radius: var(--border-radius);
+    margin-top: 20px;
+}
+
+.recommendation-item {
+    display: flex;
+    margin-bottom: 15px;
+    align-items: flex-start;
+}
+
+.recommendation-item i {
+    color: var(--primary-color);
+    margin-right: 15px;
+    font-size: 1.2rem;
+}
+
+/* Stili per PDF loading */
+.loading-spinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
+}
+
+.loading-spinner i {
+    font-size: 3rem;
+    color: var(--primary-color);
+    animation: spin 1.5s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+#pdfStatus {
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: var(--border-radius);
+    text-align: center;
+    display: none;
+}
+
+#pdfStatus.success {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+}
+
+#pdfStatus.error {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+}
+
+.two-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+@media (max-width: 768px) {
+    .two-columns {
+        grid-template-columns: 1fr;
+    }
+    
+    .report-header {
+        flex-direction: column;
+    }
+    
+    .report-actions {
+        margin-top: 15px;
     }
 }

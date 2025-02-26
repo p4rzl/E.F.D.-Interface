@@ -74,10 +74,13 @@
     margin-right: 10px;
 }
 
+/* Correzione allineamento tabella utenti */
 .table-container {
     padding: 0;
     overflow-x: auto;
     margin-top: 20px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-standard);
 }
 
 table {
@@ -85,8 +88,6 @@ table {
     border-collapse: separate;
     border-spacing: 0;
     margin: 0;
-    border-radius: var(--border-radius);
-    overflow: hidden;
 }
 
 thead {
@@ -351,6 +352,63 @@ button[disabled]:hover {
     display: inline-block;
 }
 
+/* Stile per il bottone di eliminazione utente */
+.btn-delete {
+    padding: 0.5rem 0.8rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 110px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    background-color: var(--danger-color);
+    color: white;
+}
+
+.btn-delete:hover {
+    background-color: #c0392b;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn-delete::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.3) 10%, transparent 10.01%);
+    transform: scale(10);
+    opacity: 0;
+    transition: transform 0.3s, opacity 0.5s;
+    pointer-events: none;
+}
+
+.btn-delete:active::after {
+    transform: scale(0);
+    opacity: 0.3;
+    transition: 0s;
+}
+
+.btn-delete i {
+    margin-right: 5px;
+}
+
+.btn-delete[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+    box-shadow: none;
+}
+
 /* Sezione azioni di manutenzione */
 .admin-actions {
     background-color: var(--bg-color);
@@ -490,6 +548,26 @@ button[disabled]:hover {
     }
 }
 
+/* Miglioramento del rendering tabella su schermi piccoli */
+@media (max-width: 992px) {
+    .table-container {
+        overflow-x: auto;
+    }
+    
+    table {
+        min-width: 800px; /* Imposta larghezza minima per schermi piccoli */
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+    }
+    
+    .btn-toggle, .btn-admin, .btn-delete {
+        width: 100%;
+        margin-bottom: 5px;
+    }
+}
+
 @media (max-width: 768px) {
     .table-container {
         overflow-x: auto;
@@ -526,7 +604,8 @@ button[disabled]:hover {
 
 /* Aggiungi icone per i pulsanti di azione */
 .action-buttons .btn-toggle[disabled]::before, 
-.action-buttons .btn-admin[disabled]::before {
+.action-buttons .btn-admin[disabled]::before,
+.action-buttons .btn-delete[disabled]::before {
     content: '🔒';
     margin-right: 0.5rem;
 }
@@ -673,4 +752,92 @@ body.dark-theme .role-badge.admin {
 
 body.dark-theme .role-badge.user {
     background-color: rgba(52, 152, 219, 0.3);
+}
+
+/* Miglioriamo la visualizzazione delle celle di tabella */
+.status-cell, .role-cell {
+    text-align: center;
+}
+
+.actions-cell {
+    min-width: 280px; /* Imposta una larghezza minima per la colonna delle azioni */
+}
+
+/* Migliora responsività bottoni di azione */
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+}
+
+.btn-toggle, .btn-admin, .btn-delete {
+    flex: 1 1 auto;
+    min-width: 80px;
+    margin-bottom: 5px;
+    text-align: center;
+    justify-content: center;
+}
+
+/* Stili per l'informazione di gestione report */
+.action-info {
+    margin-top: 15px;
+    padding: 10px 15px;
+    background-color: rgba(52, 152, 219, 0.1);
+    border-left: 3px solid var(--admin-accent);
+    color: var(--text-color);
+    font-size: 0.95rem;
+    border-radius: 4px;
+    display: flex;
+    align-items: flex-start;
+    line-height: 1.4;
+}
+
+.action-info i {
+    margin-right: 8px;
+    color: var(--admin-accent);
+    font-size: 1.1rem;
+    margin-top: 2px;
+}
+
+/* Miglioriamo il layout delle action cards con flexbox */
+.action-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.action-button {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    margin: 5px 0;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    width: 100%;
+    justify-content: center;
+}
+
+.action-button i {
+    margin-right: 8px;
+}
+
+.action-button:hover {
+    background-color: var(--primary-color-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.danger-button {
+    background-color: var(--danger-color);
+}
+
+.danger-button:hover {
+    background-color: #c0392b;
 }

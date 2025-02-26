@@ -50,19 +50,37 @@ document.addEventListener('DOMContentLoaded', function() {
         map.on('load', function() {
             console.log('Mappa caricata con successo');
             
+            // Variabile per tracciare se è necessario fare zoom sui dati
+            let needsFitBounds = true;
+            
             // Carica i dati GeoJSON se disponibili
             if (typeof beachesGeoJSON !== 'undefined' && beachesGeoJSON) {
                 loadBeachesLayer(map, beachesGeoJSON);
+                // Zoom automatico sui dati delle spiagge dopo il caricamento
+                if (needsFitBounds && beachesGeoJSON.features && beachesGeoJSON.features.length > 0) {
+                    fitMapToBounds(map, beachesGeoJSON);
+                    needsFitBounds = false; // Lo facciamo solo una volta
+                }
             } else {
                 console.warn('Dati GeoJSON delle spiagge non disponibili');
             }
             
             if (typeof economyGeoJSON !== 'undefined' && economyGeoJSON) {
                 loadEconomyLayer(map, economyGeoJSON);
+                // Se non abbiamo già fatto lo zoom, proviamo con questi dati
+                if (needsFitBounds && economyGeoJSON.features && economyGeoJSON.features.length > 0) {
+                    fitMapToBounds(map, economyGeoJSON);
+                    needsFitBounds = false;
+                }
             }
             
             if (typeof hazardsGeoJSON !== 'undefined' && hazardsGeoJSON) {
                 loadHazardsLayer(map, hazardsGeoJSON);
+                // Se non abbiamo ancora fatto lo zoom, proviamo con questi dati
+                if (needsFitBounds && hazardsGeoJSON.features && hazardsGeoJSON.features.length > 0) {
+                    fitMapToBounds(map, hazardsGeoJSON);
+                    needsFitBounds = false;
+                }
             }
             
             // Imposta il valore iniziale per il layer
@@ -271,11 +289,25 @@ function addBeachClickHandlers(map) {
     map.off('mouseenter', 'beaches-fill');
     map.off('mouseleave', 'beaches-fill');
     
-    // Aggiungi popup alle spiagge
+    // Rimuoviamo l'event listener globale che potrebbe bloccare i click sulle spiagge
+    map.off('click');
+    
+    // Variabile globale per tenere traccia del popup attivo
+    let activePopup = null;
+    
+    // Aggiungi popup alle spiagge - questo evento deve essere registrato PRIMA dell'evento globale
     map.on('click', 'beaches-fill', function(e) {
+        console.log('Click su spiaggia rilevato');
+        
         if (!e.features || e.features.length === 0) {
             console.log('Nessuna caratteristica trovata nel click');
             return;
+        }
+        
+        // Chiudi il popup attivo se esiste
+        if (activePopup) {
+            activePopup.remove();
+            activePopup = null;
         }
         
         const properties = e.features[0].properties;
@@ -303,20 +335,46 @@ function addBeachClickHandlers(map) {
             <p><strong>Larghezza:</strong> <span>${width}</span></p>
             <p><strong>Indice di Rischio:</strong> <span class="${riskClass}">${riskIndex}</span></p>
             <p><strong>Tasso di Erosione:</strong> <span>${erosionRate}</span></p>
-            <button class="popup-button" onclick="showBeachDetails('${properties.id}')">
-                Visualizza Dettagli
-            </button>
+            <div class="popup-buttons">
+                <button class="popup-button popup-button-risk" onclick="window.location.href='/risk-report?beach=${properties.id}'">
+                    <i class="fas fa-chart-line"></i> Report Rischio
+                </button>
+                <button class="popup-button popup-button-hazard" onclick="window.location.href='/hazard-report?beach=${properties.id}'">
+                    <i class="fas fa-exclamation-triangle"></i> Report Pericolo
+                </button>
+            </div>
         `;
         
         // Crea e mostra il popup con animazione
-        new mapboxgl.Popup({
+        activePopup = new mapboxgl.Popup({
             closeButton: true,
             closeOnClick: false,
-            className: 'beach-popup'
+            className: 'beach-popup',
+            maxWidth: '320px'
         })
             .setLngLat(e.lngLat)
             .setHTML(content)
             .addTo(map);
+            
+        // Aggiungi event listener per rimuovere il riferimento quando il popup viene chiuso
+        activePopup.on('close', function() {
+            activePopup = null;
+        });
+        
+        // Previeni la propagazione dell'evento alla mappa
+        e.stopPropagation();
+    });
+    
+    // Chiudi il popup quando si clicca sulla mappa (fuori da un popup) - questo evento deve essere dopo
+    map.on('click', function(e) {
+        // Non far nulla se il click è stato già elaborato da un'altra funzione
+        if (e.defaultPrevented) return;
+        
+        console.log('Click su mappa (non spiaggia)');
+        if (activePopup) {
+            activePopup.remove();
+            activePopup = null;
+        }
     });
     
     // Cambia il cursore quando è sopra una spiaggia
@@ -505,12 +563,21 @@ function updateMapData(map, year) {
             // Aggiorna i dati della mappa
             if (map.getSource('beaches')) {
                 map.getSource('beaches').setData(data.geojson);
+                
+                // Dopo aver aggiornato i dati, adatta la vista se necessario
+                // Ma solo se c'è stata una modifica significativa nei dati
+                if (year > 2030 || year < 2020) { // Solo per cambiamenti significativi
+                    fitMapToBounds(map, data.geojson);
+                }
             } else if (data.geojson) {
                 // Se la fonte non esiste ancora, ricrea il layer
                 loadBeachesLayer(map, data.geojson);
                 
                 // Ripristina la visibilità corretta del layer
                 toggleLayerVisibility(map, selectedLayer);
+                
+                // Adatta la vista ai nuovi dati
+                fitMapToBounds(map, data.geojson);
             }
             
             // Aggiorna anche la tabella delle spiagge se esiste
@@ -534,6 +601,67 @@ function updateMapData(map, year) {
                 }
             }
         });
+}
+
+// Funzione per adattare la vista della mappa ai confini di un GeoJSON
+function fitMapToBounds(map, geojson) {
+    if (!geojson || !geojson.features || geojson.features.length === 0) {
+        console.warn('Impossibile adattare la vista: dati GeoJSON non validi');
+        return;
+    }
+    
+    try {
+        // Calcoliamo i confini (bounds) del GeoJSON
+        const bounds = new mapboxgl.LngLatBounds();
+        
+        // Iteriamo su tutte le features nel GeoJSON
+        geojson.features.forEach(feature => {
+            // Gestiamo diverse geometrie
+            if (feature.geometry && feature.geometry.coordinates) {
+                if (feature.geometry.type === 'Polygon') {
+                    // Per i poligoni, iteriamo su tutte le coordinate dell'anello esterno
+                    feature.geometry.coordinates[0].forEach(coord => {
+                        bounds.extend(coord);
+                    });
+                } else if (feature.geometry.type === 'MultiPolygon') {
+                    // Per i multipoligoni, iteriamo su tutti i poligoni
+                    feature.geometry.coordinates.forEach(polygon => {
+                        polygon[0].forEach(coord => {
+                            bounds.extend(coord);
+                        });
+                    });
+                } else if (feature.geometry.type === 'Point') {
+                    bounds.extend(feature.geometry.coordinates);
+                } else if (feature.geometry.type === 'LineString') {
+                    feature.geometry.coordinates.forEach(coord => {
+                        bounds.extend(coord);
+                    });
+                } else if (feature.geometry.type === 'MultiLineString') {
+                    feature.geometry.coordinates.forEach(line => {
+                        line.forEach(coord => {
+                            bounds.extend(coord);
+                        });
+                    });
+                }
+            }
+        });
+        
+        // Se abbiamo coordinate valide, zoom sui bounds
+        if (!bounds.isEmpty()) {
+            console.log('Adattamento della vista ai dati GeoJSON');
+            
+            // Aggiungiamo un padding per un po' di spazio intorno
+            map.fitBounds(bounds, {
+                padding: { top: 50, bottom: 50, left: 50, right: 50 },
+                maxZoom: 15, // Limita lo zoom massimo
+                duration: 1000 // Animazione di 1 secondo
+            });
+        } else {
+            console.warn('Bounds vuoti, impossibile adattare la vista');
+        }
+    } catch (error) {
+        console.error('Errore durante il calcolo dei bounds:', error);
+    }
 }
 
 // Funzione per aggiornare la tabella delle spiagge
@@ -563,11 +691,20 @@ function updateBeachesTable(beaches) {
         erosionCell.textContent = beach.erosion_rate ? parseFloat(beach.erosion_rate).toFixed(2) : 'N/A';
         
         const actionsCell = document.createElement('td');
-        const detailsButton = document.createElement('button');
-        detailsButton.className = 'action-button';
-        detailsButton.textContent = 'Dettagli';
-        detailsButton.onclick = function() { showBeachDetails(beach.id); };
-        actionsCell.appendChild(detailsButton);
+        
+        // Link per report di rischio
+        const riskLink = document.createElement('a');
+        riskLink.className = 'action-button';
+        riskLink.href = `/risk-report?beach=${beach.id}`;
+        riskLink.innerHTML = '<i class="fas fa-chart-line"></i> Rischio';
+        actionsCell.appendChild(riskLink);
+        
+        // Link per report di pericolo
+        const hazardLink = document.createElement('a');
+        hazardLink.className = 'action-button action-button-secondary';
+        hazardLink.href = `/hazard-report?beach=${beach.id}`;
+        hazardLink.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Pericolo';
+        actionsCell.appendChild(hazardLink);
         
         row.appendChild(nameCell);
         row.appendChild(lengthCell);

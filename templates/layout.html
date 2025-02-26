@@ -7,6 +7,7 @@
     <!-- Aggiungi il file init.css come primo CSS per garantire le definizioni di base -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/init.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/notifications.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap">
     <!-- Aggiungi il font Garamond come fallback -->
@@ -63,21 +64,31 @@
     </header>
 
     <main class="content-container">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                <div class="flash-messages">
+        <!-- Rimuoviamo il vecchio blocco di flashed messages -->
+        {% block flashed_messages %}{% endblock %}
+        
+        {% if get_flashed_messages() %}
+        <!-- Container per notifiche -->
+        <div class="notifications-container">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
                     {% for category, message in messages %}
-                        <div class="alert alert-{{ category }}">{{ message }}</div>
+                        <div class="notification {{ category }}">
+                            <i class="fas {% if category == 'success' %}fa-check-circle{% elif category == 'error' %}fa-exclamation-circle{% elif category == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %}"></i>
+                            {{ message }}
+                        </div>
                     {% endfor %}
-                </div>
-            {% endif %}
-        {% endwith %}
+                {% endif %}
+            {% endwith %}
+        </div>
+        {% endif %}
         
         {% block content %}{% endblock %}
     </main>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

@@ -137,7 +137,7 @@ body.dark-theme .control-input {
 }
 
 .year-display {
-    font-size: 1.3rem;
+    font-size: 1.5rem;
     font-weight: 700;
     color: var(--primary-color);
     text-align: center;
@@ -382,5 +382,15 @@ body.dark-theme .tab-content {
 
 .high-risk {
     color: #e74c3c;
+    font-weight: 600;
+}
+
+/* Miglioramenti per titoli e testo in Scala/Garamond */
+.tab-content h2, 
+.data-section h2,
+.info-panel h3,
+.map-controls label,
+.year-display {
+    font-family: var(--font-headers);
     font-weight: 600;
 }

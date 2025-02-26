@@ -61,6 +61,17 @@ Le variabili di ambiente sono configurate nel file `.env`:
 - Chat in tempo reale tra utenti
 - Pannello di amministrazione per la gestione degli utenti
 
+## Funzionalità di pulizia automatica
+
+### Pulizia dei messaggi
+- I messaggi nella chat più vecchi di 3 giorni vengono automaticamente eliminati
+- Gli amministratori possono eliminare manualmente tutti i messaggi dal pannello di amministrazione
+
+### Pulizia dei report
+- I report PDF generati vengono conservati per 10 minuti, poi vengono automaticamente eliminati
+- Questo permette agli utenti di scaricare i report ma evita l'accumulo di file inutilizzati
+- Gli amministratori possono attivare la pulizia manualmente dal pannello di amministrazione
+
 ## Note di Sviluppo
 
 I messaggi della chat vengono automaticamente cancellati dopo 3 giorni per ottimizzare le prestazioni.
