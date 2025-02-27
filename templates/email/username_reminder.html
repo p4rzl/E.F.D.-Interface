@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .container {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 25px;
+        }
+        h1 {
+            color: #105579;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .username-box {
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            margin: 30px 0;
+            padding: 15px;
+            background-color: #eef5f9;
+            border-radius: 5px;
+            border: 1px dashed #aaa;
+        }
+        .footer {
+            margin-top: 30px;
+            font-size: 12px;
+            color: #777;
+            text-align: center;
+            border-top: 1px solid #ddd;
+            padding-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Il Tuo Nome Utente</h1>
+        
+        <p>Ciao,</p>
+        
+        <p>Hai richiesto un promemoria del tuo nome utente per accedere al sistema di monitoraggio spiagge.</p>
+        
+        <p>Il tuo nome utente è:</p>
+        
+        <div class="username-box">{{ user.username }}</div>
+        
+        <p>Ora puoi accedere al sistema utilizzando questo nome utente e la tua password.</p>
+        
+        <p>Se non hai richiesto questa informazione, puoi ignorare questa email.</p>
+        
+        <div class="footer">
+            <p>&copy; 2023 Monitoraggio Spiagge. Tutti i diritti riservati.</p>
+        </div>
+    </div>
+</body>
+</html>

@@ -14,6 +14,7 @@ from extensions import db, login_manager, csrf, socketio
 from reports import generate_risk_report, generate_hazard_report
 from dotenv import load_dotenv
 import glob
+from email_service import email_service
 
 # Carica le variabili d'ambiente dal file .env
 load_dotenv()
@@ -25,6 +26,9 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:/
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['MAX_LOGIN_ATTEMPTS'] = 5
 app.config['ACCOUNT_LOCKOUT_MINUTES'] = 15
+
+# Configura l'URL base per le email
+app.config['BASE_URL'] = os.environ.get('BASE_URL', 'http://localhost:5000')
 
 # Inizializza le estensioni
 db.init_app(app)
@@ -40,6 +44,9 @@ MAPBOX_TOKEN = os.environ.get('MAPBOX_TOKEN', 'pk.eyJ1IjoicDRyemwiLCJhIjoiY203ZW
 # Inizializza SocketIO
 socketio.init_app(app, cors_allowed_origins="*")
 
+# Inizializzare il servizio email
+email_service.init_app(app)
+
 # Carica l'utente dal database
 @login_manager.user_loader
 def load_user(user_id):
@@ -54,7 +61,8 @@ def unauthorized():
 # Solo le route pubbliche sono accessibili senza login
 @app.before_request
 def require_login():
-    public_endpoints = ['login', 'register', 'static']
+    public_endpoints = ['login', 'register', 'static', 'verify_code', 'resend_verification', 
+                       'forgot_password', 'reset_password', 'forgot_username']
     if not current_user.is_authenticated and request.endpoint not in public_endpoints:
         return redirect(url_for('login'))
 
@@ -69,38 +77,117 @@ def get_base_template_data():
 def register():
     if current_user.is_authenticated:
         return redirect(url_for('home'))
-    
     form = RegisterForm()
     if form.validate_on_submit():
         # Verifica se username esiste già
         if User.query.filter_by(username=form.username.data).first():
             flash('Username già in uso. Scegli un altro username.', 'error')
             return render_template('register.html', form=form)
-        
-        # Debug - stampiamo i valori ricevuti
-        print(f"Avatar ID ricevuto dal form: {form.avatar_id.data}, tipo: {type(form.avatar_id.data)}")
-        
+        # Verifica se email esiste già
+        if User.query.filter_by(email=form.email.data).first():
+            flash('Email già registrata. Utilizza un altro indirizzo email.', 'error')
+            return render_template('register.html', form=form)
         # Crea nuovo utente con l'avatar scelto
         user = User(
             username=form.username.data,
             email=form.email.data,
-            avatar_id=int(form.avatar_id.data)  # Convertiamo esplicitamente in int
+            avatar_id=int(form.avatar_id.data),  # Convertiamo esplicitamente in int
+            email_verified=False  # Utente non verificato inizialmente
         )
         user.set_password(form.password.data)
+        # Genera codice di verifica
+        verification_code = user.generate_verification_code()
         
         try:
             db.session.add(user)
             db.session.commit()
-            flash('Registrazione completata! Ora puoi effettuare il login.', 'success')
-            return redirect(url_for('login'))
+            
+            # Invia email con codice di verifica
+            email_sent = email_service.send_verification_email(user, verification_code)
+            
+            if email_sent:
+                flash('Registrazione completata! Ti abbiamo inviato un codice di verifica via email.', 'success')
+            else:
+                # Se l'invio dell'email fallisce, mostra il codice direttamente (solo per sviluppo)
+                flash('Registrazione completata! Non è stato possibile inviare l\'email di verifica.', 'warning')
+                flash(f'Il tuo codice di verifica è: {verification_code}', 'info')
+            # Reindirizza alla pagina di inserimento del codice
+            verify_path = url_for('verify_code', email=user.email)
+            return redirect(verify_path)
         except Exception as e:
             db.session.rollback()
             print(f"Errore durante la registrazione: {e}")
             flash('Si è verificato un errore durante la registrazione. Riprova.', 'error')
-    
     return render_template('register.html', form=form)
 
-# Gestisce il login degli utenti
+# Nuova route per la verifica tramite codice
+@app.route('/verify-code/<email>', methods=['GET', 'POST'])
+def verify_code(email):
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        flash('Utente non trovato. Verifica l\'indirizzo email.', 'error')
+        return redirect(url_for('login'))
+    if user.email_verified:
+        flash('Il tuo account è già stato verificato.', 'info')
+        return redirect(url_for('login'))
+    if request.method == 'POST':
+        code = request.form.get('verification_code')
+        if not code:
+            flash('Inserisci il codice di verifica.', 'error')
+            return render_template('verify_code.html', email=email)
+        if user.is_code_expired():
+            # Codice scaduto, genera un nuovo codice
+            new_code = user.generate_verification_code()
+            db.session.commit()
+            
+            email_sent = email_service.send_verification_email(user, new_code)
+            
+            if email_sent:
+                flash('Il codice di verifica è scaduto. Un nuovo codice è stato inviato alla tua email.', 'info')
+            else:
+                flash('Il codice di verifica è scaduto. Non è stato possibile inviare un nuovo codice.', 'error')
+            
+            return render_template('verify_code.html', email=email)
+            
+        if user.verify_email_with_code(code):
+            db.session.commit()
+            flash('Email verificata con successo! Ora puoi accedere con il tuo account.', 'success')
+            return redirect(url_for('login'))
+        else:
+            flash('Codice di verifica non valido. Riprova.', 'error')
+    
+    return render_template('verify_code.html', email=email)
+
+# Aggiorna la route per richiedere un nuovo codice di verifica
+@app.route('/resend-verification', methods=['GET', 'POST'])
+def resend_verification():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    if request.method == 'POST':
+        email = request.form.get('email')
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            flash('Nessun account trovato con questo indirizzo email.', 'error')
+            return render_template('resend_verification.html')
+        if user.email_verified:
+            flash('Questo indirizzo email è già stato verificato.', 'info')
+            return redirect(url_for('login'))
+        # Genera un nuovo codice di verifica
+        verification_code = user.generate_verification_code()
+        db.session.commit()
+        # Invia email con il nuovo codice
+        email_sent = email_service.send_verification_email(user, verification_code)
+        if email_sent:
+            flash('Un nuovo codice di verifica è stato inviato alla tua email.', 'success')
+        else:
+            flash('Non è stato possibile inviare l\'email di verifica.', 'warning')
+            flash(f'Il tuo codice di verifica è: {verification_code}', 'info')
+        # Reindirizza alla pagina di verifica
+        return redirect(url_for('verify_code', email=user.email))
+    
+    return render_template('resend_verification.html')
+
+# Modifica la funzione di login per controllare se l'email è verificata
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
@@ -123,9 +210,13 @@ def login():
         
         # Verifica la password
         if user.check_password(form.password.data):
+            # Verifica che l'email sia verificata
+            if not user.email_verified:
+                flash('Per favore verifica il tuo indirizzo email prima di accedere.', 'warning')
+                return redirect(url_for('verify_code', email=user.email))
+                
             user.reset_failed_attempts()
             login_user(user, remember=form.remember.data)
-            # Rimosso aggiornamento last_login
             next_page = request.args.get('next')
             return redirect(next_page if next_page and url_for('login') not in next_page else url_for('home'))
         
@@ -170,7 +261,6 @@ def home():
             for col in numeric_columns:
                 if col in beaches_data.columns:
                     beaches_data[col] = pd.to_numeric(beaches_data[col], errors='coerce')
-            
             # Converti NaN in None per gestire correttamente il template Jinja
             beaches_data = beaches_data.replace({np.nan: None})
             beaches_data = beaches_data.to_dict('records')
@@ -188,7 +278,6 @@ def home():
             # Legge il file CSV con indice
             risk_df = pd.read_csv(risk_path, comment="#", index_col=0)
             risk_df = risk_df.replace({np.nan: None})
-            
             # Converti DataFrame in formato più accessibile per il template
             risk_data = {}
             for idx, row in risk_df.iterrows():
@@ -209,7 +298,6 @@ def home():
             # Legge il file CSV con indice
             hazard_df = pd.read_csv(hazard_path, comment="#", index_col=0)
             hazard_df = hazard_df.replace({np.nan: None})
-            
             # Converti DataFrame in formato più accessibile per il template
             hazard_data = {}
             for idx, row in hazard_df.iterrows():
@@ -275,9 +363,7 @@ def home():
             'economy_geojson': economy_geojson,
             'hazards_geojson': hazards_geojson
         })
-        
         return render_template('home.html', **template_data)
-        
     except Exception as e:
         import traceback
         error_msg = f'Errore nel caricamento della home page: {str(e)}'
@@ -325,14 +411,12 @@ def get_map_data():
         # Applica previsioni in base all'anno selezionato
         if year > 2023:
             years_forward = year - 2023
-            
             # Simulazione di erosione (sottraendo larghezza basata sul tasso di erosione)
             for i, beach in beaches_data.iterrows():
                 if pd.notna(beach['erosion_rate']) and pd.notna(beach['width']):
                     # Calcola la nuova larghezza
                     new_width = max(0, beach['width'] - (beach['erosion_rate'] * years_forward))
                     beaches_data.at[i, 'width'] = new_width
-                    
                     # Aggiorna l'indice di rischio (aumenta con l'erosione)
                     if beach['width'] > 0:
                         # Formula semplice: rischio aumenta proporzionalmente alla riduzione della larghezza
@@ -403,7 +487,7 @@ def risk_report():
         
         return render_template('risk_report.html', 
                               beach=beach.to_dict(), 
-                              username=current_user.username,
+                              username=current_user.username, 
                               datetime=datetime)  # Passa l'oggetto datetime
     except Exception as e:
         flash(f'Errore nella generazione del report: {str(e)}', 'error')
@@ -428,7 +512,7 @@ def hazard_report():
         
         return render_template('hazard_report.html', 
                               beach=beach.to_dict(), 
-                              username=current_user.username,
+                              username=current_user.username, 
                               datetime=datetime)  # Passa l'oggetto datetime
     except Exception as e:
         flash(f'Errore nella generazione del report: {str(e)}', 'error')
@@ -486,13 +570,11 @@ def handle_connect():
     if current_user.is_authenticated:
         # Aggiungi un flag per evitare duplicazioni
         session['messages_sent'] = session.get('messages_sent', False)
-        
         # Invia la cronologia dei messaggi solo la prima volta
         if not session['messages_sent']:
             # Recupera gli ultimi 50 messaggi dal database
             recent_messages = Message.query.order_by(Message.timestamp.desc()).limit(50).all()
             recent_messages.reverse()  # Inverti per ordine cronologico
-            
             # Invia la cronologia dei messaggi al client che si è connesso
             for message in recent_messages:
                 user = User.query.get(message.user_id)
@@ -505,7 +587,6 @@ def handle_connect():
                         'is_admin': user.is_admin,
                         'time': message.timestamp.strftime('%H:%M')
                     }, broadcast=False)  # Invia solo al client connesso
-            
             # Imposta il flag per evitare reinvii
             session['messages_sent'] = True
 
@@ -526,7 +607,6 @@ def handle_message(data):
             message = Message(text=message_text, user_id=current_user.id)
             db.session.add(message)
             db.session.commit()
-            
             # Invia il messaggio a tutti i client connessi con ID univoco
             emit('message', {
                 'id': f'msg-{message.id}',  # ID univoco per questo messaggio
@@ -544,7 +624,7 @@ def admin():
     if not current_user.is_admin:
         flash('Accesso negato: devi essere un amministratore per accedere a questa pagina', 'error')
         return redirect(url_for('home'))
-    
+        
     users = User.query.all()
     return render_template('admin.html', users=users)
 
@@ -555,14 +635,11 @@ def toggle_user(user_id):
     if not current_user.is_admin:
         flash('Accesso negato: devi essere un amministratore per eseguire questa azione', 'error')
         return redirect(url_for('home'))
-    
     user = User.query.get_or_404(user_id)
-    
     # Previene la modifica dell'utente admin principale e dell'utente corrente
     if user.username == 'admin' or user == current_user:
         flash('Non puoi modificare questo utente', 'error')
         return redirect(url_for('admin'))
-    
     user.is_active = not user.is_active
     db.session.commit()
     
@@ -577,17 +654,13 @@ def toggle_admin(user_id):
     if not current_user.is_admin:
         flash('Accesso negato: devi essere un amministratore per eseguire questa azione', 'error')
         return redirect(url_for('home'))
-    
     user = User.query.get_or_404(user_id)
-    
     # Previene la modifica dell'utente admin principale e dell'utente corrente
     if user.username == 'admin' or user == current_user:
         flash('Non puoi modificare questo utente', 'error')
         return redirect(url_for('admin'))
-    
     user.is_admin = not user.is_admin
     db.session.commit()
-    
     status = "promosso ad amministratore" if user.is_admin else "rimosso da amministratore"
     flash(f'Utente {user.username} {status} con successo', 'success')
     return redirect(url_for('admin'))
@@ -599,25 +672,14 @@ def delete_user(user_id):
     if not current_user.is_admin:
         flash('Accesso negato: devi essere un amministratore per eseguire questa azione', 'error')
         return redirect(url_for('home'))
-    
     user = User.query.get_or_404(user_id)
-    
     # Previene l'eliminazione dell'utente admin principale e dell'utente corrente
     if user.username == 'admin' or user == current_user:
         flash('Non puoi eliminare questo utente', 'error')
         return redirect(url_for('admin'))
-    
-    # Salva le informazioni per il messaggio flash
-    username = user.username
-    
-    # Elimina tutti i messaggi dell'utente
-    Message.query.filter_by(user_id=user.id).delete()
-    
-    # Elimina l'utente
     db.session.delete(user)
     db.session.commit()
-    
-    flash(f'Utente {username} eliminato con successo', 'success')
+    flash(f'Utente {user.username} eliminato con successo', 'success')
     return redirect(url_for('admin'))
 
 # Gestione degli errori
@@ -718,7 +780,7 @@ def init_app_db():
         db.create_all()
         # Crea utente admin se non esiste
         if not User.query.filter_by(username='admin').first():
-            admin = User(username='admin', is_admin=True)
+            admin = User(username='admin', is_admin=True, email_verified=True)  # Admin è già verificato
             admin_password = os.environ.get('ADMIN_PASSWORD', 'admin')
             print(f"Creazione admin con password: {admin_password}")
             admin.set_password(admin_password)
@@ -783,15 +845,139 @@ def cleanup_reports_command():
         cleanup_old_reports()
         print("Pulizia dei report completata.")
 
+# Route per recupero password
+@app.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+        
+    if request.method == 'POST':
+        email = request.form.get('email')
+        user = User.query.filter_by(email=email).first()
+        
+        if not user:
+            flash('Nessun account trovato con questo indirizzo email.', 'error')
+            return render_template('forgot_password.html')
+        
+        # Genera un token di reset
+        reset_token = user.generate_reset_token()
+        db.session.commit()
+        
+        # Crea URL di reset con dominio personalizzato
+        base_url = app.config.get('BASE_URL')
+        reset_path = url_for('reset_password', token=reset_token)
+        reset_url = f"{base_url}{reset_path}"
+        
+        # Invia email con link di reset
+        email_sent = email_service.send_password_reset_email(user, reset_url)
+        
+        if email_sent:
+            flash('Ti abbiamo inviato un\'email con le istruzioni per reimpostare la tua password.', 'success')
+        else:
+            flash('Non è stato possibile inviare l\'email di reset. Per favore riprova più tardi.', 'warning')
+            # In ambiente di sviluppo, mostra l'URL di reset
+            if app.config.get('FLASK_ENV') == 'development':
+                flash(f'URL di reset (solo per sviluppo): {reset_url}', 'info')
+        
+        return redirect(url_for('login'))
+    
+    return render_template('forgot_password.html')
+
+# Route per reimpostare la password
+@app.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+        
+    # Trova l'utente con il token di reset
+    user = User.query.filter_by(reset_password_token=token).first()
+    
+    if not user:
+        flash('Il link di reset non è valido o è scaduto.', 'error')
+        return redirect(url_for('forgot_password'))
+    
+    if user.is_reset_token_expired():
+        flash('Il link di reset è scaduto. Richiedi un nuovo link.', 'error')
+        return redirect(url_for('forgot_password'))
+    
+    if request.method == 'POST':
+        password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+        
+        if not password:
+            flash('Inserisci una password valida.', 'error')
+            return render_template('reset_password.html', token=token)
+            
+        if password != confirm_password:
+            flash('Le password non coincidono.', 'error')
+            return render_template('reset_password.html', token=token)
+            
+        if len(password) < 8:
+            flash('La password deve contenere almeno 8 caratteri.', 'error')
+            return render_template('reset_password.html', token=token)
+        
+        # Imposta la nuova password e cancella il token di reset
+        user.set_password(password)
+        user.reset_password_token = None
+        user.reset_token_expiration = None
+        db.session.commit()
+        
+        flash('La tua password è stata reimpostata con successo. Ora puoi accedere.', 'success')
+        return redirect(url_for('login'))
+        
+    return render_template('reset_password.html', token=token)
+
+# Route per recupero username
+@app.route('/forgot-username', methods=['GET', 'POST'])
+def forgot_username():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+        
+    if request.method == 'POST':
+        email = request.form.get('email')
+        user = User.query.filter_by(email=email).first()
+        
+        if not user:
+            flash('Nessun account trovato con questo indirizzo email.', 'error')
+            return render_template('forgot_username.html')
+        
+        # Invia email con username
+        email_sent = email_service.send_username_reminder_email(user)
+        
+        if email_sent:
+            flash('Ti abbiamo inviato un\'email con il tuo nome utente.', 'success')
+        else:
+            flash('Non è stato possibile inviare l\'email. Per favore riprova più tardi.', 'warning')
+            # In ambiente di sviluppo, mostra l'username
+            if app.config.get('FLASK_ENV') == 'development':
+                flash(f'Il tuo nome utente è: {user.username}', 'info')
+        
+        return redirect(url_for('login'))
+    
+    return render_template('forgot_username.html')
+
 # Esecuzione dell'applicazione
 if __name__ == '__main__':
     # Crea le directory necessarie se non esistono
     os.makedirs('data', exist_ok=True)
     os.makedirs('static/reports', exist_ok=True)
     
+    # Crea la directory per i log delle email se in modalità file
+    if os.environ.get('EMAIL_SERVICE_TYPE') == 'file':
+        log_dir = os.environ.get('EMAIL_LOG_DIR', 'logs')
+        os.makedirs(log_dir, exist_ok=True)
+    
     # Inizializza il database e l'utente admin
     print("Inizializzazione del database...")
     init_app_db()
+    
+    # Esegui le migrazioni necessarie
+    try:
+        from migrations.add_verification_code import run_migration
+        run_migration()
+        print("Migrazione verification_code completata.")
+    except Exception as e:
+        print(f"Avviso: Migrazione non eseguita - {str(e)}")
     
     # Pulizia dei messaggi vecchi all'avvio
     with app.app_context():
@@ -813,5 +999,3 @@ if __name__ == '__main__':
     
     # Avvia l'app
     socketio.run(app, debug=(os.environ.get('FLASK_ENV') == 'development'), host='0.0.0.0')
-    
-# Assicuriamoci che non ci siano caratteri extra alla fine del file
