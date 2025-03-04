@@ -528,7 +528,11 @@ document.addEventListener('DOMContentLoaded', function() {
             statusEl.textContent = 'Generazione PDF in corso...';
             statusEl.className = 'pdf-status loading';
             
-            fetch(`/risk-pdf?beach={{ beach.id }}`)
+            // Ottieni la lingua corrente dal localStorage o usa l'italiano come default
+            let currentLang = localStorage.getItem('selectedLanguage') || 'it';
+            
+            // Passa la lingua come parametro alla richiesta AJAX
+            fetch(`/risk-pdf?beach={{ beach.id }}&lang=${currentLang}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success && data.pdf_path) {

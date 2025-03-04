@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{{ t.hazard_report_title }} - {{ beach.name }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+            color: #333;
+        }
+        h1 {
+            color: #e74c3c;
+            border-bottom: 2px solid #e74c3c;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #333;
+            margin-top: 20px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+        .metadata {
+            text-align: right;
+            font-size: 14px;
+            color: #666;
+        }
+        .beach-info {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+        .info-box {
+            width: 45%;
+            margin-bottom: 15px;
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .info-box h3 {
+            margin-top: 0;
+            color: #e74c3c;
+            font-size: 16px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+        .hazard-details {
+            margin-bottom: 30px;
+        }
+        .hazard-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .hazard-name {
+            font-weight: bold;
+        }
+        .hazard-value {
+            font-weight: bold;
+        }
+        .hazard-low {
+            color: #28a745;
+        }
+        .hazard-medium {
+            color: #ffc107;
+        }
+        .hazard-high {
+            color: #dc3545;
+        }
+        .recommendations {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+        }
+        .recommendation {
+            margin-bottom: 10px;
+            padding-left: 25px;
+            position: relative;
+        }
+        .recommendation:before {
+            content: "•";
+            position: absolute;
+            left: 10px;
+            color: #e74c3c;
+        }
+        .footer {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+        }
+        @page {
+            @bottom-right {
+                content: "{{ t.page }} " counter(page);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h1>{{ t.hazard_report_title }}</h1>
+            <h2>{{ beach.name }}</h2>
+        </div>
+        <div class="metadata">
+            <p>{{ t.generated_by }}: {{ username }}</p>
+            <p>{{ t.date }}: {{ date }}</p>
+        </div>
+    </div>
+
+    <h2>{{ t.overview }}</h2>
+    <div class="beach-info">
+        <div class="info-box">
+            <h3>{{ t.length }}</h3>
+            <p>{% if beach.length %}{{ beach.length|int }} {{ t.meters }}{% else %}N/A{% endif %}</p>
+        </div>
+        <div class="info-box">
+            <h3>{{ t.width }}</h3>
+            <p>{% if beach.width %}{{ beach.width|int }} {{ t.meters }}{% else %}N/A{% endif %}</p>
+        </div>
+        <div class="info-box">
+            <h3>{{ t.erosion_rate }}</h3>
+            <p>{% if beach.erosion_rate %}{{ "%.2f"|format(beach.erosion_rate) }} {{ t.meters_per_year }}{% else %}N/A{% endif %}</p>
+        </div>
+    </div>
+
+    <h2>{{ t.hazard_details }}</h2>
+    <div class="hazard-details">
+        <div class="hazard-item">
+            <div class="hazard-name">{{ t.erosion_hazard }}</div>
+            <div class="hazard-value 
+                {% if beach.erosion_rate and beach.erosion_rate > 1.0 %}hazard-high
+                {% elif beach.erosion_rate and beach.erosion_rate > 0.5 %}hazard-medium
+                {% else %}hazard-low{% endif %}">
+                {% if beach.erosion_rate %}{{ "%.2f"|format(beach.erosion_rate) }}{% else %}N/A{% endif %}
+            </div>
+        </div>
+        <div class="hazard-item">
+            <div class="hazard-name">{{ t.flooding_hazard }}</div>
+            <div class="hazard-value 
+                {% if beach.risk_index and beach.risk_index > 0.7 %}hazard-high
+                {% elif beach.risk_index and beach.risk_index > 0.4 %}hazard-medium
+                {% else %}hazard-low{% endif %}">
+                {% if beach.risk_index %}{{ "%.2f"|format(beach.risk_index * 0.7) }}{% else %}N/A{% endif %}
+            </div>
+        </div>
+        <div class="hazard-item">
+            <div class="hazard-name">{{ t.storm_hazard }}</div>
+            <div class="hazard-value 
+                {% if beach.risk_index and beach.risk_index > 0.6 %}hazard-high
+                {% elif beach.risk_index and beach.risk_index > 0.3 %}hazard-medium
+                {% else %}hazard-low{% endif %}">
+                {% if beach.risk_index %}{{ "%.2f"|format(beach.risk_index * 0.6) }}{% else %}N/A{% endif %}
+            </div>
+        </div>
+    </div>
+
+    <h2>{{ t.recommendations }}</h2>
+    <div class="recommendations">
+        <div class="recommendation">
+            Implementare sistemi di monitoraggio delle condizioni meteorologiche estreme
+        </div>
+        <div class="recommendation">
+            Sviluppare piani di evacuazione per eventi di inondazione
+        </div>
+        <div class="recommendation">
+            Costruire difese costiere adeguate alle condizioni di pericolo
+        </div>
+        <div class="recommendation">
+            Stabilire aree di buffer per proteggere le infrastrutture critiche
+        </div>
+    </div>
+
+    <div class="footer">
+        {{ t.coastal_monitoring_system }} © 2023 - {{ t.hazard_report_title }} - {{ beach.name }}
+    </div>
+</body>
+</html>

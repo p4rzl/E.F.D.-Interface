@@ -210,4 +210,25 @@
 
 <script src="{{ url_for('static', filename='js/map.js') }}"></script>
 <script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+
+<!-- Script aggiuntivo per traduzione specifica della pagina home -->
+<script>
+    // Applica traduzione al caricamento della pagina
+    document.addEventListener('DOMContentLoaded', function() {
+        const savedLanguage = localStorage.getItem('selectedLanguage');
+        if (savedLanguage && savedLanguage !== 'it') {
+            // Attendi che il contenuto sia pienamente caricato prima di tradurre
+            setTimeout(() => {
+                console.log("Applicazione traduzione specifica per home:", savedLanguage);
+                
+                // Tenta di applicare la traduzione direttamente
+                const select = document.querySelector('.goog-te-combo');
+                if (select) {
+                    select.value = savedLanguage;
+                    select.dispatchEvent(new Event('change'));
+                }
+            }, 1500);
+        }
+    });
+</script>
 {% endblock %}

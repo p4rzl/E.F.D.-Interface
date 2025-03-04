@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{{ t.hazard_report_title }} - {{ beach.name }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            color: #000;
+        }
+        h1 {
+            color: #e74c3c;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>{{ t.hazard_report_title }}</h1>
+    <h2>{{ beach.name|default('N/A') }}</h2>
+    <p><strong>{{ t.generated_by }}:</strong> {{ username }}</p>
+    <p><strong>{{ t.date }}:</strong> {{ date }}</p>
+    
+    <h3>{{ t.overview }}</h3>
+    <table>
+        <tr>
+            <th>{{ t.length }}</th>
+            <td>{% if beach.length %}{{ beach.length|int }} {{ t.meters }}{% else %}N/A{% endif %}</td>
+        </tr>
+        <tr>
+            <th>{{ t.width }}</th>
+            <td>{% if beach.width %}{{ beach.width|int }} {{ t.meters }}{% else %}N/A{% endif %}</td>
+        </tr>
+        <tr>
+            <th>{{ t.erosion_rate }}</th>
+            <td>{% if beach.erosion_rate %}{{ "%.2f"|format(beach.erosion_rate) }} {{ t.meters_per_year }}{% else %}N/A{% endif %}</td>
+        </tr>
+    </table>
+    
+    <h3>{{ t.hazard_details }}</h3>
+    <table>
+        <tr>
+            <th>{{ t.erosion_hazard }}</th>
+            <td>{% if beach.erosion_rate %}{{ "%.2f"|format(beach.erosion_rate) }}{% else %}N/A{% endif %}</td>
+        </tr>
+        <tr>
+            <th>{{ t.flooding_hazard }}</th>
+            <td>{% if beach.risk_index %}{{ "%.2f"|format(beach.risk_index * 0.7) }}{% else %}N/A{% endif %}</td>
+        </tr>
+        <tr>
+            <th>{{ t.storm_hazard }}</th>
+            <td>{% if beach.risk_index %}{{ "%.2f"|format(beach.risk_index * 0.6) }}{% else %}N/A{% endif %}</td>
+        </tr>
+    </table>
+    
+    <h3>{{ t.recommendations }}</h3>
+    <ul>
+        <li>Implementare sistemi di monitoraggio delle condizioni meteorologiche estreme</li>
+        <li>Sviluppare piani di evacuazione per eventi di inondazione</li>
+        <li>Costruire difese costiere adeguate alle condizioni di pericolo</li>
+        <li>Stabilire aree di buffer per proteggere le infrastrutture critiche</li>
+    </ul>
+    
+    <p>{{ t.coastal_monitoring_system }} © 2023 - {{ t.hazard_report_title }} - {{ beach.name|default('N/A') }}</p>
+</body>
+</html>

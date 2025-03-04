@@ -1,11 +1,19 @@
 from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
-from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, Text, Boolean, DateTime, ForeignKey, Table
 from sqlalchemy.orm import relationship
 from extensions import db
 import secrets
 import random
+import uuid
+
+# Tabella di associazione per membri del gruppo
+group_members = Table('group_members',
+    db.Model.metadata,
+    Column('user_id', Integer, ForeignKey('users.id'), primary_key=True),
+    Column('group_id', Integer, ForeignKey('chat_groups.id'), primary_key=True)
+)
 
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
@@ -25,7 +33,25 @@ class User(UserMixin, db.Model):
     token_expiration = Column(DateTime, nullable=True)
     reset_password_token = Column(String(100), unique=True, nullable=True)
     reset_token_expiration = Column(DateTime, nullable=True)
-    messages = relationship('Message', back_populates='user')
+    
+    # Relazione per i messaggi inviati
+    messages_sent = relationship('Message', 
+                               foreign_keys='Message.sender_id', 
+                               back_populates='sender')
+    
+    # Relazione per i messaggi ricevuti (privati)
+    messages_received = relationship('Message', 
+                                  foreign_keys='Message.recipient_id', 
+                                  back_populates='recipient')
+    
+    # Relazione per i gruppi creati dall'utente
+    groups_created = relationship('ChatGroup', back_populates='creator')
+    
+    # Relazione per i gruppi di cui l'utente è membro
+    groups = relationship('ChatGroup', secondary=group_members, back_populates='members')
+    
+    # Relazione per le notifiche
+    notifications = relationship('Notification', back_populates='user')
     
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -99,6 +125,26 @@ class User(UserMixin, db.Model):
     def is_reset_token_expired(self):
         """Verifica se il token di reset è scaduto"""
         return self.reset_token_expiration and self.reset_token_expiration < datetime.now()
+    
+    def __repr__(self):
+        return f'<User {self.username}>'
+
+class ChatGroup(db.Model):
+    __tablename__ = 'chat_groups'
+    
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100), nullable=False)
+    description = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    creator_id = Column(Integer, ForeignKey('users.id'))
+    
+    # Relazioni
+    creator = relationship('User', back_populates='groups_created')
+    members = relationship('User', secondary=group_members, back_populates='groups')
+    messages = relationship('Message', back_populates='group')
+    
+    def __repr__(self):
+        return f'<ChatGroup {self.name}>'
 
 class Message(db.Model):
     __tablename__ = 'messages'
@@ -106,5 +152,88 @@ class Message(db.Model):
     id = Column(Integer, primary_key=True)
     text = Column(Text, nullable=False)
     timestamp = Column(DateTime, default=datetime.utcnow, index=True)
+    
+    # Chi invia il messaggio
+    sender_id = Column(Integer, ForeignKey('users.id'))
+    sender = relationship('User', foreign_keys=[sender_id], back_populates='messages_sent')
+    
+    # Chi riceve il messaggio (per messaggi privati)
+    recipient_id = Column(Integer, ForeignKey('users.id'), nullable=True)
+    recipient = relationship('User', foreign_keys=[recipient_id], back_populates='messages_received')
+    
+    # Gruppo a cui appartiene il messaggio (se è un messaggio di gruppo)
+    group_id = Column(Integer, ForeignKey('chat_groups.id'), nullable=True)
+    group = relationship('ChatGroup', back_populates='messages')
+    
+    # Tipo di messaggio (generale, privato, gruppo)
+    message_type = Column(String(20), default='general')
+    
+    # È stato letto?
+    is_read = Column(Boolean, default=False)
+    
+    def __repr__(self):
+        return f'<Message {self.id}>'
+    
+    @property
+    def is_private(self):
+        return self.message_type == 'private'
+    
+    @property
+    def is_group(self):
+        return self.message_type == 'group'
+    
+    @property
+    def is_general(self):
+        return self.message_type == 'general'
+
+class Notification(db.Model):
+    __tablename__ = 'notifications'
+    
+    id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'))
-    user = relationship('User', back_populates='messages')
+    user = relationship('User', back_populates='notifications')
+    
+    content = Column(Text, nullable=False)
+    type = Column(String(50), nullable=False)  # 'message', 'group_invitation', ecc.
+    
+    # Di quale entità si tratta? (ID del messaggio o del gruppo)
+    related_id = Column(Integer, nullable=True)
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    is_read = Column(Boolean, default=False)
+    
+    # Payload JSON per dati aggiuntivi
+    data = Column(Text, nullable=True)  # Memorizzato come JSON
+    
+    def __repr__(self):
+        return f'<Notification {self.id}>'
+
+class SystemConfig(db.Model):
+    __tablename__ = 'system_config'
+    
+    id = Column(Integer, primary_key=True)
+    key = Column(String(100), unique=True, nullable=False)
+    value = Column(String(255), nullable=False)
+    description = Column(String(255), nullable=True)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<SystemConfig {self.key}={self.value}>'
+    
+    @classmethod
+    def get(cls, key, default=None):
+        """Ottiene un valore di configurazione dalla chiave"""
+        config = cls.query.filter_by(key=key).first()
+        return config.value if config else default
+        
+    @classmethod
+    def set(cls, key, value, description=None):
+        """Imposta un valore di configurazione"""
+        config = cls.query.filter_by(key=key).first()
+        if config:
+            config.value = value
+        else:
+            config = cls(key=key, value=value, description=description)
+            db.session.add(config)
+        db.session.commit()
+        return config

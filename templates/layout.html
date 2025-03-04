@@ -13,6 +13,7 @@
     <!-- Aggiungi il font Garamond come fallback -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600&display=swap">
     <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/translate.css') }}">
     {% block head %}{% endblock %}
 </head>
 <body class="{{ 'dark-theme' if session.get('dark_theme') else '' }}">
@@ -23,20 +24,29 @@
                     <img src="{{ url_for('static', filename='img/favicon.ico') }}" alt="Logo" class="nav-icon">
                 </a>
             </div>
-            <ul>
+            <ul class="navbar-nav me-auto">
                 {% if current_user.is_authenticated %}
-                <li><a href="{{ url_for('home') }}" {% if request.path == url_for('home') %}class="active"{% endif %}>
-                    <i class="fas fa-home"></i> <span>Home</span>
-                </a></li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('home') }}">
+                        <i class="fas fa-home"></i> <span>Home</span>
+                    </a>
+                </li>
                 
-                <li><a href="{{ url_for('chat_page') }}" {% if request.path == url_for('chat_page') %}class="active"{% endif %}>
-                    <i class="fas fa-comments"></i> <span>Chat</span>
-                </a></li>
+                <!-- Mostra il link alla chat solo se è attivata o se l'utente è admin -->
+                {% if chat_enabled or current_user.is_admin %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('chat_page') }}">
+                        <i class="fas fa-comments"></i> <span>Chat</span>
+                    </a>
+                </li>
+                {% endif %}
                 
                 {% if current_user.is_admin %}
-                <li><a href="{{ url_for('admin') }}" {% if request.path == url_for('admin') %}class="active"{% endif %}>
-                    <i class="fas fa-shield-alt"></i> <span>Admin Panel</span>
-                </a></li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('admin') }}">
+                        <i class="fas fa-shield-alt"></i> <span>Admin Panel</span>
+                    </a>
+                </li>
                 {% endif %}
                 
                 <li>
@@ -45,11 +55,40 @@
                     </button>
                 </li>
                 
+                <!-- Aggiungiamo il selettore di lingua -->
+                <li class="language-selector">
+                    <button id="language-toggle" class="language-toggle">
+                        <i class="fas fa-language"></i>
+                    </button>
+                    <div class="language-dropdown">
+                        <a href="#" data-lang="it" class="language-option active">
+                            <img src="{{ url_for('static', filename='img/flags/it.svg') }}" alt="Italiano">
+                            <span>Italiano</span>
+                        </a>
+                        <a href="#" data-lang="en" class="language-option">
+                            <img src="{{ url_for('static', filename='img/flags/en.svg') }}" alt="English">
+                            <span>English</span>
+                        </a>
+                        <a href="#" data-lang="es" class="language-option">
+                            <img src="{{ url_for('static', filename='img/flags/es.svg') }}" alt="Español">
+                            <span>Español</span>
+                        </a>
+                        <a href="#" data-lang="fr" class="language-option">
+                            <img src="{{ url_for('static', filename='img/flags/fr.svg') }}" alt="Français">
+                            <span>Français</span>
+                        </a>
+                        <a href="#" data-lang="de" class="language-option">
+                            <img src="{{ url_for('static', filename='img/flags/de.svg') }}" alt="Deutsch">
+                            <span>Deutsch</span>
+                        </a>
+                    </div>
+                </li>
+                
                 <li class="user-info">
                     <img src="{{ url_for('static', filename='img/avatars/' + current_user.avatar_id|string + '.png') }}" 
                          alt="Avatar" 
                          class="user-avatar">
-                    <span>{{ current_user.username }}</span>
+                    <span translate="no" class="username">{{ current_user.username }}</span>
                     <a href="{{ url_for('logout') }}" class="logout-btn">
                         <i class="fas fa-sign-out-alt"></i>
                         <span>Logout</span>
@@ -58,6 +97,35 @@
                 {% else %}
                 <li><a href="{{ url_for('login') }}"><i class="fas fa-sign-in-alt"></i> Login</a></li>
                 <li><a href="{{ url_for('register') }}"><i class="fas fa-user-plus"></i> Registrati</a></li>
+                
+                <!-- Aggiungiamo il selettore di lingua anche per utenti non autenticati -->
+                <li class="language-selector">
+                    <button id="language-toggle" class="language-toggle">
+                        <i class="fas fa-language"></i>
+                    </button>
+                    <div class="language-dropdown">
+                        <a href="#" data-lang="it" class="language-option active">
+                            <img src="{{ url_for('static', filename='img/flags/it.svg') }}" alt="Italiano">
+                            <span>Italiano</span>
+                        </a>
+                        <a href="#" data-lang="en" class="language-option">
+                            <img src="{{ url_for('static', filename='img/flags/en.svg') }}" alt="English">
+                            <span>English</span>
+                        </a>
+                        <a href="#" data-lang="es" class="language-option">
+                            <img src="{{ url_for('static', filename='img/flags/es.svg') }}" alt="Español">
+                            <span>Español</span>
+                        </a>
+                        <a href="#" data-lang="fr" class="language-option">
+                            <img src="{{ url_for('static', filename='img/flags/fr.svg') }}" alt="Français">
+                            <span>Français</span>
+                        </a>
+                        <a href="#" data-lang="de" class="language-option">
+                            <img src="{{ url_for('static', filename='img/flags/de.svg') }}" alt="Deutsch">
+                            <span>Deutsch</span>
+                        </a>
+                    </div>
+                </li>
                 {% endif %}
             </ul>
         </nav>
@@ -86,9 +154,24 @@
         {% block content %}{% endblock %}
     </main>
 
+    <!-- Google Translate Element - posizionato in un angolo ma visibile -->
+    <div id="google_translate_element" style="position:fixed; bottom:10px; right:10px; z-index:1000;"></div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
     <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
     <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/translate.js') }}"></script>
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({
+                pageLanguage: 'it',
+                includedLanguages: 'en,es,fr,de,it',
+                autoDisplay: false,
+                layout: google.translate.TranslateElement.FloatPosition.BOTTOM_RIGHT
+            }, 'google_translate_element');
+        }
+    </script>
+    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

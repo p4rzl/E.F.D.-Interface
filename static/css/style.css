@@ -52,6 +52,7 @@ body {
     display: flex;
     flex-direction: column;
     transition: background-color 0.3s ease, color 0.3s ease;
+    top: 0 !important;
 }
 
 /* Modifica per titoli: cambio da italic a font serif e aggiunto grassetto */
@@ -214,11 +215,78 @@ nav ul li a i {
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
+/* Fix per gli avatar nella pagina admin */
+.admin-table .mini-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color);
+    display: block;
+    margin: 0 auto;
+}
+
+/* Fix per gli avatar nella chat */
+.message-avatar img,
+.chat-message img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--bg-color-secondary);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Fix per gli avatar nella lista utenti della chat */
+.user-item .user-avatar {
+    width: 36px;
+    height: 36px;
+    min-width: 36px; /* Previene il restringimento */
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--bg-color-secondary);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Aggiunto specificamente per essere certo che il translate="no" non interferisca */
+[translate="no"].username {
+    font-weight: 600;
+    color: #125279;
+    max-width: 120px; /* Limita lunghezza username per prevenire overflow */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: inline-block;
+}
+
+.dark-theme [translate="no"].username {
+    color: #4fa1d6;
+}
+
 .user-info span {
     color: var(--nav-text);
     font-weight: 500;
     margin-right: 8px;
     font-size: 0.9rem;
+}
+
+/* Fix per il colore dell'username nella navbar */
+.user-info span.username {
+    color: var(--nav-text) !important; /* Forza il colore del testo della navbar */
+    font-weight: 500;
+    margin-right: 8px;
+    font-size: 0.9rem;
+}
+
+/* Tema scuro: assicurati che il testo sia sempre leggibile */
+.dark-theme .user-info span.username {
+    color: var(--nav-text) !important;
+}
+
+/* Override per assicurare che gli username nella navbar usino il colore corretto */
+.user-info [translate="no"].username {
+    color: var(--nav-text) !important;
 }
 
 /* Stile per il toggle tema */
@@ -298,6 +366,30 @@ nav ul li a i {
 /* Animazioni fluide per transizioni di tema */
 body, header, nav, .content-container, button, input, a {
     transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Miglioramento transizioni per il cambio tema */
+body, 
+body.dark-theme, 
+.content-container, 
+.chat-page-container,
+.chat-sidebar,
+.chat-main,
+.chat-header,
+.chat-messages-container,
+.message-content,
+.chat-input-container,
+.chat-input,
+.message,
+.message-text,
+.message-username,
+.message-time,
+.user-name {
+    transition: 
+        background-color 0.3s ease-in-out, 
+        color 0.3s ease-in-out, 
+        border-color 0.3s ease-in-out,
+        box-shadow 0.3s ease-in-out;
 }
 
 /* Stile specifico per admin panel in tema scuro */
@@ -1134,7 +1226,7 @@ body.dark-theme .mapboxgl-popup-close-button:hover {
 .attribute-value {
     font-size: 1.5rem;
     font-weight: 700;
-    color: var(--primary-color);
+    color: var (--primary-color);
 }
 
 /* Stili comuni per grafico rischio e pericolo */
@@ -1264,4 +1356,336 @@ body.dark-theme .mapboxgl-popup-close-button:hover {
     .report-actions {
         margin-top: 15px;
     }
+}
+
+/* Stili per selettore lingua */
+.language-selector {
+    position: relative;
+    z-index: 1010; /* Aumentato z-index per garantire che appaia sopra altri elementi */
+}
+
+.language-toggle {
+    background: none;
+    border: none;
+    color: var(--nav-text);
+    font-size: 1.2em;
+    cursor: pointer;
+    padding: 5px 10px;
+    margin: 0;
+    transition: all 0.3s ease;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative; /* Per aggiungere l'indicatore */
+}
+
+/* Indicatore di lingua attiva */
+.language-toggle::after {
+    content: '';
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #4CAF50; /* Verde per indicare attività */
+    bottom: 3px;
+    right: 3px;
+    opacity: 0; /* Nascosto di default */
+    transition: opacity 0.3s ease;
+}
+
+/* Mostra l'indicatore quando una lingua diversa da italiano è attiva */
+.language-toggle.active::after {
+    opacity: 1;
+}
+
+.language-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+.language-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: var(--bg-color);
+    box-shadow: var(--shadow-standard);
+    border-radius: var(--border-radius);
+    min-width: 180px;
+    z-index: 1100;
+    display: none;
+    overflow: hidden;
+    margin-top: 5px;
+    border: 1px solid var(--border-color);
+}
+
+.language-dropdown.show {
+    display: block;
+    animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.language-option {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    color: var(--text-color);
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.language-option:hover {
+    background-color: var(--bg-color-secondary);
+}
+
+.language-option.active {
+    background-color: rgba(var(--primary-color-rgb), 0.1);
+    font-weight: 500;
+}
+
+.language-option img {
+    width: 24px;
+    height: 16px;
+    margin-right: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Stile per il selettore di lingua nella pagina di login */
+.login-language-selector {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 1000;
+}
+
+.login-language-selector .language-toggle {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.login-language-selector .language-dropdown {
+    right: 0;
+}
+
+/* Nascondi elementi Google Translate originali */
+.goog-te-banner-frame, 
+.goog-te-balloon-frame,
+.goog-te-menu-frame {
+    display: none !important;
+}
+
+body {
+    top: 0 !important;
+}
+
+#goog-gt-tt, 
+.goog-te-balloon-frame {
+    display: none !important;
+}
+
+.goog-text-highlight {
+    background-color: transparent !important;
+    box-shadow: none !important;
+}
+
+#google_translate_element {
+    display: none !important;
+}
+
+/* Media queries per responsività */
+@media (max-width: 768px) {
+    .language-option span {
+        font-size: 0.9rem;
+    }
+    
+    .login-language-selector .language-toggle {
+        width: 35px;
+        height: 35px;
+    }
+}
+
+/* Miglioramenti per il selettore di lingua e traduzione */
+.language-toggle.active::after {
+    content: '';
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #4CAF50; 
+    bottom: 3px;
+    right: 3px;
+    opacity: 1;
+}
+
+/* Compatibilità con Google Translate Widget */
+.goog-te-banner-frame, 
+.goog-te-balloon-frame,
+.skiptranslate {
+    display: none !important;
+}
+
+body {
+    top: 0 !important;
+    position: relative !important;
+}
+
+/* Nascondi la barra di traduzione Google */
+.goog-te-banner-frame {
+    visibility: hidden !important;
+}
+
+/* Modifica l'aspetto del translate widget */
+#google_translate_element {
+    visibility: hidden !important;
+    opacity: 0;
+    position: absolute;
+    top: -100px;
+}
+
+/* Rimuovi highlight di Google Translate */
+.goog-text-highlight {
+    background-color: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+/* Fix per problemi di layout quando la traduzione è applicata */
+html.translated-ltr body {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+
+/* Stili per l'indicatore di traduzione */
+#translation-indicator {
+    animation: fadeInOut 1.5s infinite alternate;
+}
+
+@keyframes fadeInOut {
+    from { opacity: 0.8; }
+    to { opacity: 1; }
+}
+
+/* Miglioramenti tooltip */
+.goog-tooltip {
+    display: none !important;
+}
+
+.goog-tooltip:hover {
+    display: none !important;
+}
+
+.goog-text-highlight {
+    background-color: transparent !important;
+    border: none !important; 
+    box-shadow: none !important;
+}
+
+/* Stile per il widget Google Translate */
+#google_translate_element {
+    opacity: 0.8;
+    transition: opacity 0.3s;
+}
+
+#google_translate_element:hover {
+    opacity: 1;
+}
+
+/* Riduci dimensioni del box di Google Translate */
+.goog-te-gadget {
+    font-size: 0 !important;
+}
+
+.goog-te-gadget .goog-te-combo {
+    font-size: 12px !important;
+    padding: 2px !important;
+    border-radius: 4px !important;
+    margin: 0 !important;
+}
+
+/* Nascondi elementi non necessari */
+.goog-logo-link, .goog-te-gadget span {
+    display: none !important;
+}
+
+/* Nascondi la barra in alto */
+.goog-te-banner-frame {
+    display: none !important;
+}
+
+body {
+    top: 0 !important;
+}
+
+/* Stili per overlay di traduzione */
+#translation-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.8);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.translation-spinner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.translation-spinner i {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    animation: rotateWithColor 2s linear infinite;
+}
+
+.translation-spinner span {
+    font-size: 1.2rem;
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+@keyframes rotateWithColor {
+    0% {
+        transform: rotate(0deg);
+        color: var(--primary-color);
+    }
+    50% {
+        color: var(--secondary-color);
+    }
+    100% {
+        transform: rotate(360deg);
+        color: var(--primary-color);
+    }
+}
+
+/* Tema scuro per overlay di traduzione */
+body.dark-theme #translation-overlay {
+    background-color: rgba(20, 20, 35, 0.8);
+}
+
+body.dark-theme .translation-spinner span {
+    color: var(--accent-color);
+}
+
+/* Style per elementi che non devono essere tradotti */
+[translate="no"] {
+    font-weight: 600; /* Rendi gli username un po' più bold */
+    color: #125279; /* Colore distintivo per gli username */
+}
+
+/* Adattamento per tema scuro */
+.dark-theme [translate="no"] {
+    color: #4fa1d6;
 }

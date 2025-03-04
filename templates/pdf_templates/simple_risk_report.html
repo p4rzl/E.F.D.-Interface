@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{{ t.risk_report_title }} - {{ beach.name }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            color: #000;
+        }
+        h1 {
+            color: #105579;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>{{ t.risk_report_title }}</h1>
+    <h2>{{ beach.name|default('N/A') }}</h2>
+    <p><strong>{{ t.generated_by }}:</strong> {{ username }}</p>
+    <p><strong>{{ t.date }}:</strong> {{ date }}</p>
+    
+    <h3>{{ t.overview }}</h3>
+    <table>
+        <tr>
+            <th>{{ t.length }}</th>
+            <td>{% if beach.length %}{{ beach.length|int }} {{ t.meters }}{% else %}N/A{% endif %}</td>
+        </tr>
+        <tr>
+            <th>{{ t.width }}</th>
+            <td>{% if beach.width %}{{ beach.width|int }} {{ t.meters }}{% else %}N/A{% endif %}</td>
+        </tr>
+        <tr>
+            <th>{{ t.risk_index }}</th>
+            <td>{% if beach.risk_index %}{{ "%.2f"|format(beach.risk_index) }}{% else %}N/A{% endif %}</td>
+        </tr>
+        <tr>
+            <th>{{ t.erosion_rate }}</th>
+            <td>{% if beach.erosion_rate %}{{ "%.2f"|format(beach.erosion_rate) }} {{ t.meters_per_year }}{% else %}N/A{% endif %}</td>
+        </tr>
+    </table>
+    
+    <h3>{{ t.risk_details }}</h3>
+    <table>
+        <tr>
+            <th>{{ t.economic_risk }}</th>
+            <td>{% if beach.risk_index %}{{ "%.2f"|format(beach.risk_index * 0.8) }}{% else %}N/A{% endif %}</td>
+        </tr>
+        <tr>
+            <th>{{ t.social_risk }}</th>
+            <td>{% if beach.risk_index %}{{ "%.2f"|format(beach.risk_index * 0.6) }}{% else %}N/A{% endif %}</td>
+        </tr>
+        <tr>
+            <th>{{ t.environmental_risk }}</th>
+            <td>{% if beach.risk_index %}{{ "%.2f"|format(beach.risk_index * 0.7) }}{% else %}N/A{% endif %}</td>
+        </tr>
+    </table>
+    
+    <h3>{{ t.recommendations }}</h3>
+    <ul>
+        <li>Implementare barriere artificiali per ridurre l'erosione costiera</li>
+        <li>Ripristinare la vegetazione dunale per stabilizzare la costa</li>
+        <li>Monitorare regolarmente le variazioni della linea di costa</li>
+        <li>Informare la popolazione locale sui rischi e le misure di adattamento</li>
+    </ul>
+    
+    <p>{{ t.coastal_monitoring_system }} © 2023 - {{ t.risk_report_title }} - {{ beach.name|default('N/A') }}</p>
+</body>
+</html>

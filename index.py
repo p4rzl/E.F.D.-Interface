@@ -8,16 +8,20 @@ from flask_login import login_user, login_required, logout_user, current_user
 from datetime import datetime, timedelta
 from pathlib import Path
 from flask_socketio import emit
-from models import User, Message
+from models import User, Message, SystemConfig
 from forms import LoginForm, RegisterForm
 from extensions import db, login_manager, csrf, socketio
 from reports import generate_risk_report, generate_hazard_report
 from dotenv import load_dotenv
 import glob
 from email_service import email_service
+from translations import get_translations, get_available_languages
 
 # Carica le variabili d'ambiente dal file .env
 load_dotenv()
+
+# Variabile globale per tenere traccia degli utenti online
+online_users = set()
 
 # Configurazione dell'app Flask
 app = Flask(__name__)
@@ -68,8 +72,20 @@ def require_login():
 
 # Funzione di utilità per creare dati di base per il template
 def get_base_template_data():
+    # Ottieni la lingua dalla sessione o dai parametri
+    lang = request.args.get('lang', session.get('lang', 'it'))
+    # Salva la lingua nella sessione
+    session['lang'] = lang
+    
+    # Ottieni lo stato della chat
+    chat_enabled = SystemConfig.get('chat_enabled', 'true') == 'true'
+    
     return {
-        'current_user': current_user
+        'current_user': current_user,
+        'lang': lang,
+        't': get_translations(lang),  # Traduzioni
+        'languages': get_available_languages(),  # Lingue disponibili
+        'chat_enabled': chat_enabled  # Stato della chat
     }
 
 # Gestisce la registrazione degli utenti
@@ -77,16 +93,24 @@ def get_base_template_data():
 def register():
     if current_user.is_authenticated:
         return redirect(url_for('home'))
+    
+    # Ottieni i dati base per il template (che includono la variabile 't' per le traduzioni)
+    template_data = get_base_template_data()
+    
     form = RegisterForm()
     if form.validate_on_submit():
         # Verifica se username esiste già
         if User.query.filter_by(username=form.username.data).first():
-            flash('Username già in uso. Scegli un altro username.', 'error')
-            return render_template('register.html', form=form)
+            flash(template_data['t']['username_already_used'], 'error')
+            template_data['form'] = form
+            return render_template('register.html', **template_data)
+        
         # Verifica se email esiste già
         if User.query.filter_by(email=form.email.data).first():
-            flash('Email già registrata. Utilizza un altro indirizzo email.', 'error')
-            return render_template('register.html', form=form)
+            flash(template_data['t']['email_already_registered'], 'error')
+            template_data['form'] = form
+            return render_template('register.html', **template_data)
+        
         # Crea nuovo utente con l'avatar scelto
         user = User(
             username=form.username.data,
@@ -95,6 +119,7 @@ def register():
             email_verified=False  # Utente non verificato inizialmente
         )
         user.set_password(form.password.data)
+        
         # Genera codice di verifica
         verification_code = user.generate_verification_code()
         
@@ -103,89 +128,109 @@ def register():
             db.session.commit()
             
             # Invia email con codice di verifica
-            email_sent = email_service.send_verification_email(user, verification_code)
+            email_sent = email_service.send_verification_email(user, verification_code, template_data['lang'])
             
             if email_sent:
-                flash('Registrazione completata! Ti abbiamo inviato un codice di verifica via email.', 'success')
+                flash(template_data['t']['verification_code_sent'], 'success')
             else:
                 # Se l'invio dell'email fallisce, mostra il codice direttamente (solo per sviluppo)
-                flash('Registrazione completata! Non è stato possibile inviare l\'email di verifica.', 'warning')
+                flash(template_data['t']['email_send_error'], 'warning')
                 flash(f'Il tuo codice di verifica è: {verification_code}', 'info')
+            
             # Reindirizza alla pagina di inserimento del codice
             verify_path = url_for('verify_code', email=user.email)
             return redirect(verify_path)
         except Exception as e:
             db.session.rollback()
             print(f"Errore durante la registrazione: {e}")
-            flash('Si è verificato un errore durante la registrazione. Riprova.', 'error')
-    return render_template('register.html', form=form)
+            flash(template_data['t']['registration_error'], 'error')
+    
+    # Aggiungi il form ai dati del template
+    template_data['form'] = form
+    return render_template('register.html', **template_data)
 
 # Nuova route per la verifica tramite codice
 @app.route('/verify-code/<email>', methods=['GET', 'POST'])
 def verify_code(email):
+    # Ottieni i dati base per il template
+    template_data = get_base_template_data()
+    t = template_data['t']  # Per facilità di riferimento
+    
     user = User.query.filter_by(email=email).first()
     if not user:
-        flash('Utente non trovato. Verifica l\'indirizzo email.', 'error')
+        flash(t['user_not_found'], 'error')
         return redirect(url_for('login'))
+    
     if user.email_verified:
-        flash('Il tuo account è già stato verificato.', 'info')
+        flash(t['email_already_verified'], 'info')
         return redirect(url_for('login'))
+        
     if request.method == 'POST':
         code = request.form.get('verification_code')
         if not code:
-            flash('Inserisci il codice di verifica.', 'error')
-            return render_template('verify_code.html', email=email)
+            flash(t['enter_verification_code'], 'error')
+            return render_template('verify_code.html', email=email, **template_data)
+            
         if user.is_code_expired():
             # Codice scaduto, genera un nuovo codice
             new_code = user.generate_verification_code()
             db.session.commit()
             
-            email_sent = email_service.send_verification_email(user, new_code)
+            email_sent = email_service.send_verification_email(user, new_code, template_data['lang'])
             
             if email_sent:
-                flash('Il codice di verifica è scaduto. Un nuovo codice è stato inviato alla tua email.', 'info')
+                flash(t['code_expired'], 'info')
             else:
-                flash('Il codice di verifica è scaduto. Non è stato possibile inviare un nuovo codice.', 'error')
+                flash(t['email_send_error'], 'error')
             
-            return render_template('verify_code.html', email=email)
+            return render_template('verify_code.html', email=email, **template_data)
             
         if user.verify_email_with_code(code):
             db.session.commit()
-            flash('Email verificata con successo! Ora puoi accedere con il tuo account.', 'success')
+            flash(t['email_verified'], 'success')
             return redirect(url_for('login'))
         else:
-            flash('Codice di verifica non valido. Riprova.', 'error')
+            flash(t['invalid_code'], 'error')
     
-    return render_template('verify_code.html', email=email)
+    return render_template('verify_code.html', email=email, **template_data)
 
 # Aggiorna la route per richiedere un nuovo codice di verifica
 @app.route('/resend-verification', methods=['GET', 'POST'])
 def resend_verification():
     if current_user.is_authenticated:
         return redirect(url_for('home'))
+    
+    # Ottieni i dati base per il template
+    template_data = get_base_template_data()
+    t = template_data['t']  # Per facilità di riferimento
+    
     if request.method == 'POST':
         email = request.form.get('email')
         user = User.query.filter_by(email=email).first()
         if not user:
-            flash('Nessun account trovato con questo indirizzo email.', 'error')
-            return render_template('resend_verification.html')
+            flash(t['user_not_found'], 'error')
+            return render_template('resend_verification.html', **template_data)
+        
         if user.email_verified:
-            flash('Questo indirizzo email è già stato verificato.', 'info')
+            flash(t['email_already_verified'], 'info')
             return redirect(url_for('login'))
+        
         # Genera un nuovo codice di verifica
         verification_code = user.generate_verification_code()
         db.session.commit()
         # Invia email con il nuovo codice
-        email_sent = email_service.send_verification_email(user, verification_code)
+        email_sent = email_service.send_verification_email(user, verification_code, template_data['lang'])
         if email_sent:
-            flash('Un nuovo codice di verifica è stato inviato alla tua email.', 'success')
+            flash(t['code_resent'], 'success')
         else:
-            flash('Non è stato possibile inviare l\'email di verifica.', 'warning')
-            flash(f'Il tuo codice di verifica è: {verification_code}', 'info')
+            flash(t['email_send_error'], 'warning')
+            if app.config.get('FLASK_ENV') == 'development':
+                flash(f'Codice: {verification_code}', 'info')
+        
         # Reindirizza alla pagina di verifica
         return redirect(url_for('verify_code', email=user.email))
     
-    return render_template('resend_verification.html')
+    return render_template('resend_verification.html', **template_data)
 
 # Modifica la funzione di login per controllare se l'email è verificata
 @app.route('/login', methods=['GET', 'POST'])
@@ -193,26 +238,31 @@ def login():
     if current_user.is_authenticated:
         return redirect(url_for('home'))
     
+    # Ottieni i dati base per il template (che includono la variabile 't' per le traduzioni)
+    template_data = get_base_template_data()
+    
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
         
         # Verifica se l'utente esiste
         if user is None:
-            flash('Username non trovato. Controlla e riprova.', 'error')
-            return render_template('login.html', form=form)
+            flash(template_data['t']['user_not_found'], 'error')
+            template_data['form'] = form
+            return render_template('login.html', **template_data)
         
         # Controlla se l'account è bloccato
         if user.is_locked():
             remaining_time = user.get_lockout_remaining_time()
-            flash(f'Account temporaneamente bloccato. Riprova tra {remaining_time} minuti.', 'error')
-            return render_template('login.html', form=form)
+            flash(f"{template_data['t']['account_locked']} {remaining_time} {template_data['t']['minutes']}.", 'error')
+            template_data['form'] = form
+            return render_template('login.html', **template_data)
         
         # Verifica la password
         if user.check_password(form.password.data):
             # Verifica che l'email sia verificata
             if not user.email_verified:
-                flash('Per favore verifica il tuo indirizzo email prima di accedere.', 'warning')
+                flash(template_data['t']['verify_email_first'], 'warning')
                 return redirect(url_for('verify_code', email=user.email))
                 
             user.reset_failed_attempts()
@@ -223,9 +273,11 @@ def login():
         # Incrementa il contatore di tentativi falliti
         user.increment_failed_attempts()
         remaining_attempts = app.config['MAX_LOGIN_ATTEMPTS'] - user.failed_login_attempts
-        flash(f'Password non valida. Tentativi rimanenti: {remaining_attempts}', 'error')
+        flash(f"{template_data['t']['invalid_password']} {remaining_attempts} {template_data['t']['remaining_attempts']}", 'error')
     
-    return render_template('login.html', form=form)
+    # Aggiungi il form al contesto del template
+    template_data['form'] = form
+    return render_template('login.html', **template_data)
 
 # Gestisce il logout degli utenti
 @app.route('/logout')
@@ -530,13 +582,20 @@ def risk_pdf():
         # Pulizia dei report vecchi prima di generarne di nuovi
         cleanup_old_reports()
         
+        # Ottieni la lingua selezionata dall'utente
+        language = request.args.get('lang', 'it')
+        # Valida la lingua per sicurezza
+        if language not in ['it', 'en', 'es', 'fr', 'de']:
+            language = 'it'  # Default a italiano
+        
         beaches_data = pd.read_csv('data/beaches.csv')
         beach = beaches_data[beaches_data['id'] == beach_id].iloc[0] if not beaches_data[beaches_data['id'] == beach_id].empty else None
         
         if beach is None:
             return jsonify({'error': 'Spiaggia non trovata'}), 404
         
-        pdf_path = generate_risk_report(beach.to_dict(), current_user.username)
+        # Passa la lingua al generatore di report
+        pdf_path = generate_risk_report(beach.to_dict(), current_user.username, language)
         return jsonify({'success': True, 'pdf_path': pdf_path})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -553,13 +612,20 @@ def hazard_pdf():
         # Pulizia dei report vecchi prima di generarne di nuovi
         cleanup_old_reports()
         
+        # Ottieni la lingua selezionata dall'utente
+        language = request.args.get('lang', 'it')
+        # Valida la lingua per sicurezza
+        if language not in ['it', 'en', 'es', 'fr', 'de']:
+            language = 'it'  # Default a italiano
+        
         beaches_data = pd.read_csv('data/beaches.csv')
         beach = beaches_data[beaches_data['id'] == beach_id].iloc[0] if not beaches_data[beaches_data['id'] == beach_id].empty else None
         
         if beach is None:
             return jsonify({'error': 'Spiaggia non trovata'}), 404
         
-        pdf_path = generate_hazard_report(beach.to_dict(), current_user.username)
+        # Passa la lingua al generatore di report
+        pdf_path = generate_hazard_report(beach.to_dict(), current_user.username, language)
         return jsonify({'success': True, 'pdf_path': pdf_path})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -568,6 +634,15 @@ def hazard_pdf():
 @socketio.on('connect')
 def handle_connect():
     if current_user.is_authenticated:
+        # Aggiungi l'utente alla lista degli utenti online
+        online_users.add(current_user.username)
+        
+        # Notifica tutti gli utenti che questo utente è online
+        emit('user_status', {
+            'username': current_user.username,
+            'status': True
+        }, broadcast=True)
+        
         # Aggiungi un flag per evitare duplicazioni
         session['messages_sent'] = session.get('messages_sent', False)
         # Invia la cronologia dei messaggi solo la prima volta
@@ -579,12 +654,15 @@ def handle_connect():
             for message in recent_messages:
                 user = User.query.get(message.user_id)
                 if user:
+                    # Verifica se il messaggio appartiene all'utente corrente
+                    is_own = message.user_id == current_user.id
                     emit('message', {
                         'id': f'msg-{message.id}',  # ID univoco
                         'user': user.username,
                         'message': message.text,
                         'avatar_id': user.avatar_id,
                         'is_admin': user.is_admin,
+                        'is_own': is_own,  # Aggiungi flag per identificare i messaggi propri
                         'time': message.timestamp.strftime('%H:%M')
                     }, broadcast=False)  # Invia solo al client connesso
             # Imposta il flag per evitare reinvii
@@ -594,6 +672,15 @@ def handle_connect():
 @socketio.on('disconnect')
 def handle_disconnect():
     if current_user.is_authenticated:
+        # Rimuovi l'utente dalla lista degli utenti online
+        online_users.discard(current_user.username)
+        
+        # Notifica tutti gli utenti che questo utente è offline
+        emit('user_status', {
+            'username': current_user.username,
+            'status': False
+        }, broadcast=True)
+        
         # Resetta il flag di messaggi inviati alla disconnessione
         if 'messages_sent' in session:
             session.pop('messages_sent', None)
@@ -624,9 +711,33 @@ def admin():
     if not current_user.is_admin:
         flash('Accesso negato: devi essere un amministratore per accedere a questa pagina', 'error')
         return redirect(url_for('home'))
-        
+    
+    # Ottieni lo stato della chat dal database (default: attivata)
+    chat_enabled = SystemConfig.get('chat_enabled', 'true') == 'true'
+    
     users = User.query.all()
-    return render_template('admin.html', users=users)
+    return render_template('admin.html', users=users, chat_enabled=chat_enabled)
+
+# Nuova route per attivare/disattivare la chat
+@app.route('/admin/toggle-chat', methods=['POST'])
+@login_required
+def toggle_chat_visibility():
+    if not current_user.is_admin:
+        flash('Accesso negato: devi essere un amministratore per eseguire questa azione', 'error')
+        return redirect(url_for('home'))
+    
+    # Ottieni lo stato corrente e cambialo
+    current_state = SystemConfig.get('chat_enabled', 'true')
+    new_state = 'false' if current_state == 'true' else 'true'
+    
+    # Salva il nuovo stato
+    SystemConfig.set('chat_enabled', new_state, 'Indica se la chat è visibile agli utenti')
+    
+    # Messaggio di conferma
+    action = "attivata" if new_state == 'true' else "disattivata"
+    flash(f'La chat è stata {action} con successo', 'success')
+    
+    return redirect(url_for('admin'))
 
 # Route per attivare/disattivare utenti
 @app.route('/toggle_user/<int:user_id>', methods=['POST'])
@@ -642,7 +753,6 @@ def toggle_user(user_id):
         return redirect(url_for('admin'))
     user.is_active = not user.is_active
     db.session.commit()
-    
     status = "attivato" if user.is_active else "disattivato"
     flash(f'Utente {user.username} {status} con successo', 'success')
     return redirect(url_for('admin'))
@@ -715,7 +825,6 @@ def admin_cleanup_messages():
     if not current_user.is_admin:
         flash('Accesso negato: devi essere un amministratore per eseguire questa azione', 'error')
         return redirect(url_for('home'))
-    
     try:
         cleanup_old_messages()
         flash('Pulizia dei messaggi vecchi completata con successo', 'success')
@@ -755,11 +864,26 @@ def cleanup_messages_command():
 @app.route('/chat')
 @login_required
 def chat_page():
+    # Controlla se la chat è attivata
+    chat_enabled = SystemConfig.get('chat_enabled', 'true') == 'true'
+    
+    # Se la chat è disattivata e l'utente non è admin, reindirizza alla home
+    if not chat_enabled and not current_user.is_admin:
+        flash('La chat è attualmente disattivata', 'info')
+        return redirect(url_for('home'))
+    
     # Recupera gli ultimi 100 messaggi per mostrarli nella pagina
     messages = Message.query.order_by(Message.timestamp.asc()).limit(100).all()
     
-    # Recupera gli utenti per mostrare la lista degli utenti
+    # Recupera tutti gli utenti attivi
     users = User.query.filter_by(is_active=True).all()
+    
+    # Aggiungi proprietà is_online a ogni utente
+    for user in users:
+        user.is_online = user.username in online_users or user == current_user
+    
+    # Aggiungi automaticamente l'utente corrente alla lista di utenti online
+    online_users.add(current_user.username)
     
     template_data = get_base_template_data()
     template_data.update({
@@ -785,7 +909,11 @@ def init_app_db():
             print(f"Creazione admin con password: {admin_password}")
             admin.set_password(admin_password)
             db.session.add(admin)
-            db.session.commit()
+            db.session.commit()        
+        
+        # Imposta la configurazione predefinita della chat se non esiste
+        if not SystemConfig.query.filter_by(key='chat_enabled').first():
+            SystemConfig.set('chat_enabled', 'true', 'Indica se la chat è visibile agli utenti')
 
 # Funzione per eliminare i report vecchi
 def cleanup_old_reports():
@@ -794,7 +922,6 @@ def cleanup_old_reports():
         reports_dir = os.path.join(app.static_folder, 'reports')
         if not os.path.exists(reports_dir):
             return
-        
         # Tempo limite: 10 minuti fa
         cutoff_time = datetime.now() - timedelta(minutes=10)
         
@@ -813,10 +940,8 @@ def cleanup_old_reports():
                     cleaned += 1
                 except (PermissionError, OSError) as e:
                     print(f"Errore nell'eliminazione del file {pdf_path}: {str(e)}")
-        
         if cleaned > 0:
             print(f"Pulizia report: {cleaned} file PDF eliminati.")
-        
     except Exception as e:
         print(f"Errore durante la pulizia dei report: {str(e)}")
         traceback.print_exc()
@@ -848,16 +973,19 @@ def cleanup_reports_command():
 # Route per recupero password
 @app.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
+    # Ottieni i dati base per il template
+    template_data = get_base_template_data()
+    t = template_data['t']  # Per facilità di riferimento
+    
     if current_user.is_authenticated:
         return redirect(url_for('home'))
         
     if request.method == 'POST':
         email = request.form.get('email')
         user = User.query.filter_by(email=email).first()
-        
         if not user:
-            flash('Nessun account trovato con questo indirizzo email.', 'error')
-            return render_template('forgot_password.html')
+            flash(t['user_not_found'], 'error')
+            return render_template('forgot_password.html', **template_data)
         
         # Genera un token di reset
         reset_token = user.generate_reset_token()
@@ -869,52 +997,56 @@ def forgot_password():
         reset_url = f"{base_url}{reset_path}"
         
         # Invia email con link di reset
-        email_sent = email_service.send_password_reset_email(user, reset_url)
+        email_sent = email_service.send_password_reset_email(user, reset_url, template_data['lang'])
         
         if email_sent:
-            flash('Ti abbiamo inviato un\'email con le istruzioni per reimpostare la tua password.', 'success')
+            flash(t['reset_link_sent'], 'success')
         else:
-            flash('Non è stato possibile inviare l\'email di reset. Per favore riprova più tardi.', 'warning')
+            flash(t['email_send_error'], 'warning')
             # In ambiente di sviluppo, mostra l'URL di reset
             if app.config.get('FLASK_ENV') == 'development':
                 flash(f'URL di reset (solo per sviluppo): {reset_url}', 'info')
         
         return redirect(url_for('login'))
     
-    return render_template('forgot_password.html')
-
+    return render_template('forgot_password.html', **template_data)
+    
 # Route per reimpostare la password
 @app.route('/reset-password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
+    # Ottieni la lingua dalla sessione o dai parametri
+    lang = request.args.get('lang', session.get('lang', 'it'))
+    session['lang'] = lang
+    t = get_translations(lang)
+    
     if current_user.is_authenticated:
         return redirect(url_for('home'))
-        
+    
     # Trova l'utente con il token di reset
     user = User.query.filter_by(reset_password_token=token).first()
-    
     if not user:
-        flash('Il link di reset non è valido o è scaduto.', 'error')
+        flash(t['invalid_reset_link'], 'error')
         return redirect(url_for('forgot_password'))
     
     if user.is_reset_token_expired():
-        flash('Il link di reset è scaduto. Richiedi un nuovo link.', 'error')
+        flash(t['expired_reset_link'], 'error')
         return redirect(url_for('forgot_password'))
-    
+        
     if request.method == 'POST':
         password = request.form.get('password')
         confirm_password = request.form.get('confirm_password')
         
         if not password:
-            flash('Inserisci una password valida.', 'error')
-            return render_template('reset_password.html', token=token)
+            flash(t['enter_password'], 'error')
+            return render_template('reset_password.html', token=token, t=t, lang=lang, languages=get_available_languages())
             
         if password != confirm_password:
-            flash('Le password non coincidono.', 'error')
-            return render_template('reset_password.html', token=token)
+            flash(t['passwords_not_match'], 'error')
+            return render_template('reset_password.html', token=token, t=t, lang=lang, languages=get_available_languages())
             
         if len(password) < 8:
-            flash('La password deve contenere almeno 8 caratteri.', 'error')
-            return render_template('reset_password.html', token=token)
+            flash(t['password_requirements'], 'error')
+            return render_template('reset_password.html', token=token, t=t, lang=lang, languages=get_available_languages())
         
         # Imposta la nuova password e cancella il token di reset
         user.set_password(password)
@@ -922,46 +1054,47 @@ def reset_password(token):
         user.reset_token_expiration = None
         db.session.commit()
         
-        flash('La tua password è stata reimpostata con successo. Ora puoi accedere.', 'success')
+        flash(t['password_reset_success'], 'success')
         return redirect(url_for('login'))
-        
-    return render_template('reset_password.html', token=token)
+    
+    return render_template('reset_password.html', token=token, t=t, lang=lang, languages=get_available_languages())
 
 # Route per recupero username
 @app.route('/forgot-username', methods=['GET', 'POST'])
 def forgot_username():
+    # Ottieni i dati base per il template
+    template_data = get_base_template_data()
+    t = template_data['t']  # Per facilità di riferimento
+    
     if current_user.is_authenticated:
         return redirect(url_for('home'))
         
     if request.method == 'POST':
         email = request.form.get('email')
         user = User.query.filter_by(email=email).first()
-        
         if not user:
-            flash('Nessun account trovato con questo indirizzo email.', 'error')
-            return render_template('forgot_username.html')
+            flash(t['user_not_found'], 'error')
+            return render_template('forgot_username.html', **template_data)
         
         # Invia email con username
-        email_sent = email_service.send_username_reminder_email(user)
-        
+        email_sent = email_service.send_username_reminder_email(user, template_data['lang'])
         if email_sent:
-            flash('Ti abbiamo inviato un\'email con il tuo nome utente.', 'success')
+            flash(t['username_reminder_sent'], 'success')
         else:
-            flash('Non è stato possibile inviare l\'email. Per favore riprova più tardi.', 'warning')
+            flash(t['email_send_error'], 'warning')
             # In ambiente di sviluppo, mostra l'username
             if app.config.get('FLASK_ENV') == 'development':
                 flash(f'Il tuo nome utente è: {user.username}', 'info')
         
         return redirect(url_for('login'))
     
-    return render_template('forgot_username.html')
+    return render_template('forgot_username.html', **template_data)
 
 # Esecuzione dell'applicazione
 if __name__ == '__main__':
     # Crea le directory necessarie se non esistono
     os.makedirs('data', exist_ok=True)
     os.makedirs('static/reports', exist_ok=True)
-    
     # Crea la directory per i log delle email se in modalità file
     if os.environ.get('EMAIL_SERVICE_TYPE') == 'file':
         log_dir = os.environ.get('EMAIL_LOG_DIR', 'logs')
@@ -999,3 +1132,239 @@ if __name__ == '__main__':
     
     # Avvia l'app
     socketio.run(app, debug=(os.environ.get('FLASK_ENV') == 'development'), host='0.0.0.0')
+
+# Aggiungi questi gestori di eventi socket.io per supportare la nuova chat
+
+@socketio.on('get_messages')
+def handle_get_messages(data):
+    if not current_user.is_authenticated:
+        return
+    
+    chat_type = data.get('chatType')
+    target_id = data.get('targetId')
+    
+    messages = []
+    
+    if chat_type == 'general':
+        # Recupera i messaggi della chat generale (limitati a 50)
+        messages = Message.query.filter_by(message_type='general').order_by(Message.timestamp.desc()).limit(50).all()
+    elif chat_type == 'private' and target_id:
+        # Recupera i messaggi privati tra i due utenti
+        messages = Message.query.filter(
+            ((Message.sender_id == current_user.id) & (Message.recipient_id == target_id)) |
+            ((Message.sender_id == target_id) & (Message.recipient_id == current_user.id))
+        ).filter_by(message_type='private').order_by(Message.timestamp.asc()).all()
+    elif chat_type == 'group' and target_id:
+        # Recupera i messaggi del gruppo
+        messages = Message.query.filter_by(
+            group_id=target_id, message_type='group'
+        ).order_by(Message.timestamp.asc()).all()
+    
+    # Invia i messaggi al client
+    for message in messages:
+        sender = User.query.get(message.sender_id)
+        if sender:
+            emit('message', {
+                'id': f'msg-{message.id}',
+                'user': sender.username,
+                'message': message.text,
+                'avatar_id': sender.avatar_id,
+                'is_admin': sender.is_admin,
+                'is_own': message.sender_id == current_user.id,
+                'time': message.timestamp.strftime('%H:%M'),
+                'chatType': message.message_type,
+                'fromUserId': message.sender_id,
+                'toUserId': message.recipient_id,
+                'groupId': message.group_id
+            })
+
+@socketio.on('get_chat_participants')
+def handle_get_chat_participants(data):
+    if not current_user.is_authenticated:
+        return
+        
+    chat_type = data.get('chatType')
+    target_id = data.get('targetId')
+    
+    online_users_list = []
+    offline_users_list = []
+    
+    if chat_type == 'general':
+        # Per la chat generale, includi tutti gli utenti
+        all_users = User.query.filter(User.is_active == True).all()
+        
+        for user in all_users:
+            user_data = {
+                'id': user.id,
+                'username': user.username,
+                'avatar_id': user.avatar_id,
+                'is_admin': user.is_admin
+            }
+            
+            # Verifica se l'utente è online
+            if user.username in online_users:
+                online_users_list.append(user_data)
+            else:
+                offline_users_list.append(user_data)
+                
+    elif chat_type == 'private' and target_id:
+        # Per le chat private, includi solo l'altro utente e l'utente corrente
+        other_user = User.query.get(target_id)
+        
+        if other_user and other_user.is_active:
+            user_data = {
+                'id': other_user.id,
+                'username': other_user.username,
+                'avatar_id': other_user.avatar_id,
+                'is_admin': other_user.is_admin
+            }
+            
+            # Verifica se l'utente è online
+            if other_user.username in online_users:
+                online_users_list.append(user_data)
+            else:
+                offline_users_list.append(user_data)
+                
+        # Includi anche l'utente corrente (sempre "online")
+        online_users_list.append({
+            'id': current_user.id,
+            'username': current_user.username,
+            'avatar_id': current_user.avatar_id,
+            'is_admin': current_user.is_admin
+        })
+        
+    elif chat_type == 'group' and target_id:
+        # Per le chat di gruppo, includi i membri del gruppo
+        group = ChatGroup.query.get(target_id)
+        if group:
+            for member in group.members:
+                if member.is_active:
+                    user_data = {
+                        'id': member.id,
+                        'username': member.username,
+                        'avatar_id': member.avatar_id,
+                        'is_admin': member.is_admin
+                    }
+                    
+                    # Verifica se l'utente è online
+                    if member.username in online_users:
+                        online_users_list.append(user_data)
+                    else:
+                        offline_users_list.append(user_data)
+    
+    # Invia i partecipanti al client
+    emit('chat_participants', {
+        'online': online_users_list,
+        'offline': offline_users_list
+    })
+
+@socketio.on('get_group_info')
+def handle_get_group_info(data):
+    if not current_user.is_authenticated:
+        return
+        
+    group_id = data.get('group_id')
+    if not group_id:
+        return
+        
+    group = ChatGroup.query.get(group_id)
+    if not group:
+        return
+        
+    creator = User.query.get(group.creator_id)
+    creator_name = creator.username if creator else 'Unknown'
+    
+    # Prepara le informazioni sui membri
+    members = []
+    for member in group.members:
+        if member.is_active:
+            members.append({
+                'id': member.id,
+                'username': member.username,
+                'avatar_id': member.avatar_id,
+                'is_admin': member.is_admin,
+                'is_online': member.username in online_users
+            })
+    
+    # Invia le informazioni sul gruppo al client
+    emit('group_info', {
+        'id': group.id,
+        'name': group.name,
+        'description': group.description,
+        'creator_id': group.creator_id,
+        'creator_name': creator_name,
+        'created_at': group.created_at.isoformat(),
+        'members': members
+    })
+
+@socketio.on('create_group')
+def handle_create_group(data):
+    if not current_user.is_authenticated:
+        return
+        
+    name = data.get('name')
+    description = data.get('description', '')
+    member_ids = data.get('members', [])
+    
+    if not name:
+        return
+    
+    try:
+        # Crea un nuovo gruppo
+        group = ChatGroup(
+            name=name,
+            description=description,
+            creator_id=current_user.id
+        )
+        
+        # Aggiungi il creatore come membro
+        group.members.append(current_user)
+        
+        # Aggiungi gli altri membri
+        if member_ids:
+            for member_id in member_ids:
+                member = User.query.get(member_id)
+                if member and member.is_active:
+                    group.members.append(member)
+        
+        db.session.add(group)
+        db.session.commit()
+        
+        # Notifica a tutti gli utenti il nuovo gruppo
+        emit('new_group', {
+            'id': group.id,
+            'name': group.name,
+            'description': group.description,
+            'creator_id': group.creator_id
+        }, broadcast=True)
+        
+        # Invia un messaggio di sistema nel gruppo
+        system_message = Message(
+            text=f"{current_user.username} ha creato il gruppo",
+            sender_id=current_user.id,
+            group_id=group.id,
+            message_type='group'
+        )
+        db.session.add(system_message)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        print(f"Errore nella creazione del gruppo: {str(e)}")
+
+@socketio.on('join_group')
+def handle_join_group(data):
+    if not current_user.is_authenticated:
+        return
+        
+    group_id = data.get('group_id')
+    if not group_id:
+        return
+        
+    group = ChatGroup.query.get(group_id)
+    if not group:
+        return
+        
+    # Aggiungi l'utente al gruppo se non è già membro
+    if current_user not in group.members:
+        group.members.append(current_user)
+        db.session.commit()

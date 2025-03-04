@@ -11,6 +11,12 @@ from datetime import datetime
 from fpdf import FPDF
 import matplotlib.pyplot as plt
 from pathlib import Path
+import time
+import uuid
+from xhtml2pdf import pisa
+import jinja2
+from flask import current_app
+from translations import get_translations
 
 root_path = get_root_path(__name__)
 
@@ -157,194 +163,116 @@ def ensure_directory(path):
     os.makedirs(path, exist_ok=True)
     return path
 
-def generate_risk_report(beach, username):
-    """Genera un report PDF per il rischio di una spiaggia."""
+def create_pdf(template_path, output_path, context_data):
+    """
+    Crea un PDF dal template HTML e lo salva nel percorso specificato
+    Con gestione errori migliorata e logging dettagliato
+    """
+    import logging
+    logging.basicConfig(level=logging.DEBUG)
+    logger = logging.getLogger('pdf_generator')
+    
+    # Verifica percorsi file
+    logger.debug(f"Template path: {template_path}")
+    logger.debug(f"Output path: {output_path}")
+    
+    if not os.path.exists(template_path):
+        logger.error(f"Il template {template_path} non esiste!")
+        return False
+    
+    # Crea directory di output se non esiste
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    
     try:
-        # Assicura che la directory reports esista
-        report_dir = ensure_directory('static/reports')
+        # Carica il template HTML
+        with open(template_path, 'r', encoding='utf-8') as template_file:
+            html_template = template_file.read()
+            logger.debug(f"Template caricato, lunghezza: {len(html_template)} bytes")
         
-        # Crea un PDF
-        pdf = FPDF()
-        pdf.add_page()
+        # Prepara l'ambiente Jinja2 con filtri sicuri
+        env = jinja2.Environment(autoescape=True)
         
-        # Set font
-        pdf.set_font('Arial', 'B', 16)
+        # Registra filtri personalizzati
+        def safe_int(value):
+            if value is None:
+                return 0
+            try:
+                return int(float(value))
+            except (ValueError, TypeError):
+                return 0
         
-        # Titolo
-        beach_name = beach.get('name', 'Spiaggia sconosciuta')
-        pdf.cell(0, 10, f'Report di Rischio: {beach_name}', 0, 1, 'C')
+        def safe_format(format_str, value):
+            if value is None:
+                return "N/A"
+            try:
+                return format_str % float(value)
+            except (ValueError, TypeError):
+                return "N/A"
         
-        # Informazioni sulla spiaggia
-        pdf.set_font('Arial', '', 12)
-        pdf.cell(0, 10, f'Generato da: {username}', 0, 1)
-        pdf.cell(0, 10, f'Data: {datetime.now().strftime("%d/%m/%Y %H:%M")}', 0, 1)
+        env.filters['int'] = safe_int
+        env.filters['format'] = safe_format
         
-        pdf.ln(10)
+        # Registra anche i filtri di default
+        env.filters['default'] = lambda value, default_value: default_value if value is None else value
         
-        # Caratteristiche della spiaggia
-        pdf.set_font('Arial', 'B', 14)
-        pdf.cell(0, 10, 'Caratteristiche della spiaggia', 0, 1)
+        # Crea il template e renderizza il contenuto
+        template = env.from_string(html_template)
+        html_content = template.render(**context_data)
+        logger.debug(f"HTML renderizzato, lunghezza: {len(html_content)} bytes")
         
-        pdf.set_font('Arial', '', 12)
-        pdf.cell(0, 10, f'Lunghezza: {beach.get("length", "N/A")} m', 0, 1)
-        pdf.cell(0, 10, f'Larghezza: {beach.get("width", "N/A")} m', 0, 1)
-        pdf.cell(0, 10, f'Indice di rischio: {beach.get("risk_index", "N/A")}', 0, 1)
-        pdf.cell(0, 10, f'Tasso di erosione: {beach.get("erosion_rate", "N/A")} m/anno', 0, 1)
+        # Salva HTML renderizzato per debug
+        debug_html_path = output_path.replace('.pdf', '_debug.html')
+        with open(debug_html_path, "w", encoding='utf-8') as debug_file:
+            debug_file.write(html_content)
+        logger.debug(f"HTML di debug salvato in: {debug_html_path}")
         
-        pdf.ln(10)
-        
-        # Simulazione di grafico di previsione
-        pdf.set_font('Arial', 'B', 14)
-        pdf.cell(0, 10, 'Previsione di erosione', 0, 1)
-        
-        # Crea un grafico con matplotlib
-        fig, ax = plt.subplots(figsize=(10, 6))
-        
-        # Usa valori di default se i dati non sono disponibili
-        try:
-            erosion_rate = float(beach.get('erosion_rate', 0))
-        except (ValueError, TypeError):
-            erosion_rate = 0.5  # valore di default
+        # Converti HTML in PDF con gestione errori migliorata
+        with open(output_path, "wb") as output_file:
+            # Configura le opzioni per pisa
+            pdf_options = {
+                "encoding": "UTF-8",
+                "warn": True,
+                "xhtml": True,
+                "debug": 1  # Abilita il debug
+            }
             
-        try:
-            initial_width = float(beach.get('width', 100))
-        except (ValueError, TypeError):
-            initial_width = 50  # valore di default
+            pisa_status = pisa.CreatePDF(
+                src=html_content,      # HTML da convertire
+                dest=output_file,      # File di output
+                encoding='utf-8',
+                **pdf_options
+            )
         
-        years = np.arange(2023, 2100)
-        widths = np.maximum(0, initial_width - erosion_rate * (years - 2023))
+        # Controlla se ci sono errori
+        if pisa_status.err:
+            logger.error(f"Errore pisa: {pisa_status.err}")
+            # Stampa i log degli errori
+            for msg in pisa_status.log:
+                if msg[0] == 'error':
+                    logger.error(f"PDF Error: {msg[1]}")
+            return False
         
-        ax.plot(years, widths, 'b-')
-        ax.set_xlabel('Anno')
-        ax.set_ylabel('Larghezza spiaggia (m)')
-        ax.set_title('Previsione di erosione nel tempo')
-        ax.grid(True)
-        
-        # Salva temporaneamente il grafico
-        beach_id = beach.get("id", "unknown")
-        chart_path = os.path.join(report_dir, f'erosion_chart_{beach_id}.png')
-        plt.savefig(chart_path)
-        plt.close()
-        
-        # Aggiungi il grafico al PDF
-        pdf.image(chart_path, x=10, y=None, w=180)
-        
-        # Aggiungi raccomandazioni
-        pdf.ln(10)
-        pdf.set_font('Arial', 'B', 14)
-        pdf.cell(0, 10, 'Raccomandazioni', 0, 1)
-        
-        pdf.set_font('Arial', '', 12)
-        if erosion_rate > 0.5:
-            pdf.multi_cell(0, 10, 'Questa spiaggia sta subendo un\'erosione significativa. Si raccomanda di considerare misure di mitigazione come ripascimenti periodici o strutture di protezione costiera.')
-        else:
-            pdf.multi_cell(0, 10, 'Questa spiaggia mostra un tasso di erosione moderato. Si consiglia di monitorare regolarmente le condizioni e pianificare interventi preventivi.')
-        
-        # Salva il PDF
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        pdf_filename = f'risk_report_{beach_id}_{timestamp}.pdf'
-        pdf_path = os.path.join(report_dir, pdf_filename)
-        pdf.output(pdf_path)
-        
-        # Rimuovi l'immagine temporanea
-        if os.path.exists(chart_path):
-            os.remove(chart_path)
-        
-        return pdf_path
-    
+        return True
     except Exception as e:
-        print(f"Errore durante la generazione del report di rischio: {str(e)}")
-        traceback.print_exc()
-        return None
+        import traceback
+        logger.error(f"Eccezione durante la generazione del PDF: {str(e)}")
+        logger.error(traceback.format_exc())
+        return False
 
-def generate_hazard_report(beach, username):
-    """Genera un report PDF per il pericolo di una spiaggia."""
-    # Assicura che la directory reports esista
-    report_dir = ensure_directory('static/reports')
-    
-    # Crea un PDF
-    pdf = FPDF()
-    pdf.add_page()
-    
-    # Set font
-    pdf.set_font('Arial', 'B', 16)
-    
-    # Titolo
-    beach_name = beach.get('name', 'Spiaggia sconosciuta')
-    pdf.cell(0, 10, f'Report di Pericolo: {beach_name}', 0, 1, 'C')
-    
-    # Informazioni sulla spiaggia
-    pdf.set_font('Arial', '', 12)
-    pdf.cell(0, 10, f'Generato da: {username}', 0, 1)
-    pdf.cell(0, 10, f'Data: {datetime.now().strftime("%d/%m/%Y %H:%M")}', 0, 1)
-    
-    pdf.ln(10)
-    
-    # Caratteristiche della spiaggia
-    pdf.set_font('Arial', 'B', 14)
-    pdf.cell(0, 10, 'Valutazione del pericolo', 0, 1)
-    
-    pdf.set_font('Arial', '', 12)
-    
-    # Dati di esempio - in un'app reale, questi valori verrebbero dal database
-    hazard_factors = {
-        'Inondazioni': 'Alto',
-        'Erosione costiera': 'Moderato',
-        'Maremoti': 'Basso',
-        'Tempeste': 'Moderato'
-    }
-    
-    for factor, level in hazard_factors.items():
-        pdf.cell(0, 10, f'{factor}: {level}', 0, 1)
-    
-    pdf.ln(10)
-    
-    # Crea un grafico a barre per i livelli di pericolo
-    pdf.set_font('Arial', 'B', 14)
-    pdf.cell(0, 10, 'Livelli di pericolo', 0, 1)
-    
-    fig, ax = plt.subplots(figsize=(10, 6))
-    
-    factors = list(hazard_factors.keys())
-    # Converti livelli testuali in valori numerici
-    values = [{'Alto': 3, 'Moderato': 2, 'Basso': 1}[level] for level in hazard_factors.values()]
-    
-    ax.bar(factors, values, color=['red', 'orange', 'blue', 'orange'])
-    ax.set_xlabel('Fattori di pericolo')
-    ax.set_ylabel('Livello (1=Basso, 2=Moderato, 3=Alto)')
-    ax.set_title('Analisi dei fattori di pericolo')
-    ax.set_ylim(0, 4)
-    plt.xticks(rotation=45, ha='right')
-    plt.tight_layout()
-    
-    # Salva temporaneamente il grafico
-    chart_path = os.path.join(report_dir, f'hazard_chart_{beach.get("id", "unknown")}.png')
-    plt.savefig(chart_path)
-    plt.close()
-    
-    # Aggiungi il grafico al PDF
-    pdf.image(chart_path, x=10, y=None, w=180)
-    
-    # Aggiungi raccomandazioni
-    pdf.ln(10)
-    pdf.set_font('Arial', 'B', 14)
-    pdf.cell(0, 10, 'Raccomandazioni di sicurezza', 0, 1)
-    
-    pdf.set_font('Arial', '', 12)
-    
-    # Raccomandazioni basate sul pericolo principale
-    if 'Alto' in hazard_factors.values():
-        pdf.multi_cell(0, 10, 'ATTENZIONE: È stato identificato un alto livello di pericolo per questa spiaggia. Si raccomandano misure di protezione immediate e la limitazione dell\'accesso durante condizioni meteorologiche avverse.')
-    else:
-        pdf.multi_cell(0, 10, 'Si raccomanda il monitoraggio regolare delle condizioni e l\'implementazione di sistemi di allarme tempestivo per i visitatori della spiaggia.')
-    
-    # Salva il PDF
-    pdf_filename = f'hazard_report_{beach.get("id", "unknown")}_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf'
-    pdf_path = os.path.join(report_dir, pdf_filename)
-    pdf.output(pdf_path)
-    
-    # Rimuovi l'immagine temporanea
-    if os.path.exists(chart_path):
-        os.remove(chart_path)
-    
-    return pdf_path
+from pdf_generator import generate_pdf_report
+
+def generate_risk_report(beach_data, username, language='it'):
+    """
+    Genera un report di rischio per la spiaggia specificata,
+    con supporto multilingua e gestione errori migliorata
+    """
+    # Utilizziamo il nuovo generatore PDF centralizzato
+    return generate_pdf_report('risk', beach_data, username, language)
+
+def generate_hazard_report(beach_data, username, language='it'):
+    """
+    Genera un report di pericolo per la spiaggia specificata,
+    con supporto multilingua e gestione errori migliorata
+    """
+    # Utilizziamo il nuovo generatore PDF centralizzato
+    return generate_pdf_report('hazard', beach_data, username, language)

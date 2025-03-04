@@ -1020,3 +1020,301 @@ body.dark-theme .register-container {
     background-color: rgba(30, 30, 40, 0.7) !important;
     border-color: rgba(50, 50, 70, 0.4);
 }
+
+/* Stili per selettore lingua nella pagina di login */
+.language-selector {
+    position: relative;
+    z-index: 1010; /* Aumentato z-index per garantire che appaia sopra altri elementi */
+}
+
+.login-language-selector {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    z-index: 1010;
+}
+
+.language-toggle {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.2em;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+    position: relative; /* Per aggiungere l'indicatore */
+}
+
+/* Indicatore di lingua attiva */
+.language-toggle::after {
+    content: '';
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #4CAF50; /* Verde per indicare attività */
+    bottom: 3px;
+    right: 3px;
+    opacity: 0; /* Nascosto di default */
+    transition: opacity 0.3s ease;
+}
+
+/* Mostra l'indicatore quando una lingua diversa da italiano è attiva */
+.language-toggle.active::after {
+    opacity: 1;
+}
+
+.language-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.language-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: white;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+    min-width: 180px;
+    z-index: 1100;
+    display: none;
+    overflow: hidden;
+    margin-top: 5px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.language-dropdown.show {
+    display: block;
+    animation: fadeIn 0.3s;
+}
+
+.language-option {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    color: #333;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.language-option:hover {
+    background-color: #f5f5f5;
+}
+
+.language-option.active {
+    background-color: rgba(16, 85, 121, 0.1);
+    font-weight: 500;
+}
+
+.language-option img {
+    width: 24px;
+    height: 16px;
+    margin-right: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Tema scuro */
+body.dark-theme .language-dropdown {
+    background-color: #1a1a2e;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+}
+
+body.dark-theme .language-option {
+    color: #e6e6e6;
+}
+
+body.dark-theme .language-option:hover {
+    background-color: #16213e;
+}
+
+/* Nascondi elementi Google Translate originali */
+.goog-te-banner-frame, 
+.goog-te-balloon-frame,
+.goog-te-menu-frame {
+    display: none !important;
+}
+
+body {
+    top: 0 !important;
+}
+
+#goog-gt-tt, 
+.goog-te-balloon-frame {
+    display: none !important;
+}
+
+.goog-text-highlight {
+    background-color: transparent !important;
+    box-shadow: none !important;
+}
+
+#google_translate_element {
+    display: none !important;
+}
+
+/* Correzioni per Google Translate nella pagina di login */
+.language-toggle.active::after {
+    content: '';
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #4CAF50; 
+    bottom: 3px;
+    right: 3px;
+    opacity: 1;
+}
+
+/* Compatibilità con Google Translate Widget */
+.goog-te-banner-frame, 
+.goog-te-balloon-frame,
+.skiptranslate {
+    display: none !important;
+}
+
+body {
+    top: 0 !important;
+    position: relative !important;
+}
+
+/* Nascondi la barra di traduzione Google */
+.goog-te-banner-frame {
+    visibility: hidden !important;
+}
+
+#goog-gt-tt, 
+.goog-te-balloon-frame {
+    display: none !important;
+}
+
+/* Modifica l'aspetto del translate widget */
+#google_translate_element {
+    visibility: hidden !important;
+    opacity: 0;
+    position: absolute;
+    top: -100px;
+}
+
+/* Rimuovi highlight di Google Translate */
+.goog-text-highlight {
+    background-color: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
+}
+
+/* Fix per problemi di layout quando la traduzione è applicata */
+html.translated-ltr body {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+
+/* Tooltip di Google Translate non voluti */
+.goog-tooltip {
+    display: none !important;
+}
+
+.goog-tooltip:hover {
+    display: none !important;
+}
+
+/* Stile per il widget Google Translate */
+#google_translate_element {
+    opacity: 0.8;
+    transition: opacity 0.3s;
+}
+
+#google_translate_element:hover {
+    opacity: 1;
+}
+
+/* Riduci dimensioni del box di Google Translate */
+.goog-te-gadget {
+    font-size: 0 !important;
+}
+
+.goog-te-gadget .goog-te-combo {
+    font-size: 12px !important;
+    padding: 2px !important;
+    border-radius: 4px !important;
+    margin: 0 !important;
+}
+
+/* Nascondi elementi non necessari */
+.goog-logo-link, .goog-te-gadget span {
+    display: none !important;
+}
+
+/* Nascondi la barra in alto */
+.goog-te-banner-frame {
+    display: none !important;
+}
+
+body {
+    top: 0 !important;
+}
+
+/* Stili per overlay di traduzione */
+#translation-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.8);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.translation-spinner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+.translation-spinner i {
+    font-size: 2.5rem;
+    color: #105579;
+    animation: rotateWithColor 2s linear infinite;
+}
+
+.translation-spinner span {
+    font-size: 1.2rem;
+    color: #105579;
+    font-weight: 500;
+}
+
+@keyframes rotateWithColor {
+    0% {
+        transform: rotate(0deg);
+        color: #105579;
+    }
+    50% {
+        color: #659047;
+    }
+    100% {
+        transform: rotate(360deg);
+        color: #105579;
+    }
+}
+
+/* Tema scuro per overlay di traduzione */
+body.dark-theme #translation-overlay {
+    background-color: rgba(20, 20, 35, 0.8);
+}
+
+body.dark-theme .translation-spinner span,
+body.dark-theme .translation-spinner i {
+    color: #3498db;
+}

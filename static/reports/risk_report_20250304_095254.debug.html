@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Report di Rischio - Spiaggia Dorada</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+            color: #333;
+        }
+        h1 {
+            color: #105579;
+            border-bottom: 2px solid #659047;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #333;
+            margin-top: 20px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+        .metadata {
+            text-align: right;
+            font-size: 14px;
+            color: #666;
+        }
+        .beach-info {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+        .info-box {
+            width: 45%;
+            margin-bottom: 15px;
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .info-box h3 {
+            margin-top: 0;
+            color: #659047;
+            font-size: 16px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+        .risk-details {
+            margin-bottom: 30px;
+        }
+        .risk-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .risk-name {
+            font-weight: bold;
+        }
+        .risk-value {
+            font-weight: bold;
+        }
+        .risk-low {
+            color: #28a745;
+        }
+        .risk-medium {
+            color: #ffc107;
+        }
+        .risk-high {
+            color: #dc3545;
+        }
+        .recommendations {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+        }
+        .recommendation {
+            margin-bottom: 10px;
+            padding-left: 25px;
+            position: relative;
+        }
+        .recommendation:before {
+            content: "•";
+            position: absolute;
+            left: 10px;
+            color: #105579;
+        }
+        .footer {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+        }
+        @page {
+            @bottom-right {
+                content: "Pagina " counter(page);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h1>Report di Rischio</h1>
+            <h2>Spiaggia Dorada</h2>
+        </div>
+        <div class="metadata">
+            <p>Generato da: admin</p>
+            <p>Data: 04/03/2025</p>
+        </div>
+    </div>
+
+    <h2>Panoramica</h2>
+    <div class="beach-info">
+        <div class="info-box">
+            <h3>Lunghezza</h3>
+            <p>1200 metri</p>
+        </div>
+        <div class="info-box">
+            <h3>Larghezza</h3>
+            <p>45 metri</p>
+        </div>
+        <div class="info-box">
+            <h3>Indice di rischio</h3>
+            <p>0.65</p>
+        </div>
+        <div class="info-box">
+            <h3>Tasso di erosione</h3>
+            <p>0.80 metri/anno</p>
+        </div>
+    </div>
+
+    <h2>Dettagli del rischio</h2>
+    <div class="risk-details">
+        <div class="risk-item">
+            <div class="risk-name">Rischio economico</div>
+            <div class="risk-value 
+                risk-medium
+                ">
+                0.52
+            </div>
+        </div>
+        <div class="risk-item">
+            <div class="risk-name">Rischio sociale</div>
+            <div class="risk-value 
+                risk-medium
+                ">
+                0.39
+            </div>
+        </div>
+        <div class="risk-item">
+            <div class="risk-name">Rischio ambientale</div>
+            <div class="risk-value 
+                risk-medium
+                ">
+                0.45
+            </div>
+        </div>
+    </div>
+
+    <h2>Raccomandazioni</h2>
+    <div class="recommendations">
+        <div class="recommendation">
+            Implementare barriere artificiali per ridurre l'erosione costiera
+        </div>
+        <div class="recommendation">
+            Ripristinare la vegetazione dunale per stabilizzare la costa
+        </div>
+        <div class="recommendation">
+            Monitorare regolarmente le variazioni della linea di costa
+        </div>
+        <div class="recommendation">
+            Informare la popolazione locale sui rischi e le misure di adattamento
+        </div>
+    </div>
+
+    <div class="footer">
+        Sistema di Monitoraggio Costiero © 2023 - Report di Rischio - Spiaggia Dorada
+    </div>
+</body>
+</html>

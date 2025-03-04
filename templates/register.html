@@ -1,129 +1,77 @@
-<!DOCTYPE html>
-<html lang="it">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registrazione - Monitoraggio Spiagge</title>
-    <!-- Assicuriamoci che il CSS sia caricato correttamente -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style-login.css') }}">
-    <!-- Altri CSS che potrebbero causare conflitti -->
-    <!-- <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"> -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/init.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/notifications.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600&display=swap">
-    <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon">
-    <!-- Carica il CSS del gradiente per ultimo per garantire che abbia priorità -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/gradient-background.css') }}">
-</head>
-<!-- Rimuoviamo eventuali classi o stili che potrebbero sovrascrivere il gradiente -->
-<body class="{{ 'dark-theme' if session.get('dark_theme') else '' }} register-body">
-    <!-- Notifiche container -->
-    {% if get_flashed_messages() %}
-    <div class="notifications-container">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="notification {{ category }}">
-                        <i class="fas {% if category == 'success' %}fa-check-circle{% elif category == 'error' %}fa-exclamation-circle{% elif category == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %}"></i>
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
+{% extends "base_auth.html" %}
+
+{% block container_class %}register-page{% endblock %}
+
+{% block title %}{{ t.sign_up }}{% endblock %}
+
+{% block content %}
+<form method="POST" class="auth-form">
+    {{ form.hidden_tag() }}
+    
+    <div class="form-group">
+        <label for="username">{{ t.username }}</label>
+        {{ form.username(class="form-control", placeholder=t.username) }}
     </div>
-    {% endif %}
 
-    <div class="auth-container register-page">
-        <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo" class="logo">
-        <h1>Registrazione</h1>
-        <p class="auth-subtitle">Crea un nuovo account per accedere al sistema.</p>
+    <div class="form-group">
+        <label for="email">{{ t.email }}</label>
+        {{ form.email(class="form-control", placeholder=t.email) }}
+    </div>
 
-        <form method="POST" action="{{ url_for('register') }}" class="auth-form">
-            {{ form.hidden_tag() }}
+    <div class="form-group">
+        <label for="password">{{ t.password }}</label>
+        {{ form.password(class="form-control", placeholder=t.password) }}
+    </div>
 
-            <div class="form-group">
-                {{ form.username.label(class="form-label") }}
-                {{ form.username(class="form-control") }}
-                {% if form.username.errors %}
-                    <div class="form-error">
-                        {% for error in form.username.errors %}
-                            <span>{{ error }}</span>
-                        {% endfor %}
-                    </div>
-                {% endif %}
+    <div class="form-group">
+        <label for="confirm_password">{{ t.confirm_password }}</label>
+        {{ form.confirm_password(class="form-control", placeholder=t.confirm_password) }}
+    </div>
+
+    <div class="form-group">
+        <label>{{ t.select_avatar }}</label>
+        <div class="avatar-selection">
+            {% for i in range(1, 9) %}
+            <div class="avatar-option">
+                <input type="radio" id="avatar{{ i }}" name="avatar_id" value="{{ i }}" 
+                       class="avatar-radio" {% if i == 1 %}checked{% endif %}>
+                <label for="avatar{{ i }}">
+                    <img src="{{ url_for('static', filename='img/avatars/' ~ i ~ '.png') }}" 
+                         alt="Avatar {{ i }}" class="avatar-img">
+                </label>
             </div>
-
-            <div class="form-group">
-                {{ form.email.label(class="form-label") }}
-                {{ form.email(class="form-control") }}
-                {% if form.email.errors %}
-                    <div class="form-error">
-                        {% for error in form.email.errors %}
-                            <span>{{ error }}</span>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            </div>
-
-            <div class="form-group">
-                {{ form.password.label(class="form-label") }}
-                {{ form.password(class="form-control") }}
-                {% if form.password.errors %}
-                    <div class="form-error">
-                        {% for error in form.password.errors %}
-                            <span>{{ error }}</span>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            </div>
-
-            <div class="form-group">
-                {{ form.confirm_password.label(class="form-label") }}
-                {{ form.confirm_password(class="form-control") }}
-                {% if form.confirm_password.errors %}
-                    <div class="form-error">
-                        {% for error in form.confirm_password.errors %}
-                            <span>{{ error }}</span>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            </div>
-
-            <!-- Sezione per la selezione dell'avatar -->
-            <div class="form-group">
-                <label class="form-label">Scegli avatar</label>
-                <div class="avatar-selection">
-                    {% for value, label in form.avatar_id.choices %}
-                    <div class="avatar-option">
-                        <input type="radio" id="avatar_{{ value }}" name="avatar_id" value="{{ value }}" 
-                              {% if form.avatar_id.data == value %}checked{% endif %}>
-                        <label for="avatar_{{ value }}">
-                            <img src="{{ url_for('static', filename='img/avatars/' ~ value ~ '.png') }}" alt="{{ label }}">
-                        </label>
-                    </div>
-                    {% endfor %}
-                </div>
-                {% if form.avatar_id.errors %}
-                    <div class="form-error">
-                        {% for error in form.avatar_id.errors %}
-                            <span>{{ error }}</span>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            </div>
-
-            <div class="form-group">
-                {{ form.submit(class="btn btn-primary") }}
-            </div>
-        </form>
-        
-        <div class="auth-links">
-            <p>Hai già un account? <a href="{{ url_for('login') }}">Accedi</a></p>
+            {% endfor %}
         </div>
     </div>
 
-    <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
-</body>
-</html>
+    <button type="submit" class="btn btn-primary">{{ t.sign_up }}</button>
+    
+    <div class="auth-links">
+        <p>{{ t.already_registered }} <a href="{{ url_for('login') }}">{{ t.login }}</a></p>
+    </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Script per selezionare visualmente l'avatar
+    document.querySelectorAll('.avatar-radio').forEach(radio => {
+        radio.addEventListener('change', function() {
+            // Rimuovi classe "selected" da tutte le immagini
+            document.querySelectorAll('.avatar-img').forEach(img => {
+                img.classList.remove('selected');
+            });
+            
+            // Aggiungi classe "selected" all'immagine selezionata
+            if (this.checked) {
+                this.nextElementSibling.querySelector('img').classList.add('selected');
+            }
+        });
+        
+        // Imposta classe iniziale
+        if (radio.checked) {
+            radio.nextElementSibling.querySelector('img').classList.add('selected');
+        }
+    });
+</script>
+{% endblock %}

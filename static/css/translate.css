@@ -1,0 +1,171 @@
+/**
+ * Stili per il sistema di traduzione
+ */
+
+/* Overlay di traduzione */
+#translation-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.3);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+/* Contenitore del messaggio di traduzione */
+.translation-message {
+    background-color: rgba(255, 255, 255, 0.85);
+    border-radius: 8px;
+    padding: 15px 25px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    max-width: 90%;
+    transform: translateY(20px);
+    transition: transform 0.3s ease-out;
+}
+
+/* Adattamento per tema scuro */
+.dark-theme #translation-overlay .translation-message {
+    background-color: rgba(40, 44, 52, 0.85);
+    color: #e6e6e6;
+}
+
+/* Icona di traduzione */
+.translation-icon {
+    font-size: 1.8em;
+    color: #105579;
+    margin-right: 15px;
+}
+
+/* Testo del messaggio */
+.translation-text {
+    font-size: 1em;
+    color: #333;
+}
+
+.dark-theme .translation-text {
+    color: #e6e6e6;
+}
+
+/* Animazione di pulsazione per l'icona */
+@keyframes pulse {
+    0% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(1.1); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+.fa-pulse {
+    animation: pulse 1.5s infinite;
+}
+
+/* Selettore di lingua */
+.language-selector {
+    position: relative;
+    z-index: 100;
+}
+
+.language-toggle {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px;
+    border-radius: 50%;
+    transition: all 0.3s;
+}
+
+.language-toggle:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.language-toggle.active {
+    position: relative;
+}
+
+.language-toggle.active::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 8px;
+    height: 8px;
+    background-color: #4CAF50;
+    border-radius: 50%;
+}
+
+.language-dropdown {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background-color: white;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+    padding: 5px 0;
+    min-width: 150px;
+}
+
+.dark-theme .language-dropdown {
+    background-color: #2c3e50;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+}
+
+.language-dropdown.show {
+    display: block;
+    animation: fadeInDown 0.3s forwards;
+}
+
+.language-option {
+    display: flex;
+    align-items: center;
+    padding: 8px 15px;
+    text-decoration: none;
+    color: #333;
+    transition: background-color 0.2s;
+}
+
+.dark-theme .language-option {
+    color: #e6e6e6;
+}
+
+.language-option img {
+    width: 20px;
+    margin-right: 10px;
+}
+
+.language-option:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.dark-theme .language-option:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.language-option.active {
+    background-color: rgba(0, 0, 0, 0.1);
+    font-weight: 500;
+}
+
+.dark-theme .language-option.active {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

@@ -7,6 +7,7 @@ from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 from flask import render_template, url_for, current_app
 import requests  # Per Brevo API
+from translations import get_translations
 
 class EmailService:
     def __init__(self, app=None):
@@ -51,12 +52,23 @@ class EmailService:
                     logging.error(f"Impossibile creare la directory per i log delle email: {e}")
                     self.service_type = 'console'
                     
-    def send_verification_email(self, user, verification_code):
+    def send_verification_email(self, user, verification_code, language='it'):
         """Invia email di verifica all'utente utilizzando il servizio configurato"""
-        subject = 'Verifica il tuo indirizzo email'
-        html_content = render_template('email/verify_email.html',
-                                      user=user, 
-                                      verification_code=verification_code)
+        t = get_translations(language)
+        subject = t["verification_email_subject"]
+        html_content = f"""
+        <html>
+        <body>
+            <h2>{t["hello"]} {user.username},</h2>
+            <p>{t["verification_email_intro"]}</p>
+            <h1 style="font-size: 24px; background-color: #f2f2f2; padding: 10px; text-align: center;">{verification_code}</h1>
+            <p>{t["verification_code_valid_for"]} 24 {t["hours"]}.</p>
+            <p>{t["if_you_did_not_register"]}</p>
+            <p>{t["regards"]},<br>
+            {t["coastal_monitoring_system"]}</p>
+        </body>
+        </html>
+        """
                                       
         if self.service_type == 'brevo':
             return self._send_via_brevo(user.email, subject, html_content, verification_code)
@@ -67,12 +79,23 @@ class EmailService:
         else:  # default: console
             return self._print_to_console(user.email, subject, verification_code)
     
-    def send_password_reset_email(self, user, reset_url):
+    def send_password_reset_email(self, user, reset_url, language='it'):
         """Invia email per il reset della password"""
-        subject = 'Reset della tua password'
-        html_content = render_template('email/reset_password.html',
-                                      user=user, 
-                                      reset_url=reset_url)
+        t = get_translations(language)
+        subject = t["reset_password_subject"]
+        html_content = f"""
+        <html>
+        <body>
+            <h2>{t["hello"]} {user.username},</h2>
+            <p>{t["reset_password_intro"]}</p>
+            <p><a href="{reset_url}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">{t["reset_password"]}</a></p>
+            <p>{t["reset_link_valid_for"]} 1 {t["hour"]}.</p>
+            <p>{t["if_you_did_not_request_reset"]}</p>
+            <p>{t["regards"]},<br>
+            {t["coastal_monitoring_system"]}</p>
+        </body>
+        </html>
+        """
                                       
         if self.service_type == 'brevo':
             return self._send_via_brevo(user.email, subject, html_content, reset_url)
@@ -83,11 +106,22 @@ class EmailService:
         else:  # default: console
             return self._print_to_console(user.email, subject, reset_url)
             
-    def send_username_reminder_email(self, user):
+    def send_username_reminder_email(self, user, language='it'):
         """Invia email con il promemoria dello username"""
-        subject = 'Il tuo nome utente'
-        html_content = render_template('email/username_reminder.html',
-                                      user=user)
+        t = get_translations(language)
+        subject = t["username_reminder_subject"]
+        html_content = f"""
+        <html>
+        <body>
+            <h2>{t["hello"]},</h2>
+            <p>{t["username_reminder_intro"]}</p>
+            <h1 style="font-size: 24px; background-color: #f2f2f2; padding: 10px; text-align: center;">{user.username}</h1>
+            <p>{t["if_you_did_not_request_username"]}</p>
+            <p>{t["regards"]},<br>
+            {t["coastal_monitoring_system"]}</p>
+        </body>
+        </html>
+        """
         username = user.username
                                       
         if self.service_type == 'brevo':

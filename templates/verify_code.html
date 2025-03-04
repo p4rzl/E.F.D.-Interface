@@ -1,72 +1,28 @@
-<!DOCTYPE html>
-<html lang="it">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verifica Email - Monitoraggio Spiagge</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style-login.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/init.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/notifications.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap">
-    <link rel="icon" href="{{ url_for('static', filename='img/favicon.ico') }}" type="image/x-icon">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/gradient-background.css') }}">
-    <style>
-        .code-input {
-            letter-spacing: 0.5rem;
-            font-size: 1.5rem;
-            text-align: center;
-            font-weight: bold;
-        }
-    </style>
-</head>
-<body class="{{ 'dark-theme' if session.get('dark_theme') else '' }}">
-    {% if get_flashed_messages() %}
-    <div class="notifications-container">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="notification {{ category }}">
-                        <i class="fas {% if category == 'success' %}fa-check-circle{% elif category == 'error' %}fa-exclamation-circle{% elif category == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %}"></i>
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            {% endif %}
-        {% endwith %}
-    </div>
-    {% endif %}
+{% extends "base_auth.html" %}
 
-    <div class="auth-container login-page">
-        <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo" class="logo">
-        <h1>Verifica il tuo indirizzo email</h1>
-        <p class="auth-subtitle">Inserisci il codice a 6 cifre che abbiamo inviato a {{ email }}</p>
+{% block container_class %}login-page{% endblock %}
 
-        <form method="POST" action="{{ url_for('verify_code', email=email) }}" class="auth-form">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-            <div class="form-group">
-                <label for="verification_code" class="form-label">Codice di verifica</label>
-                <input type="text" id="verification_code" name="verification_code" class="form-control code-input" 
-                       pattern="[0-9]{6}" maxlength="6" minlength="6" inputmode="numeric" autocomplete="off" required>
-                <small>Inserisci le 6 cifre numeriche ricevute via email</small>
-            </div>
+{% block title %}{{ t.verify_email }}{% endblock %}
 
-            <div class="form-group">
-                <button type="submit" class="btn btn-primary">Verifica</button>
-            </div>
-        </form>
-        
-        <div class="auth-links">
-            <p><a href="{{ url_for('resend_verification') }}">Non hai ricevuto il codice?</a></p>
-            <p><a href="{{ url_for('login') }}">Torna al Login</a></p>
-        </div>
+{% block content %}
+<p class="auth-subtitle">{{ t.enter_verification_code }}</p>
+
+<form method="POST" class="auth-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="form-group">
+        <label for="verification_code">{{ t.verification_code }}</label>
+        <input type="text" class="form-control" id="verification_code" 
+               name="verification_code" required maxlength="6"
+               pattern="[0-9]{6}" placeholder="000000">
     </div>
 
-    <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
-    <script>
-        // Focus automatico sul campo di input quando la pagina si carica
-        window.onload = function() {
-            document.getElementById('verification_code').focus();
-        }
-    </script>
-</body>
-</html>
+    <button type="submit" class="btn btn-primary">{{ t.verify_button }}</button>
+    
+    <div class="auth-links">
+        <p>{{ t.resend_code }} 
+           <a href="{{ url_for('resend_verification') }}">{{ t.resend_verification }}</a>
+        </p>
+        <p><a href="{{ url_for('login') }}">{{ t.back }}</a></p>
+    </div>
+</form>
+{% endblock %}
