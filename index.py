@@ -7,10 +7,9 @@ from flask import Flask, render_template, redirect, url_for, flash, request, ses
 from flask_login import login_user, login_required, logout_user, current_user
 from datetime import datetime, timedelta
 from pathlib import Path
-from flask_socketio import emit
-from models import User, Message, SystemConfig
+from models import User, SystemConfig
 from forms import LoginForm, RegisterForm
-from extensions import db, login_manager, csrf, socketio
+from extensions import db, login_manager, csrf
 from reports import generate_risk_report, generate_hazard_report
 from dotenv import load_dotenv
 import glob
@@ -19,9 +18,6 @@ from translations import get_translations, get_available_languages
 
 # Carica le variabili d'ambiente dal file .env
 load_dotenv()
-
-# Variabile globale per tenere traccia degli utenti online
-online_users = set()
 
 # Configurazione dell'app Flask
 app = Flask(__name__)
@@ -44,9 +40,6 @@ login_manager.login_message_category = 'warning'
 
 # Token per Mapbox
 MAPBOX_TOKEN = os.environ.get('MAPBOX_TOKEN', 'pk.eyJ1IjoicDRyemwiLCJhIjoiY203ZWw3emd5MGN0eDJrc2V0eTdpcWN2ZCJ9.4VJRSR4REamVL1Qdw1wVdA')
-
-# Inizializza SocketIO
-socketio.init_app(app, cors_allowed_origins="*")
 
 # Inizializzare il servizio email
 email_service.init_app(app)
@@ -77,15 +70,11 @@ def get_base_template_data():
     # Salva la lingua nella sessione
     session['lang'] = lang
     
-    # Ottieni lo stato della chat
-    chat_enabled = SystemConfig.get('chat_enabled', 'true') == 'true'
-    
     return {
         'current_user': current_user,
         'lang': lang,
         't': get_translations(lang),  # Traduzioni
-        'languages': get_available_languages(),  # Lingue disponibili
-        'chat_enabled': chat_enabled  # Stato della chat
+        'languages': get_available_languages()  # Lingue disponibili
     }
 
 # Gestisce la registrazione degli utenti
@@ -630,81 +619,7 @@ def hazard_pdf():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# Gestione della chat
-@socketio.on('connect')
-def handle_connect():
-    if current_user.is_authenticated:
-        # Aggiungi l'utente alla lista degli utenti online
-        online_users.add(current_user.username)
-        
-        # Notifica tutti gli utenti che questo utente è online
-        emit('user_status', {
-            'username': current_user.username,
-            'status': True
-        }, broadcast=True)
-        
-        # Aggiungi un flag per evitare duplicazioni
-        session['messages_sent'] = session.get('messages_sent', False)
-        # Invia la cronologia dei messaggi solo la prima volta
-        if not session['messages_sent']:
-            # Recupera gli ultimi 50 messaggi dal database
-            recent_messages = Message.query.order_by(Message.timestamp.desc()).limit(50).all()
-            recent_messages.reverse()  # Inverti per ordine cronologico
-            # Invia la cronologia dei messaggi al client che si è connesso
-            for message in recent_messages:
-                user = User.query.get(message.user_id)
-                if user:
-                    # Verifica se il messaggio appartiene all'utente corrente
-                    is_own = message.user_id == current_user.id
-                    emit('message', {
-                        'id': f'msg-{message.id}',  # ID univoco
-                        'user': user.username,
-                        'message': message.text,
-                        'avatar_id': user.avatar_id,
-                        'is_admin': user.is_admin,
-                        'is_own': is_own,  # Aggiungi flag per identificare i messaggi propri
-                        'time': message.timestamp.strftime('%H:%M')
-                    }, broadcast=False)  # Invia solo al client connesso
-            # Imposta il flag per evitare reinvii
-            session['messages_sent'] = True
-
-# Aggiunta per gestire la disconnessione
-@socketio.on('disconnect')
-def handle_disconnect():
-    if current_user.is_authenticated:
-        # Rimuovi l'utente dalla lista degli utenti online
-        online_users.discard(current_user.username)
-        
-        # Notifica tutti gli utenti che questo utente è offline
-        emit('user_status', {
-            'username': current_user.username,
-            'status': False
-        }, broadcast=True)
-        
-        # Resetta il flag di messaggi inviati alla disconnessione
-        if 'messages_sent' in session:
-            session.pop('messages_sent', None)
-
-@socketio.on('message')
-def handle_message(data):
-    if current_user.is_authenticated:
-        message_text = data.get('message', '').strip()
-        if message_text:
-            # Salva il messaggio nel database
-            message = Message(text=message_text, user_id=current_user.id)
-            db.session.add(message)
-            db.session.commit()
-            # Invia il messaggio a tutti i client connessi con ID univoco
-            emit('message', {
-                'id': f'msg-{message.id}',  # ID univoco per questo messaggio
-                'user': current_user.username,
-                'message': message_text,
-                'avatar_id': current_user.avatar_id,
-                'is_admin': current_user.is_admin,  # Aggiungi flag per amministratore
-                'time': datetime.now().strftime('%H:%M')
-            }, broadcast=True)
-
-# Admin route
+# Admin route - rimozione dei riferimenti alla chat
 @app.route('/admin')
 @login_required
 def admin():
@@ -712,32 +627,8 @@ def admin():
         flash('Accesso negato: devi essere un amministratore per accedere a questa pagina', 'error')
         return redirect(url_for('home'))
     
-    # Ottieni lo stato della chat dal database (default: attivata)
-    chat_enabled = SystemConfig.get('chat_enabled', 'true') == 'true'
-    
     users = User.query.all()
-    return render_template('admin.html', users=users, chat_enabled=chat_enabled)
-
-# Nuova route per attivare/disattivare la chat
-@app.route('/admin/toggle-chat', methods=['POST'])
-@login_required
-def toggle_chat_visibility():
-    if not current_user.is_admin:
-        flash('Accesso negato: devi essere un amministratore per eseguire questa azione', 'error')
-        return redirect(url_for('home'))
-    
-    # Ottieni lo stato corrente e cambialo
-    current_state = SystemConfig.get('chat_enabled', 'true')
-    new_state = 'false' if current_state == 'true' else 'true'
-    
-    # Salva il nuovo stato
-    SystemConfig.set('chat_enabled', new_state, 'Indica se la chat è visibile agli utenti')
-    
-    # Messaggio di conferma
-    action = "attivata" if new_state == 'true' else "disattivata"
-    flash(f'La chat è stata {action} con successo', 'success')
-    
-    return redirect(url_for('admin'))
+    return render_template('admin.html', users=users)
 
 # Route per attivare/disattivare utenti
 @app.route('/toggle_user/<int:user_id>', methods=['POST'])
@@ -810,95 +701,12 @@ def before_request():
             secure_url = request.url.replace('http://', 'https://', 1)
             return redirect(secure_url, code=301)
 
-# Pulizia dei messaggi vecchi (ridotta a 3 giorni)
-def cleanup_old_messages():
-    cutoff = datetime.now() - timedelta(days=3)  # Modificato da 7 a 3 giorni
-    old_messages = Message.query.filter(Message.timestamp < cutoff).all()
-    for message in old_messages:
-        db.session.delete(message)
-    db.session.commit()
-
-# Aggiungi una route per eseguire la pulizia dei messaggi
-@app.route('/admin/cleanup-messages', methods=['POST'])
-@login_required
-def admin_cleanup_messages():
-    if not current_user.is_admin:
-        flash('Accesso negato: devi essere un amministratore per eseguire questa azione', 'error')
-        return redirect(url_for('home'))
-    try:
-        cleanup_old_messages()
-        flash('Pulizia dei messaggi vecchi completata con successo', 'success')
-    except Exception as e:
-        flash(f'Errore durante la pulizia dei messaggi: {str(e)}', 'error')
-    
-    return redirect(url_for('admin'))
-
-# Aggiungi una route per eliminare tutti i messaggi
-@app.route('/admin/delete-all-messages', methods=['POST'])
-@login_required
-def admin_delete_all_messages():
-    if not current_user.is_admin:
-        flash('Accesso negato: devi essere un amministratore per eseguire questa azione', 'error')
-        return redirect(url_for('home'))
-    
-    try:
-        # Elimina tutti i messaggi dal database
-        Message.query.delete()
-        db.session.commit()
-        flash('Tutti i messaggi sono stati eliminati con successo', 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Errore durante l\'eliminazione dei messaggi: {str(e)}', 'error')
-    
-    return redirect(url_for('admin'))
-
-# Aggiungi un comando per eseguire automaticamente la pulizia dei messaggi
-@app.cli.command("cleanup-messages")
-def cleanup_messages_command():
-    """Pulisce i messaggi più vecchi di 3 giorni."""
-    with app.app_context():
-        cleanup_old_messages()
-        print("Pulizia dei messaggi completata.")
-
-# Nuova route dedicata alla chat
-@app.route('/chat')
-@login_required
-def chat_page():
-    # Controlla se la chat è attivata
-    chat_enabled = SystemConfig.get('chat_enabled', 'true') == 'true'
-    
-    # Se la chat è disattivata e l'utente non è admin, reindirizza alla home
-    if not chat_enabled and not current_user.is_admin:
-        flash('La chat è attualmente disattivata', 'info')
-        return redirect(url_for('home'))
-    
-    # Recupera gli ultimi 100 messaggi per mostrarli nella pagina
-    messages = Message.query.order_by(Message.timestamp.asc()).limit(100).all()
-    
-    # Recupera tutti gli utenti attivi
-    users = User.query.filter_by(is_active=True).all()
-    
-    # Aggiungi proprietà is_online a ogni utente
-    for user in users:
-        user.is_online = user.username in online_users or user == current_user
-    
-    # Aggiungi automaticamente l'utente corrente alla lista di utenti online
-    online_users.add(current_user.username)
-    
-    template_data = get_base_template_data()
-    template_data.update({
-        'messages': messages, 
-        'users': users
-    })
-    
-    return render_template('chat.html', **template_data)
-
-# Aggiungiamo una route specifica per i suoni
+# Rimuoviamo anche questa route se usata solo per i suoni di notifica della chat
 @app.route('/static/audio/<filename>')
 def serve_audio(filename):
     return send_from_directory(os.path.join(app.root_path, 'static', 'audio'), filename)
 
-# Inizializzazione del database
+# Inizializzazione del database - rimuoviamo i riferimenti alla chat
 def init_app_db():
     with app.app_context():
         db.create_all()
@@ -910,10 +718,6 @@ def init_app_db():
             admin.set_password(admin_password)
             db.session.add(admin)
             db.session.commit()        
-        
-        # Imposta la configurazione predefinita della chat se non esiste
-        if not SystemConfig.query.filter_by(key='chat_enabled').first():
-            SystemConfig.set('chat_enabled', 'true', 'Indica se la chat è visibile agli utenti')
 
 # Funzione per eliminare i report vecchi
 def cleanup_old_reports():
@@ -1112,12 +916,10 @@ if __name__ == '__main__':
     except Exception as e:
         print(f"Avviso: Migrazione non eseguita - {str(e)}")
     
-    # Pulizia dei messaggi vecchi all'avvio
+    # Rimuoviamo la pulizia dei messaggi vecchi all'avvio
     with app.app_context():
         try:
-            cleanup_old_messages()
-            print("Pulizia automatica dei messaggi completata.")
-            # Aggiungiamo anche la pulizia dei report all'avvio
+            # Aggiungiamo solo la pulizia dei report all'avvio
             cleanup_old_reports()
             print("Pulizia automatica dei report completata.")
         except Exception as e:
@@ -1130,241 +932,5 @@ if __name__ == '__main__':
     print("Credenziali predefinite: admin/admin")
     print("============================================")
     
-    # Avvia l'app
-    socketio.run(app, debug=(os.environ.get('FLASK_ENV') == 'development'), host='0.0.0.0')
-
-# Aggiungi questi gestori di eventi socket.io per supportare la nuova chat
-
-@socketio.on('get_messages')
-def handle_get_messages(data):
-    if not current_user.is_authenticated:
-        return
-    
-    chat_type = data.get('chatType')
-    target_id = data.get('targetId')
-    
-    messages = []
-    
-    if chat_type == 'general':
-        # Recupera i messaggi della chat generale (limitati a 50)
-        messages = Message.query.filter_by(message_type='general').order_by(Message.timestamp.desc()).limit(50).all()
-    elif chat_type == 'private' and target_id:
-        # Recupera i messaggi privati tra i due utenti
-        messages = Message.query.filter(
-            ((Message.sender_id == current_user.id) & (Message.recipient_id == target_id)) |
-            ((Message.sender_id == target_id) & (Message.recipient_id == current_user.id))
-        ).filter_by(message_type='private').order_by(Message.timestamp.asc()).all()
-    elif chat_type == 'group' and target_id:
-        # Recupera i messaggi del gruppo
-        messages = Message.query.filter_by(
-            group_id=target_id, message_type='group'
-        ).order_by(Message.timestamp.asc()).all()
-    
-    # Invia i messaggi al client
-    for message in messages:
-        sender = User.query.get(message.sender_id)
-        if sender:
-            emit('message', {
-                'id': f'msg-{message.id}',
-                'user': sender.username,
-                'message': message.text,
-                'avatar_id': sender.avatar_id,
-                'is_admin': sender.is_admin,
-                'is_own': message.sender_id == current_user.id,
-                'time': message.timestamp.strftime('%H:%M'),
-                'chatType': message.message_type,
-                'fromUserId': message.sender_id,
-                'toUserId': message.recipient_id,
-                'groupId': message.group_id
-            })
-
-@socketio.on('get_chat_participants')
-def handle_get_chat_participants(data):
-    if not current_user.is_authenticated:
-        return
-        
-    chat_type = data.get('chatType')
-    target_id = data.get('targetId')
-    
-    online_users_list = []
-    offline_users_list = []
-    
-    if chat_type == 'general':
-        # Per la chat generale, includi tutti gli utenti
-        all_users = User.query.filter(User.is_active == True).all()
-        
-        for user in all_users:
-            user_data = {
-                'id': user.id,
-                'username': user.username,
-                'avatar_id': user.avatar_id,
-                'is_admin': user.is_admin
-            }
-            
-            # Verifica se l'utente è online
-            if user.username in online_users:
-                online_users_list.append(user_data)
-            else:
-                offline_users_list.append(user_data)
-                
-    elif chat_type == 'private' and target_id:
-        # Per le chat private, includi solo l'altro utente e l'utente corrente
-        other_user = User.query.get(target_id)
-        
-        if other_user and other_user.is_active:
-            user_data = {
-                'id': other_user.id,
-                'username': other_user.username,
-                'avatar_id': other_user.avatar_id,
-                'is_admin': other_user.is_admin
-            }
-            
-            # Verifica se l'utente è online
-            if other_user.username in online_users:
-                online_users_list.append(user_data)
-            else:
-                offline_users_list.append(user_data)
-                
-        # Includi anche l'utente corrente (sempre "online")
-        online_users_list.append({
-            'id': current_user.id,
-            'username': current_user.username,
-            'avatar_id': current_user.avatar_id,
-            'is_admin': current_user.is_admin
-        })
-        
-    elif chat_type == 'group' and target_id:
-        # Per le chat di gruppo, includi i membri del gruppo
-        group = ChatGroup.query.get(target_id)
-        if group:
-            for member in group.members:
-                if member.is_active:
-                    user_data = {
-                        'id': member.id,
-                        'username': member.username,
-                        'avatar_id': member.avatar_id,
-                        'is_admin': member.is_admin
-                    }
-                    
-                    # Verifica se l'utente è online
-                    if member.username in online_users:
-                        online_users_list.append(user_data)
-                    else:
-                        offline_users_list.append(user_data)
-    
-    # Invia i partecipanti al client
-    emit('chat_participants', {
-        'online': online_users_list,
-        'offline': offline_users_list
-    })
-
-@socketio.on('get_group_info')
-def handle_get_group_info(data):
-    if not current_user.is_authenticated:
-        return
-        
-    group_id = data.get('group_id')
-    if not group_id:
-        return
-        
-    group = ChatGroup.query.get(group_id)
-    if not group:
-        return
-        
-    creator = User.query.get(group.creator_id)
-    creator_name = creator.username if creator else 'Unknown'
-    
-    # Prepara le informazioni sui membri
-    members = []
-    for member in group.members:
-        if member.is_active:
-            members.append({
-                'id': member.id,
-                'username': member.username,
-                'avatar_id': member.avatar_id,
-                'is_admin': member.is_admin,
-                'is_online': member.username in online_users
-            })
-    
-    # Invia le informazioni sul gruppo al client
-    emit('group_info', {
-        'id': group.id,
-        'name': group.name,
-        'description': group.description,
-        'creator_id': group.creator_id,
-        'creator_name': creator_name,
-        'created_at': group.created_at.isoformat(),
-        'members': members
-    })
-
-@socketio.on('create_group')
-def handle_create_group(data):
-    if not current_user.is_authenticated:
-        return
-        
-    name = data.get('name')
-    description = data.get('description', '')
-    member_ids = data.get('members', [])
-    
-    if not name:
-        return
-    
-    try:
-        # Crea un nuovo gruppo
-        group = ChatGroup(
-            name=name,
-            description=description,
-            creator_id=current_user.id
-        )
-        
-        # Aggiungi il creatore come membro
-        group.members.append(current_user)
-        
-        # Aggiungi gli altri membri
-        if member_ids:
-            for member_id in member_ids:
-                member = User.query.get(member_id)
-                if member and member.is_active:
-                    group.members.append(member)
-        
-        db.session.add(group)
-        db.session.commit()
-        
-        # Notifica a tutti gli utenti il nuovo gruppo
-        emit('new_group', {
-            'id': group.id,
-            'name': group.name,
-            'description': group.description,
-            'creator_id': group.creator_id
-        }, broadcast=True)
-        
-        # Invia un messaggio di sistema nel gruppo
-        system_message = Message(
-            text=f"{current_user.username} ha creato il gruppo",
-            sender_id=current_user.id,
-            group_id=group.id,
-            message_type='group'
-        )
-        db.session.add(system_message)
-        db.session.commit()
-    except Exception as e:
-        db.session.rollback()
-        print(f"Errore nella creazione del gruppo: {str(e)}")
-
-@socketio.on('join_group')
-def handle_join_group(data):
-    if not current_user.is_authenticated:
-        return
-        
-    group_id = data.get('group_id')
-    if not group_id:
-        return
-        
-    group = ChatGroup.query.get(group_id)
-    if not group:
-        return
-        
-    # Aggiungi l'utente al gruppo se non è già membro
-    if current_user not in group.members:
-        group.members.append(current_user)
-        db.session.commit()
+    # Avvia l'app usando il metodo standard Flask invece di socketio.run
+    app.run(debug=(os.environ.get('FLASK_ENV') == 'development'), host='0.0.0.0')

@@ -32,14 +32,7 @@
                     </a>
                 </li>
                 
-                <!-- Mostra il link alla chat solo se è attivata o se l'utente è admin -->
-                {% if chat_enabled or current_user.is_admin %}
-                <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('chat_page') }}">
-                        <i class="fas fa-comments"></i> <span>Chat</span>
-                    </a>
-                </li>
-                {% endif %}
+                <!-- Rimosso il blocco if chat_enabled -->
                 
                 {% if current_user.is_admin %}
                 <li class="nav-item">
@@ -157,7 +150,7 @@
     <!-- Google Translate Element - posizionato in un angolo ma visibile -->
     <div id="google_translate_element" style="position:fixed; bottom:10px; right:10px; z-index:1000;"></div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <!-- Rimosso il riferimento a socket.io -->
     <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
     <script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
     <script src="{{ url_for('static', filename='js/translate.js') }}"></script>

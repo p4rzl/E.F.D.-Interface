@@ -123,29 +123,10 @@
     </section>
     
     <section class="admin-actions">
-        <h2><i class="fas fa-cogs"></i> Azioni di Manutenzione</h2>
+        <h2><i class="fas fa-tools"></i> Azioni di Manutenzione</h2>
         
         <div class="action-cards">
-            <div class="action-card">
-                <h3><i class="fas fa-trash"></i> Pulizia Messaggi</h3>
-                
-                <form action="{{ url_for('admin_cleanup_messages') }}" method="post">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="action-button">
-                        <i class="fas fa-broom"></i> Pulisci Messaggi Vecchi (3+ giorni)
-                    </button>
-                </form>
-                
-                <form action="{{ url_for('admin_delete_all_messages') }}" method="post" 
-                      onsubmit="return confirm('Sei sicuro di voler eliminare TUTTI i messaggi? Questa azione non può essere annullata.');">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <button type="submit" class="action-button danger-button">
-                        <i class="fas fa-trash-alt"></i> Elimina Tutti i Messaggi
-                    </button>
-                </form>
-            </div>
-            
-            <!-- Aggiungiamo una nuova action card per la pulizia dei report -->
+            <!-- Card per la gestione dei report (già esistente) -->
             <div class="action-card">
                 <h3><i class="fas fa-file-pdf"></i> Gestione Report</h3>
                 
@@ -161,35 +142,10 @@
                     I report PDF vengono automaticamente eliminati dopo 10 minuti dalla loro generazione.
                 </p>
             </div>
+
+            <!-- Qui possono essere aggiunte altre action card esistenti -->
         </div>
     </section>
-
-    <!-- Sezione per la gestione della chat -->
-    <div class="admin-actions">
-        <h2><i class="fas fa-comments"></i> Gestione Chat</h2>
-        <div class="action-cards">
-            <div class="action-card">
-                <h3><i class="fas fa-toggle-on"></i> Visibilità Chat</h3>
-                <p>Attiva o disattiva la chat per tutti gli utenti del sistema.</p>
-                <form action="{{ url_for('toggle_chat_visibility') }}" method="post">
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    {% if chat_enabled %}
-                    <button type="submit" class="action-button danger-button">
-                        <i class="fas fa-eye-slash"></i> Nascondi Chat
-                    </button>
-                    {% else %}
-                    <button type="submit" class="action-button">
-                        <i class="fas fa-eye"></i> Attiva Chat
-                    </button>
-                    {% endif %}
-                </form>
-                <div class="action-info">
-                    <i class="fas fa-info-circle"></i>
-                    <span>La chat è attualmente <strong>{{ "attiva" if chat_enabled else "nascosta" }}</strong>. Gli utenti {{ "possono" if chat_enabled else "non possono" }} accedere alla funzionalità di chat.</span>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
 {% endblock %}
 

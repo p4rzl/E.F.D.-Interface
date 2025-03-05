@@ -180,6 +180,104 @@ document.addEventListener('DOMContentLoaded', function() {
             mapContainer.appendChild(errorMessage);
         }
     }
+    
+    // Ascoltatore per cambio tema
+    document.addEventListener('themeChanged', function(e) {
+        // Controlla se la mappa è stata inizializzata
+        if (typeof map === 'undefined' || !map) return;
+        
+        const isDark = e.detail.theme === 'dark';
+        
+        try {
+            // Salva lo stato attuale della mappa
+            const currentState = {
+                center: map.getCenter(),
+                zoom: map.getZoom(),
+                pitch: map.getPitch(),
+                bearing: map.getBearing(),
+                // Salva la visibilità di tutti i layer
+                layers: []
+            };
+            
+            // Salva la visibilità dei layer
+            if (map.getLayer('beaches-fill')) {
+                currentState.layers.push({
+                    id: 'beaches-fill',
+                    visibility: map.getLayoutProperty('beaches-fill', 'visibility') === 'visible'
+                });
+            }
+            if (map.getLayer('beaches-outline')) {
+                currentState.layers.push({
+                    id: 'beaches-outline',
+                    visibility: map.getLayoutProperty('beaches-outline', 'visibility') === 'visible'
+                });
+            }
+            if (map.getLayer('economy-layer')) {
+                currentState.layers.push({
+                    id: 'economy-layer',
+                    visibility: map.getLayoutProperty('economy-layer', 'visibility') === 'visible'
+                });
+            }
+            if (map.getLayer('hazards-layer')) {
+                currentState.layers.push({
+                    id: 'hazards-layer',
+                    visibility: map.getLayoutProperty('hazards-layer', 'visibility') === 'visible'
+                });
+            }
+            
+            // Aggiungiamo anche un log per debug
+            console.log("Cambio tema mappa:", isDark ? 'dark' : 'light', "Layer salvati:", currentState.layers);
+            
+            // Cambia lo stile della mappa
+            map.setStyle(isDark ? 'mapbox://styles/mapbox/dark-v11' : 'mapbox://styles/mapbox/light-v11');
+            
+            // Dopo il cambio stile, ripristina lo stato della mappa
+            map.once('style.load', function() {
+                console.log("Nuovo stile mappa caricato, ripristino dati...");
+                
+                // Ripristina view
+                map.setCenter(currentState.center);
+                map.setZoom(currentState.zoom);
+                map.setPitch(currentState.pitch);
+                map.setBearing(currentState.bearing);
+                
+                // Ricarica tutti i layer
+                if (typeof beachesGeoJSON !== 'undefined' && beachesGeoJSON) {
+                    loadBeachesLayer(map, beachesGeoJSON);
+                }
+                
+                if (typeof economyGeoJSON !== 'undefined' && economyGeoJSON) {
+                    loadEconomyLayer(map, economyGeoJSON);
+                }
+                
+                if (typeof hazardsGeoJSON !== 'undefined' && hazardsGeoJSON) {
+                    loadHazardsLayer(map, hazardsGeoJSON);
+                }
+                
+                // Ripristina la visibilità dei layer
+                setTimeout(() => {
+                    currentState.layers.forEach(layer => {
+                        if (map.getLayer(layer.id)) {
+                            map.setLayoutProperty(
+                                layer.id, 
+                                'visibility', 
+                                layer.visibility ? 'visible' : 'none'
+                            );
+                        }
+                    });
+                    
+                    // Ripristina i gestori di eventi
+                    if (map.getLayer('beaches-fill')) {
+                        addBeachClickHandlers(map);
+                    }
+                    
+                    console.log("Ripristino dati mappa completato");
+                }, 100);
+            });
+        } catch (error) {
+            console.error("Errore durante l'aggiornamento del tema della mappa:", error);
+        }
+    });
 });
 
 // Calcola e imposta le statistiche iniziali

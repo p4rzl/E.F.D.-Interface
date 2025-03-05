@@ -53,6 +53,9 @@ body {
     flex-direction: column;
     transition: background-color 0.3s ease, color 0.3s ease;
     top: 0 !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
 }
 
 /* Modifica per titoli: cambio da italic a font serif e aggiunto grassetto */
@@ -1358,7 +1361,7 @@ body.dark-theme .mapboxgl-popup-close-button:hover {
     }
 }
 
-/* Stili per selettore lingua */
+/* Stili per selettore lingua - Assicura che segua il tema */
 .language-selector {
     position: relative;
     z-index: 1010; /* Aumentato z-index per garantire che appaia sopra altri elementi */
@@ -1367,7 +1370,7 @@ body.dark-theme .mapboxgl-popup-close-button:hover {
 .language-toggle {
     background: none;
     border: none;
-    color: var(--nav-text);
+    color: var(--nav-text); /* Usa la variabile del colore del testo della navbar */
     font-size: 1.2em;
     cursor: pointer;
     padding: 5px 10px;
@@ -1380,6 +1383,7 @@ body.dark-theme .mapboxgl-popup-close-button:hover {
     align-items: center;
     justify-content: center;
     position: relative; /* Per aggiungere l'indicatore */
+    background-color: rgba(255, 255, 255, 0.1); /* Sottile sfondo bianco semi-trasparente */
 }
 
 /* Indicatore di lingua attiva */
@@ -1402,58 +1406,51 @@ body.dark-theme .mapboxgl-popup-close-button:hover {
 }
 
 .language-toggle:hover {
-    background-color: rgba(255, 255, 255, 0.2);
-    transform: scale(1.1);
+    background-color: rgba(255, 255, 255, 0.2); /* Sfondo più chiaro in hover */
+    transform: rotate(15deg); /* Stessa animazione del pulsante tema */
 }
 
+/* Dropdown del selettore lingua */
 .language-dropdown {
     position: absolute;
     top: 100%;
     right: 0;
-    background-color: var(--bg-color);
-    box-shadow: var(--shadow-standard);
-    border-radius: var(--border-radius);
+    background-color: var(--bg-color); /* Usa la variabile di colore di sfondo del tema */
+    box-shadow: var(--shadow-standard); /* Usa la variabile di ombra del tema */
+    border-radius: var(--border-radius); /* Usa la variabile di raggio bordo del tema */
     min-width: 180px;
     z-index: 1100;
     display: none;
     overflow: hidden;
     margin-top: 5px;
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--border-color); /* Usa la variabile di colore bordo del tema */
 }
 
-.language-dropdown.show {
-    display: block;
-    animation: fadeIn 0.3s;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
+/* Diverse opzioni del dropdown */
 .language-option {
     display: flex;
     align-items: center;
     padding: 10px 15px;
-    color: var(--text-color);
+    color: var(--text-color); /* Usa la variabile di colore del testo del tema */
     text-decoration: none;
     transition: all 0.2s ease;
 }
 
 .language-option:hover {
-    background-color: var(--bg-color-secondary);
+    background-color: var(--hover-color); /* Usa la variabile di colore hover del tema */
 }
 
 .language-option.active {
-    background-color: rgba(var(--primary-color-rgb), 0.1);
+    background-color: rgba(var(--primary-color-rgb, 52, 152, 219), 0.1);
     font-weight: 500;
+    position: relative;
 }
 
-.language-option img {
-    width: 24px;
-    height: 16px;
-    margin-right: 10px;
-    border: 1px solid rgba(0, 0, 0, 0.1);
+.language-option.active::after {
+    content: "✓";
+    position: absolute;
+    right: 10px;
+    color: var(--primary-color); /* Usa la variabile di colore primario del tema */
 }
 
 /* Stile per il selettore di lingua nella pagina di login */
@@ -1688,4 +1685,146 @@ body.dark-theme .translation-spinner span {
 /* Adattamento per tema scuro */
 .dark-theme [translate="no"] {
     color: #4fa1d6;
+}
+
+/* Aggiungi queste classi per le animazioni di cambio lingua */
+.page-transitioning-out {
+    opacity: 0;
+    transition: opacity 0.3s ease-out;
+}
+
+.page-transitioning-in {
+    opacity: 0;
+    animation: fadeIn 0.5s ease-in forwards;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Stile per l'indicatore di caricamento lingua */
+.language-transition-loader {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(52, 152, 219, 0.3);
+    border-top: 4px solid rgba(52, 152, 219, 1);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    z-index: 9999;
+}
+
+@keyframes spin {
+    0% { transform: translate(-50%, -50%) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Prevenzione flash di contenuto non tradotto */
+body:not(.translation-ready) {
+    /* rimuoviamo questa regola che nascondeva il contenuto */
+    /* visibility: hidden; */
+}
+
+body.translation-ready {
+    visibility: visible;
+    opacity: 1; /* era 0, cambiata a 1 per mostrare subito il contenuto */
+    /* transition: opacity 0.3s ease-in; */
+}
+
+body.translation-visible {
+    opacity: 1;
+}
+
+/* Overlay per la transizione del tema */
+.theme-transition-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #000;
+    pointer-events: none;
+    z-index: 9998;
+    transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Transizioni del tema più fluide */
+body {
+    transition: background-color 0.5s ease, color 0.5s ease;
+}
+
+body.theme-transitioning * {
+    transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease !important;
+}
+
+/* Migliora animazione del dropdown delle lingue */
+.language-dropdown {
+    transform: translateY(-10px);
+    opacity: 0;
+    visibility: hidden;
+    transition: transform 0.3s ease, opacity 0.3s ease, visibility 0s linear 0.3s;
+}
+
+.language-dropdown.show {
+    transform: translateY(0);
+    opacity: 1;
+    visibility: visible;
+    transition: transform 0.3s ease, opacity 0.3s ease, visibility 0s linear 0s;
+}
+
+/* Evidenziazione linguaggio attivo */
+.language-option.active {
+    background-color: rgba(52, 152, 219, 0.1);
+    font-weight: bold;
+    position: relative;
+}
+
+.language-option.active::after {
+    content: "✓";
+    position: absolute;
+    right: 10px;
+    color: #3498db;
+}
+
+.language-option {
+    transition: background-color 0.2s ease;
+}
+
+.language-option:hover {
+    background-color: rgba(52, 152, 219, 0.05);
+}
+
+/* Miglioramento pulsante tema con transizione icona */
+#theme-toggle {
+    overflow: hidden;
+    position: relative;
+}
+
+#theme-toggle i {
+    transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+}
+
+#theme-toggle:hover i {
+    transform: rotate(45deg);
+}
+
+/* Miglioramento switch tema con effetto fluido */
+.dark-theme {
+    transition: background-color 0.5s ease, color 0.5s ease;
+}
+
+.dark-theme .navbar,
+.dark-theme .sidebar,
+.dark-theme .card,
+.dark-theme .modal-content,
+.dark-theme .dropdown-menu,
+.dark-theme .btn,
+.dark-theme input,
+.dark-theme select,
+.dark-theme textarea {
+    transition: background-color 0.5s ease, color 0.5s ease, border-color 0.5s ease;
 }

@@ -1,40 +1,103 @@
 /**
- * Gestore del tema chiaro/scuro
+ * Script migliorato per gestire il cambio tema con transizioni più fluide
+ * e preservazione delle preferenze utente
  */
 document.addEventListener('DOMContentLoaded', function() {
     const themeToggle = document.getElementById('theme-toggle');
+    const themeIcon = themeToggle ? themeToggle.querySelector('i') : null;
     
-    if (themeToggle) {
-        // Applica il tema salvato all'avvio
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        if (savedTheme === 'dark') {
-            document.body.classList.add('dark-theme');
-            themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
-        } else {
-            themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
-        }
+    // Variabile per tracciare lo stato corrente del tema
+    let isDarkTheme = localStorage.getItem('darkTheme') === 'true';
+    
+    // Imposta il tema iniziale al caricamento della pagina
+    if (isDarkTheme) {
+        document.body.classList.add('dark-theme');
+        if (themeIcon) themeIcon.className = 'fas fa-sun';
+    } else {
+        if (themeIcon) themeIcon.className = 'fas fa-moon';
+    }
+    
+    /**
+     * Applica il tema con transizione graduale
+     * @param {boolean} dark - Se true applica tema scuro, altrimenti tema chiaro
+     */
+    function applyTheme(dark) {
+        // Salva la preferenza
+        localStorage.setItem('darkTheme', dark);
+        isDarkTheme = dark;
         
-        // Gestisci il click sul toggle
-        themeToggle.addEventListener('click', function() {
-            document.body.classList.toggle('dark-theme');
-            const isDark = document.body.classList.contains('dark-theme');
+        // Prepara l'animazione
+        document.body.classList.add('theme-transitioning');
+        
+        // Aggiungi overlay temporaneo per la transizione
+        const overlay = document.createElement('div');
+        overlay.className = 'theme-transition-overlay';
+        overlay.style.opacity = '0';
+        document.body.appendChild(overlay);
+        
+        // Fase 1: fade-in dell'overlay
+        requestAnimationFrame(() => {
+            overlay.style.opacity = '0.12'; // Opacità leggera per non accecare l'utente
             
-            // Aggiorna l'icona
-            this.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
-            
-            // Salva la preferenza nel localStorage
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            
-            // Notifica alla mappa di aggiornare lo stile (se presente)
-            const themeEvent = new CustomEvent('themeChanged', {
-                detail: {
-                    theme: isDark ? 'dark' : 'light'
+            setTimeout(() => {
+                // Fase 2: applica il tema sotto l'overlay
+                if (dark) {
+                    document.body.classList.add('dark-theme');
+                    if (themeIcon) themeIcon.className = 'fas fa-sun';
+                } else {
+                    document.body.classList.remove('dark-theme');
+                    if (themeIcon) themeIcon.className = 'fas fa-moon';
                 }
-            });
-            document.dispatchEvent(themeEvent);
-            
-            // Aggiorna i grafici se presenti
-            updateChartsTheme(isDark);
+
+                // Fase 2.5: Invia un evento personalizzato per aggiornare la mappa
+                const event = new CustomEvent('themeChanged', {
+                    detail: {
+                        theme: dark ? 'dark' : 'light'
+                    }
+                });
+                document.dispatchEvent(event);
+                
+                // Fase 3: fade-out dell'overlay ed eliminazione
+                setTimeout(() => {
+                    overlay.style.opacity = '0';
+                    
+                    setTimeout(() => {
+                        document.body.removeChild(overlay);
+                        document.body.classList.remove('theme-transitioning');
+                    }, 350); // Durata del fade-out
+                }, 100); // Piccola pausa per applicare il tema
+            }, 150); // Durata del fade-in
+        });
+    }
+    
+    // Gestisci il click sul pulsante tema
+    if (themeToggle) {
+        themeToggle.addEventListener('click', function() {
+            // Toggle del tema
+            applyTheme(!isDarkTheme);
+        });
+    }
+    
+    // Preferenze utente da sistema operativo (rispetto del prefers-color-scheme)
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+    
+    // Se l'utente non ha impostato una preferenza, usa quella del sistema
+    if (localStorage.getItem('darkTheme') === null) {
+        applyTheme(prefersDark.matches);
+    }
+    
+    // Ascolta cambiamenti nelle preferenze di sistema
+    prefersDark.addEventListener('change', (e) => {
+        // Cambia il tema solo se l'utente non ha impostato una preferenza manuale
+        if (localStorage.getItem('darkThemeManual') !== 'true') {
+            applyTheme(e.matches);
+        }
+    });
+    
+    // Quando si clicca manualmente, imposta flag per ignorare preferenze sistema
+    if (themeToggle) {
+        themeToggle.addEventListener('click', function() {
+            localStorage.setItem('darkThemeManual', 'true');
         });
     }
     

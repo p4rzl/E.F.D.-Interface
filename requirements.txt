@@ -1,7 +1,6 @@
 Flask>=2.0.0
 Flask-Login>=0.5.0
 Flask-WTF>=1.0.0
-Flask-SocketIO>=5.0.0
 Werkzeug>=2.0.0
 SQLAlchemy>=1.4.0
 WTForms>=3.0.0
@@ -18,7 +17,6 @@ matplotlib>=3.4.0
 flask-sqlalchemy==3.0.3
 fpdf==1.7.2
 email-validator==2.0.0
-eventlet==0.33.3
 sendgrid==6.10.0
 requests==2.31.0
 setuptools>=65.5.0
