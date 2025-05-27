@@ -75,3 +75,17 @@ Le variabili di ambiente sono configurate nel file `.env`:
 ## Note di Sviluppo
 
 I messaggi della chat vengono automaticamente cancellati dopo 3 giorni per ottimizzare le prestazioni.
+
+## Esecuzione con Docker
+
+### Costruzione dell'immagine Docker
+Per costruire l'immagine Docker dell'applicazione, esegui il seguente comando nella directory principale del repository:
+```bash
+docker build -t efd-interface .
+```
+
+### Esecuzione del container Docker
+Per eseguire il container Docker dell'applicazione, utilizza il seguente comando:
+```bash
+docker run -p 5000:5000 --env-file .env efd-interface
+```
